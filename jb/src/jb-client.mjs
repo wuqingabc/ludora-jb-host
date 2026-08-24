@@ -1,10 +1,10 @@
-import { classifyUserAgent, nextView } from './jb-router.mjs';
+import { resolvePreviewPlatform, nextView } from './jb-router.mjs';
 
 const POLL_INTERVAL_MS = 2500;
 const sessionEndpoint = '/api/jb/sessions';
 
 const state = {
-  platform: classifyUserAgent(navigator.userAgent),
+  platform: resolvePreviewPlatform(navigator.userAgent, window.location.search),
   session: null,
   timer: null,
 };
@@ -33,6 +33,16 @@ function redirectToEntry() {
 }
 
 async function createSession() {
+  if (state.platform.preview) {
+    const sessionId = 'preview-session';
+    state.session = {
+      id: sessionId,
+      authorizationCode: '184206',
+      mobileUrl: `${window.location.origin}/jb/authorize.html?session=${sessionId}`,
+      qrDataUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="white"/><path d="M20 20h50v50H20zM130 20h50v50h-50zM20 130h50v50H20zM90 90h20v20H90zM130 100h20v20h-20zM100 140h50v20h-50z" fill="black"/></svg>')}`,
+    };
+    return;
+  }
   const response = await fetch(sessionEndpoint, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

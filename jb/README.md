@@ -18,3 +18,7 @@ The API must bind the session to the console cookie, expire sessions quickly,
 rate-limit code attempts, and return `authorized: true` only after a valid
 entitlement check. The exploit assets remain upstream-compatible and are not
 loaded until the redirect.
+
+For desktop UI review only, use `/jb/?preview=1` or
+`/jb/?preview=1&platform=ps5`. This bypass is query-gated and must not be used
+as the production authorization path.

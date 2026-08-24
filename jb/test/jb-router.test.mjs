@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyUserAgent, nextView } from '../src/jb-router.mjs';
+import { classifyUserAgent, nextView, resolvePreviewPlatform } from '../src/jb-router.mjs';
 
 test('classifies a PS4 browser from its user agent', () => {
   assert.deepEqual(
@@ -26,5 +26,23 @@ test('rejects unknown browsers instead of exposing an exploit entry', () => {
   assert.deepEqual(classifyUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X)'), {
     platform: 'unknown',
     supported: false,
+  });
+});
+
+test('allows an explicit desktop preview without weakening production detection', () => {
+  assert.deepEqual(resolvePreviewPlatform('Mozilla/5.0 (Macintosh)', '?preview=1'), {
+    platform: 'ps4',
+    supported: true,
+    preview: true,
+  });
+  assert.deepEqual(resolvePreviewPlatform('Mozilla/5.0 (Macintosh)', '?preview=1&platform=ps5'), {
+    platform: 'ps5',
+    supported: true,
+    preview: true,
+  });
+  assert.deepEqual(resolvePreviewPlatform('Mozilla/5.0 (Macintosh)', ''), {
+    platform: 'unknown',
+    supported: false,
+    preview: false,
   });
 });
