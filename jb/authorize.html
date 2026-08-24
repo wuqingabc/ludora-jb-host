@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ludora · Authorize</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand">LUDORA <span>/ AUTHORIZE</span></div>
+      <section class="panel compact">
+        <p class="eyebrow">DEVICE AUTHORIZATION</p>
+        <h1>输入授权码</h1>
+        <p class="lede">输入电视屏幕上的 6 位授权码，确认后主机浏览器会自动继续。</p>
+        <form data-form>
+          <input class="auth-input" data-code inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+          <button type="submit">确认授权</button>
+        </form>
+        <p class="status"><span data-message>授权码仅对当前设备有效。</span></p>
+      </section>
+    </main>
+    <script type="module" src="./src/authorize.mjs"></script>
+  </body>
+</html>

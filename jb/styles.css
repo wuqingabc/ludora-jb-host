@@ -17,4 +17,8 @@ h1 { max-width: 520px; margin: 18px 0 14px; font-size: clamp(32px, 7vw, 58px); l
 .code-block small { max-width: 250px; overflow-wrap: anywhere; line-height: 1.5; }
 .status { display: flex; align-items: center; gap: 10px; margin: 42px 0 0; color: #a7b0b7; font: 13px/1.5 ui-monospace, monospace; }
 .status i { width: 8px; height: 8px; display: inline-block; border-radius: 50%; background: #d9ff55; box-shadow: 0 0 16px #d9ff55; }
+.auth-input { width: 100%; margin-top: 28px; padding: 18px 16px; border: 1px solid #46535d; border-radius: 10px; outline: none; background: #0a0b0d; color: #fff; font: 700 32px/1 ui-monospace, monospace; letter-spacing: .22em; text-align: center; }
+.auth-input:focus { border-color: #d9ff55; box-shadow: 0 0 0 3px rgba(217,255,85,.14); }
+button { width: 100%; margin-top: 14px; padding: 16px; border: 0; border-radius: 10px; background: #d9ff55; color: #10140b; cursor: pointer; font-weight: 800; }
+button:disabled { cursor: wait; opacity: .5; }
 @media (max-width: 560px) { .handoff { align-items: flex-start; flex-direction: column; } .panel { margin-top: 70px; } }

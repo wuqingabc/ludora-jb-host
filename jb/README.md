@@ -11,6 +11,9 @@ keeps the exploit UI behind an authorization handshake:
 5. The console polls `GET /api/jb/sessions/:id` and redirects to `/jb/ps4/` or
    `/jb/ps5/` only after authorization.
 
+The phone page is `/jb/authorize.html?session=:id` and calls
+`POST /api/jb/sessions/:id/authorize` with `{ authorizationCode }`.
+
 The API must bind the session to the console cookie, expire sessions quickly,
 rate-limit code attempts, and return `authorized: true` only after a valid
 entitlement check. The exploit assets remain upstream-compatible and are not
