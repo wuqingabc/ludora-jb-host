@@ -8,12 +8,15 @@
   </head>
   <body>
     <main class="shell">
-      <div class="brand">LUDORA <span>/ ACCESS</span></div>
+      <header class="site-header">
+        <div class="brand">鲁哆啦 <span>Ludora</span></div>
+        <div class="header-meta">设备授权</div>
+      </header>
 
       <section class="panel" data-view="waiting" hidden>
-        <p class="eyebrow">SECURE DEVICE HANDSHAKE</p>
+        <p class="eyebrow">设备授权</p>
         <h1>用手机完成授权</h1>
-        <p class="lede">扫码打开手机页面，输入你的授权码。授权成功后，此 PS4/PS5 浏览器会自动进入对应入口。</p>
+        <p class="lede">请使用手机扫码并输入授权码。验证通过后，主机浏览器将自动进入对应入口。</p>
         <div class="handoff">
           <div class="qr-wrap"><img data-qr alt="手机授权二维码"></div>
           <div class="code-block"><span>授权码</span><strong data-code>------</strong><small data-mobile-url></small></div>
@@ -22,10 +25,10 @@
       </section>
 
       <section class="panel compact" data-view="ps4-entry" hidden>
-        <p class="eyebrow">PS4 READY</p><h1>正在准备入口…</h1><p class="status"><i></i><span data-message>授权成功，正在进入入口…</span></p>
+        <p class="eyebrow">PS4</p><h1>正在准备入口…</h1><p class="status"><i></i><span data-message>授权成功，正在进入入口…</span></p>
       </section>
       <section class="panel compact" data-view="ps5-entry" hidden>
-        <p class="eyebrow">PS5 READY</p><h1>正在准备入口…</h1><p class="status"><i></i><span data-message>授权成功，正在进入入口…</span></p>
+        <p class="eyebrow">PS5</p><h1>正在准备入口…</h1><p class="status"><i></i><span data-message>授权成功，正在进入入口…</span></p>
       </section>
       <section class="panel compact" data-view="unsupported" hidden>
         <p class="eyebrow">UNSUPPORTED DEVICE</p><h1>请在主机浏览器中打开</h1><p class="status"><span data-message></span></p>
