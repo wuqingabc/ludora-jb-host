@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ludora · Access</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand">LUDORA <span>/ ACCESS</span></div>
+
+      <section class="panel" data-view="waiting" hidden>
+        <p class="eyebrow">SECURE DEVICE HANDSHAKE</p>
+        <h1>用手机完成授权</h1>
+        <p class="lede">扫码打开手机页面，输入你的授权码。授权成功后，此 PS4/PS5 浏览器会自动进入对应入口。</p>
+        <div class="handoff">
+          <div class="qr-wrap"><img data-qr alt="手机授权二维码"></div>
+          <div class="code-block"><span>授权码</span><strong data-code>------</strong><small data-mobile-url></small></div>
+        </div>
+        <p class="status"><i></i><span data-message>等待手机确认…</span></p>
+      </section>
+
+      <section class="panel compact" data-view="ps4-entry" hidden>
+        <p class="eyebrow">PS4 READY</p><h1>正在准备入口…</h1><p class="status"><i></i><span data-message>授权成功，正在进入入口…</span></p>
+      </section>
+      <section class="panel compact" data-view="ps5-entry" hidden>
+        <p class="eyebrow">PS5 READY</p><h1>正在准备入口…</h1><p class="status"><i></i><span data-message>授权成功，正在进入入口…</span></p>
+      </section>
+      <section class="panel compact" data-view="unsupported" hidden>
+        <p class="eyebrow">UNSUPPORTED DEVICE</p><h1>请在主机浏览器中打开</h1><p class="status"><span data-message></span></p>
+      </section>
+      <section class="panel compact" data-view="error" hidden>
+        <p class="eyebrow">TEMPORARILY UNAVAILABLE</p><h1>授权服务暂时不可用</h1><p class="status"><span data-message></span></p>
+      </section>
+    </main>
+    <script type="module" src="./src/jb-client.mjs"></script>
+  </body>
+</html>
