@@ -22,3 +22,8 @@ loaded until the redirect.
 For desktop UI review only, use `/jb/?preview=1` or
 `/jb/?preview=1&platform=ps5`. This bypass is query-gated and must not be used
 as the production authorization path.
+
+The authorization UI and every protected Host page accept `?lang=zh-CN`,
+`?lang=zh-TW`, and `?lang=en-US`. The default is `zh-CN`; the selected locale
+is retained locally and carried from the phone authorization handoff to the
+final Host entry.

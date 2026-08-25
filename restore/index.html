@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html><head>
+<meta name="ludora-host" content="1">
+<script src="../i18n/zh-CN.js"></script>
+<script src="../i18n/zh-TW.js"></script>
+<script src="../i18n/en-US.js"></script>
+<script src="../i18n.js"></script>
 <meta charset="utf-8">
 <title>Ludora · 恢复入口</title>
 <link rel="stylesheet" href="../style.css">
@@ -9,8 +14,8 @@
 <hr>
 <br>
 <h1 style="font-size: 18px;color: yellow;">Select Your Firmware</h1>
-<button class="btn" onmouseover="msgs.innerHTML='Restore PS4 5.05 FW GoldHEN Host'" onmouseout="msgs.innerHTML='PS4 - PS5 Exploit Host by GamerHack'" onclick="location.replace('505goldhen/index.html')"> 5.05 FW GoldHEN </button>
-<button class="btn" onmouseover="msgs.innerHTML='Restore PS4 5.05 FW Host v2.5'" onmouseout="msgs.innerHTML='PS4 - PS5 Exploit Host by GamerHack'" onclick="location.replace('505/index.html')"> 5.05 FW v2.5 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Restore PS4 5.05 FW GoldHEN Host'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="location.replace('505goldhen/index.html')"> 5.05 FW GoldHEN </button>
+<button class="btn" onmouseover="msgs.innerHTML='Restore PS4 5.05 FW Host v2.5'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="location.replace('505/index.html')"> 5.05 FW v2.5 </button>
 <br>
 <a href="672goldhen/index.html"><button class="btn" onmouseover="msgs.innerHTML='Restore PS4 6.72 FW GoldHEN Host with Automatic Exploitation'" onmouseout="msgs.innerHTML='PS4 Restore Host to User&#8217;s Guide'"> 6.72 FW GoldHEN </button></a>
 <a href="672/index.html"><button class="btn" onmouseover="msgs.innerHTML='Restore PS4 6.72 FW Host v3.0'" onmouseout="msgs.innerHTML='PS4 Restore Host to User&#8217;s Guide'"> 6.72 FW v3.0 </button></a>
@@ -22,7 +27,6 @@
 <a href="900v3/index.html"><button class="btn" onmouseover="msgs.innerHTML='Restore PS4 9.00 FW Host v3.0 with Automatic Exploitation - FontFaceSet Webkit'" onmouseout="msgs.innerHTML='PS4 Restore Host to User&#8217;s Guide'"> 9.00 FW v3.0 | Auto </button></a>
 <br>
 <button class="btn" onclick="location.replace('../index.html')"> Return </button>
-<h1 style="margin-top: 276px;">Designed by:<a href="https://twitter.com/GamerHack93" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@GamerHack93</a>A special thanks to all the devs on the scene.</h1>
 <script>
 var jailbreak_start_date = localStorage.getItem("jailbreak_start_date");
 if (jailbreak_start_date !== null) {
