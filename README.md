@@ -1,4 +1,17 @@
 # PS4 - PS5 Exploit Host
+
+## Ludora presentation layer
+
+All HTML pages in this host, including firmware menus, cache installers, payload tools, and restore pages, use the local `style.css` presentation layer. The exploit scripts, manifests, payload binaries, and relative asset paths remain unchanged.
+
+When updating the host on a PS4, clear the Browser cookies and website data from the browser Options menu before reopening `/jb`; Application Cache can otherwise continue displaying an older page shell.
+
+Run the local checks before shipping:
+
+```bash
+npm run verify:host-pages
+npm run verify:host-runtime
+```
 PS4 Firmwares: `5.05` `6.72` `7.XX` `8.XX` `9.XX` `10.XX` `11.00` `11.02`
 
 PS5 Firmwares: `1.XX` `5.XX`

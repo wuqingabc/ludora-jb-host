@@ -1,0 +1,8 @@
+{
+  "name": "ludora-jb-host",
+  "private": true,
+  "scripts": {
+    "verify:host-pages": "node scripts/check-host-pages.mjs",
+    "verify:host-runtime": "node scripts/verify-host-runtime.mjs"
+  }
+}
