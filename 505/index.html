@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>PS4 5.05 FW Host v2.5 by GamerHack</title>
+<meta name="ludora-host" content="1">
+<script src="../i18n/zh-CN.js"></script>
+<script src="../i18n/zh-TW.js"></script>
+<script src="../i18n/en-US.js"></script>
+<script src="../i18n.js"></script>
+<title>PS4 5.05 FW Host v2.5 · Ludora</title>
 <link rel="stylesheet" href="../style.css">
 <script src="exploit.js"></script>
 </head>
@@ -9,7 +14,7 @@
 <script>
 if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 </script>
-<h1 id=msgs>PS4 5.05 FW Host v2.5 by GamerHack</h1>
+<h1 id=msgs>PS4 5.05 FW Host v2.5 · Ludora</h1>
 <hr>
 <br>
 <div id=progress>
@@ -17,55 +22,54 @@ if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 </div>
 <div id=menu style="display: none">
 <h1 style="font-size: 18px;color: yellow;">Main Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.4b18.10 for 5.05 FW'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_goldhenbeta()"> GoldHEN v2.4b18.10 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.3 for 5.05 FW'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_goldhen23()"> GoldHEN v2.3 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Send a Payload using port 9020'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_binloader()"> Bin Loader </button>
+<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.4b18.10 for 5.05 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_goldhenbeta()"> GoldHEN v2.4b18.10 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.3 for 5.05 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_goldhen23()"> GoldHEN v2.3 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Send a Payload using port 9020'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_binloader()"> Bin Loader </button>
 <br>
 <h1 style="font-size: 18px;">Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='Enable Some Debugging Functions Available on TestKit'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_todex()"> ToDex </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump Games to USB Drive'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_dumper()"> Game-Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='Access this console Through FTP (Be careful what you do)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_ftp()"> FTP </button>
-<button class="btn" onmouseover="msgs.innerHTML='Transfer Installed Games to USB Drive in exFAT'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_app2usb()"> App2USB </button>
-<button class="btn" onmouseover="msgs.innerHTML='Create a Backup of the Database and Users to a USB Drive'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_dbackup()"> DB Backup </button>
-<button class="btn" onmouseover="msgs.innerHTML='Restore a Backup of the Database and Users from a USB Drive'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_dbrestore()"> DB Restore </button>
+<button class="btn" onmouseover="msgs.innerHTML='Enable Some Debugging Functions Available on TestKit'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_todex()"> ToDex </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump Games to USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_dumper()"> Game-Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='Access this console Through FTP (Be careful what you do)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_ftp()"> FTP </button>
+<button class="btn" onmouseover="msgs.innerHTML='Transfer Installed Games to USB Drive in exFAT'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_app2usb()"> App2USB </button>
+<button class="btn" onmouseover="msgs.innerHTML='Create a Backup of the Database and Users to a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_dbackup()"> DB Backup </button>
+<button class="btn" onmouseover="msgs.innerHTML='Restore a Backup of the Database and Users from a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_dbrestore()"> DB Restore </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Enable System Updates'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_enablebUpdates()"> Enable Updates </button>
-<button class="btn" onmouseover="msgs.innerHTML='Disable System Updates'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_disableUpdates()"> Disable Updates </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump a Console Kernel to a USB Drive'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_kernelDump()"> Kernel Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='PS4 Debug for 5.05 FW'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_ps4debug()"> PS4 Debug </button>
-<button class="btn" onmouseover="msgs.innerHTML='Renames (fake) RIFs to (free) RIFs'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_rifRen()"> RIF Renamer </button>
-<button class="btn" onmouseover="msgs.innerHTML='Active Remote Play'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_ren()"> Remote Play </button>
+<button class="btn" onmouseover="msgs.innerHTML='Enable System Updates'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_enablebUpdates()"> Enable Updates </button>
+<button class="btn" onmouseover="msgs.innerHTML='Disable System Updates'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_disableUpdates()"> Disable Updates </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump a Console Kernel to a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_kernelDump()"> Kernel Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='PS4 Debug for 5.05 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_ps4debug()"> PS4 Debug </button>
+<button class="btn" onmouseover="msgs.innerHTML='Renames (fake) RIFs to (free) RIFs'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_rifRen()"> RIF Renamer </button>
+<button class="btn" onmouseover="msgs.innerHTML='Active Remote Play'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_ren()"> Remote Play </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Required to Activate Cheats Through the PS4 Trainer Website'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_webrte()"> WebRTE </button>
-<a href="http://ps4trainer.com/Trainer/index.html"><button class="btn btn-onln" onmouseover="msgs.innerHTML='PS4 Trainer Website (Follow Instructions There)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'"> PS4 Trainer Web </button></a>
-<button class="btn" onmouseover="msgs.innerHTML='Games Mods'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="mods_group()"> Games-Mods </button>
-<button class="btn" onmouseover="msgs.innerHTML='Parental Controls Passcode Notification - if shows 0000 that means passcode is not set'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_parental()"> Parental Controls </button>
+<button class="btn" onmouseover="msgs.innerHTML='Required to Activate Cheats Through the PS4 Trainer Website'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_webrte()"> WebRTE </button>
+<a href="http://ps4trainer.com/Trainer/index.html"><button class="btn btn-onln" onmouseover="msgs.innerHTML='PS4 Trainer Website (Follow Instructions There)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')"> PS4 Trainer Web </button></a>
+<button class="btn" onmouseover="msgs.innerHTML='Games Mods'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="mods_group()"> Games-Mods </button>
+<button class="btn" onmouseover="msgs.innerHTML='Parental Controls Passcode Notification - if shows 0000 that means passcode is not set'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_parental()"> Parental Controls </button>
 <br>
-<button class="btn btn-toolbox" onmouseover="msgs.innerHTML='Orbis Toolbox for 5.05 FW'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_toolbox()" style="margin-left: 68px;"> Orbis-Toolbox </button>
-<button class="btn" onmouseover="msgs.innerHTML='Modify PS4 FAN Speed'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_fanthreshold()" style="margin-bottom: 70px"> Fan Threshold </button><select id="tempC"></select>°C
+<button class="btn btn-toolbox" onmouseover="msgs.innerHTML='Orbis Toolbox for 5.05 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_toolbox()" style="margin-left: 68px;"> Orbis-Toolbox </button>
+<button class="btn" onmouseover="msgs.innerHTML='Modify PS4 FAN Speed'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_fanthreshold()" style="margin-bottom: 70px"> Fan Threshold </button><select id="tempC"></select>°C
 </div>
 <div id=mods>
 <h1 style="font-size: 18px;color: yellow;">Online Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.00 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_arabicGuy100()"> Arabic Guy v1.00 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.27 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_arabicGuy127()"> Arabic Guy v1.27 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.32 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_arabicGuy132()"> Arabic Guy v1.32 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.33 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_arabicGuy133()"> Arabic Guy v1.33 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.00 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy100()"> Arabic Guy v1.00 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.27 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy127()"> Arabic Guy v1.27 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.32 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy132()"> Arabic Guy v1.32 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.33 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy133()"> Arabic Guy v1.33 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Lamance v0.9 - 1.38 (Right + Square)'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_Lamance()"> Lamance v0.9 - 1.38 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.32'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_WildeModz132()"> WildeModz-1.32 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.33'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_WildeModz133()"> WildeModz-1.33 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.38'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_WildeModz138()"> WildeModz-1.38 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.46'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_WildeModz146()"> WildeModz-1.46 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Lamance v0.9 - 1.38 (Right + Square)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Lamance()"> Lamance v0.9 - 1.38 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.32'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz132()"> WildeModz-1.32 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.33'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz133()"> WildeModz-1.33 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.38'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz138()"> WildeModz-1.38 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.46'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz146()"> WildeModz-1.46 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.00'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_Oysters100()"> RDR2 v1.00 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.13'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_Oysters113()"> RDR2 v1.13 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.19'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_Oysters119()"> RDR2 v1.19 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.24'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_Oysters124()"> RDR2 v1.24 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.29'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_Oysters129()"> RDR2 v1.29 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.00'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters100()"> RDR2 v1.00 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.13'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters113()"> RDR2 v1.13 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.19'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters119()"> RDR2 v1.19 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.24'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters124()"> RDR2 v1.24 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.29'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters129()"> RDR2 v1.29 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Return to Main Menu'" onmouseout="msgs.innerHTML='PS4 5.05 FW Host v2.5 by GamerHack'" onclick="load_menu()" style="margin-bottom: 179px"> Return </button>
+<button class="btn" onmouseover="msgs.innerHTML='Return to Main Menu'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_menu()" style="margin-bottom: 179px"> Return </button>
 </div>
-<h1 style="margin-top: 105px;">Special Thanks to:<a href="https://twitter.com/_AlAzif" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@_AlAzif</a>Leeful<a href="https://twitter.com/SpecterDev" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@SpecterDev</a>SiSTR0<a href="https://twitter.com/Prb29327239" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@Prb29327239</a></h1>
 <script>
 function success(){
 document.getElementById("menu").style.display = "block";

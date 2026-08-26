@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html manifest="cache.manifest">
 <head>
-<title>PS4 7.50 - 7.55 FW Host v1.5 by GamerHack</title>
+<meta name="ludora-host" content="1">
+<script src="../i18n/zh-CN.js"></script>
+<script src="../i18n/zh-TW.js"></script>
+<script src="../i18n/en-US.js"></script>
+<script src="../i18n.js"></script>
+<title>PS4 7.50 - 7.55 FW Host v1.5 · Ludora</title>
 <link rel="stylesheet" href="../style.css">
 <script>
-function DLProgress(e){Percent=(Math.round(e.loaded / e.total * 100));document.getElementById="display:none";window.msgs.innerHTML="Installing Offline Cache: " + Percent + "%";}
-function DisplayCacheProgress(){setTimeout(function(){window.msgs.innerHTML="Cache Installed Successfully ✔";},1000);setTimeout(function(){window.msgs.innerHTML="Now Close And Re-Open Your Browser ...";},3000);}window.applicationCache.addEventListener("progress",DLProgress,false);window.applicationCache.oncached=function(e){DisplayCacheProgress();};window.applicationCache.onupdateready=function(e){DisplayCacheProgress();};
+function DLProgress(e){Percent=(Math.round(e.loaded / e.total * 100));document.getElementById="display:none";window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});}
+function DisplayCacheProgress(){setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.complete');},1000);setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.reopen');},3000);}if(window.applicationCache){if(window.applicationCache){window.applicationCache.addEventListener("progress",DLProgress,false);window.applicationCache.oncached=function(e){DisplayCacheProgress();};window.applicationCache.onupdateready=function(e){DisplayCacheProgress();};}}
 document.cookie = 'kex=1';
 </script>
 </head>
 <body>
 <div id="menu">
-<h1 id="msgs">PS4 7.50 - 7.55 FW Host v1.5 by GamerHack</h1>
+<h1 id="msgs">PS4 7.50 - 7.55 FW Host v1.5 · Ludora</h1>
 <hr>
 <br>
 <h1 style="font-size: 18px;color: yellow;">Main Payloads</h1>
@@ -67,7 +72,6 @@ document.cookie = 'kex=1';
 <br>
 <button class="btn" onclick="load_menu()" style="margin-bottom: 303px;"> Return </button>
 </div>
-<h1 style="margin-top: 43px;">Special Thanks to:<a href="https://twitter.com/sleirsgoevy" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@sleirsgoevy</a>ChendoChap<a href="https://twitter.com/_AlAzif" style="color: #f31414;margin-left: 10px;">@_AlAzif</a></h1>
 <script>
 function mods_group(){
 document.getElementById("mods").style.display = "block";
@@ -220,7 +224,7 @@ document.getElementById("msgs-mods").innerHTML = "Red Dead Redemption 2 Mod - Oy
 }
 
 function pagetitle(){
-document.getElementById("msgs").innerHTML = "PS4 7.50 - 7.55 FW Host v1.5 by GamerHack";
+document.getElementById("msgs").innerHTML = "PS4 7.50 - 7.55 FW Host v1.5 · Ludora";
 document.getElementById("msgs-mods").innerHTML = "Games Mods";
 }
 

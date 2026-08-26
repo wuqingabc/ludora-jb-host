@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>PS4 9.00 FW Host v3.0 by GamerHack | Automatic Exploitation</title>
+<meta name="ludora-host" content="1">
+<script src="../i18n/zh-CN.js"></script>
+<script src="../i18n/zh-TW.js"></script>
+<script src="../i18n/en-US.js"></script>
+<script src="../i18n.js"></script>
+<title>PS4 9.00 FW Host v3.0 · Ludora | Automatic Exploitation</title>
 <link rel="stylesheet" href="../style.css">
 <script src="int64.js"></script>
 <script src="rop.js"></script>
@@ -12,7 +17,7 @@
 <script>
 if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 </script>
-<h1 id="msgs">PS4 9.00 FW Host v3.0 by GamerHack</h1>
+<h1 id="msgs">PS4 9.00 FW Host v3.0 · Ludora</h1>
 <hr>
 <br>
 <div id="progress">
@@ -20,88 +25,87 @@ if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 </div>
 <div id="menu" style="display: none">
 <h1 style="font-size: 18px;color: yellow;">Main Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.4b18.10 for 9.00 FW'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_goldhenbeta()"> GoldHEN v2.4b18.10 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.3 for 9.00 FW'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_goldhen23()"> GoldHEN v2.3 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Send a Payload using port 9020'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_binloader()"> Bin Loader </button>
+<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.4b18.10 for 9.00 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_goldhenbeta()"> GoldHEN v2.4b18.10 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GoldHEN v2.3 for 9.00 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_goldhen23()"> GoldHEN v2.3 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Send a Payload using port 9020'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_binloader()"> Bin Loader </button>
 <br>
 <h1 style="font-size: 18px;">Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='Dump Game Only to USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Gdumper()"> Game-Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump Update Only to USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Udumper()"> Update-Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump Separate Game and Update to USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_SGUdumper()"> SGU-Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump Merged Game and Update to USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_MGUdumper()"> MGU-Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump Game Only to USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Gdumper()"> Game-Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump Update Only to USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Udumper()"> Update-Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump Separate Game and Update to USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_SGUdumper()"> SGU-Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump Merged Game and Update to USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_MGUdumper()"> MGU-Dumper </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Enable Some Debugging Functions Available on TestKit'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_todex()"> ToDex </button>
-<a href="webactivator.html"><button class="btn" onmouseover="msgs.innerHTML='Activate Your User Account from the Console Browser'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'"> Web-Activator </button></a>
-<button class="btn" onmouseover="msgs.innerHTML='Access this console Through FTP (Be careful what you do)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_ftp()"> FTP </button>
-<button class="btn" onmouseover="msgs.innerHTML='Transfer Installed Games to USB Drive in exFAT'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_app2usb()"> App2USB </button>
-<button class="btn" onmouseover="msgs.innerHTML='Create a Backup of the Database and Users to a USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_dbackup()"> DB Backup </button>
-<button class="btn" onmouseover="msgs.innerHTML='Restore a Backup of the Database and Users from a USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_dbrestore()"> DB Restore </button>
+<button class="btn" onmouseover="msgs.innerHTML='Enable Some Debugging Functions Available on TestKit'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_todex()"> ToDex </button>
+<a href="webactivator.html"><button class="btn" onmouseover="msgs.innerHTML='Activate Your User Account from the Console Browser'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')"> Web-Activator </button></a>
+<button class="btn" onmouseover="msgs.innerHTML='Access this console Through FTP (Be careful what you do)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_ftp()"> FTP </button>
+<button class="btn" onmouseover="msgs.innerHTML='Transfer Installed Games to USB Drive in exFAT'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_app2usb()"> App2USB </button>
+<button class="btn" onmouseover="msgs.innerHTML='Create a Backup of the Database and Users to a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_dbackup()"> DB Backup </button>
+<button class="btn" onmouseover="msgs.innerHTML='Restore a Backup of the Database and Users from a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_dbrestore()"> DB Restore </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Enable System Updates'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_enablebUpdates()"> Enable Updates </button>
-<button class="btn" onmouseover="msgs.innerHTML='Disable System Updates'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_disableUpdates()"> Disable Updates </button>
-<button class="btn" onmouseover="msgs.innerHTML='Enable/Disable Browser History.'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_historyBlocker()"> History Blocker </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump a Console Kernel to a USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_kernelDump()"> Kernel Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='Dump a Kernel Module to a USB Drive'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_moduleDump()"> Module Dumper </button>
-<button class="btn" onmouseover="msgs.innerHTML='PS4 Debug for 9.00 FW'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_ps4debug()"> PS4 Debug </button>
+<button class="btn" onmouseover="msgs.innerHTML='Enable System Updates'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_enablebUpdates()"> Enable Updates </button>
+<button class="btn" onmouseover="msgs.innerHTML='Disable System Updates'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_disableUpdates()"> Disable Updates </button>
+<button class="btn" onmouseover="msgs.innerHTML='Enable/Disable Browser History.'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_historyBlocker()"> History Blocker </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump a Console Kernel to a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_kernelDump()"> Kernel Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='Dump a Kernel Module to a USB Drive'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_moduleDump()"> Module Dumper </button>
+<button class="btn" onmouseover="msgs.innerHTML='PS4 Debug for 9.00 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_ps4debug()"> PS4 Debug </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Disables the ASLR (Address space layout randomization)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_disbAslr()"> Disable ASLR </button>
-<button class="btn" onmouseover="msgs.innerHTML='Disable IDU Mode if you have activated it by mistake'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_exitidu()"> Exit IDU </button>
-<button class="btn" onmouseover="msgs.innerHTML='Renames (fake) RIFs to (free) RIFs'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_rifRen()"> RIF Renamer </button>
-<button class="btn" onmouseover="msgs.innerHTML='Permanent UART for 9.00 FW'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_permUart()"> Permanent UART </button>
-<button class="btn" onmouseover="msgs.innerHTML='Required to Activate Cheats Through the PS4 Trainer Website'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_webrte()"> WebRTE </button>
-<a href="http://ps4trainer.com/Trainer/index.html"><button class="btn btn-onln" onmouseover="msgs.innerHTML='PS4 Trainer Website (Follow Instructions There)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'"> PS4 Trainer Web </button></a>
+<button class="btn" onmouseover="msgs.innerHTML='Disables the ASLR (Address space layout randomization)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_disbAslr()"> Disable ASLR </button>
+<button class="btn" onmouseover="msgs.innerHTML='Disable IDU Mode if you have activated it by mistake'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_exitidu()"> Exit IDU </button>
+<button class="btn" onmouseover="msgs.innerHTML='Renames (fake) RIFs to (free) RIFs'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_rifRen()"> RIF Renamer </button>
+<button class="btn" onmouseover="msgs.innerHTML='Permanent UART for 9.00 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_permUart()"> Permanent UART </button>
+<button class="btn" onmouseover="msgs.innerHTML='Required to Activate Cheats Through the PS4 Trainer Website'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_webrte()"> WebRTE </button>
+<a href="http://ps4trainer.com/Trainer/index.html"><button class="btn btn-onln" onmouseover="msgs.innerHTML='PS4 Trainer Website (Follow Instructions There)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')"> PS4 Trainer Web </button></a>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Linux Loaders Menu'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="linux_group()" style="margin-left: 69px"> Linux Loaders </button>
-<button class="btn btn-onln" onmouseover="msgs.innerHTML='Games Mods (Hosted Online)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="mods_group()"> Games-Mods (Online) </button>
-<button class="btn btn-toolbox" onmouseover="msgs.innerHTML='Orbis ToolBox Alpha 1190 for 9.00 FW'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_toolbox()"> Orbis-Toolbox </button>
-<button class="btn" onmouseover="msgs.innerHTML='Modify PS4 FAN Speed'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_fanthreshold()" style="margin-bottom: 70px"> Fan Threshold </button><select id="tempC"></select>°C
+<button class="btn" onmouseover="msgs.innerHTML='Linux Loaders Menu'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="linux_group()" style="margin-left: 69px"> Linux Loaders </button>
+<button class="btn btn-onln" onmouseover="msgs.innerHTML='Games Mods (Hosted Online)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="mods_group()"> Games-Mods (Online) </button>
+<button class="btn btn-toolbox" onmouseover="msgs.innerHTML='Orbis ToolBox Alpha 1190 for 9.00 FW'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_toolbox()"> Orbis-Toolbox </button>
+<button class="btn" onmouseover="msgs.innerHTML='Modify PS4 FAN Speed'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_fanthreshold()" style="margin-bottom: 70px"> Fan Threshold </button><select id="tempC"></select>°C
 </div>
 <div id="lnx">
 <h1 style="font-size: 18px;color: yellow;">Linux Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='Identify the Southbridge of your Console for the Linux Installation'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_southbridge()"> Whos that Southbridge </button>
+<button class="btn" onmouseover="msgs.innerHTML='Identify the Southbridge of your Console for the Linux Installation'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_southbridge()"> Whos that Southbridge </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 1GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linux1gb()"> Linux 1GB </button>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 2GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linux2gb()"> Linux 2GB </button>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 3GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linux3gb()"> Linux 3GB </button>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 4GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linux4gb()"> Linux 4GB </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 1GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linux1gb()"> Linux 1GB </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 2GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linux2gb()"> Linux 2GB </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 3GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linux3gb()"> Linux 3GB </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux with 4GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linux4gb()"> Linux 4GB </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 1GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linuxPS4Pro1gb()"> Linux 1GB (PS4-Pro) </button>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 2GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linuxPS4Pro2gb()"> Linux 2GB (PS4-Pro) </button>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 3GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linuxPS4Pro3gb()"> Linux 3GB (PS4-Pro) </button>
-<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 4GB VRAM (PSXita)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_linuxPS4Pro4gb()"> Linux 4GB (PS4-Pro) </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 1GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linuxPS4Pro1gb()"> Linux 1GB (PS4-Pro) </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 2GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linuxPS4Pro2gb()"> Linux 2GB (PS4-Pro) </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 3GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linuxPS4Pro3gb()"> Linux 3GB (PS4-Pro) </button>
+<button class="btn" onmouseover="msgs.innerHTML='Load Linux for (PS4-Pro) with 4GB VRAM (PSXita)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_linuxPS4Pro4gb()"> Linux 4GB (PS4-Pro) </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Return to Main Menu'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_menu()" style="margin-bottom: 241px"> Return </button>
+<button class="btn" onmouseover="msgs.innerHTML='Return to Main Menu'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_menu()" style="margin-bottom: 241px"> Return </button>
 </div>
 <div id="mods">
 <h1 style="font-size: 18px;color: yellow;">Online Payloads</h1>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.00 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_arabicGuy100()"> Arabic Guy v1.00 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.27 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_arabicGuy127()"> Arabic Guy v1.27 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.32 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_arabicGuy132()"> Arabic Guy v1.32 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.33 (L1 + R1)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_arabicGuy133()"> Arabic Guy v1.33 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Expulsion v4.0 - 1.38'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Expulsion()"> Expulsion v4.0 - 1.38 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Lamance v0.9 - 1.38 (Right + Square)'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Lamance()"> Lamance v0.9 - 1.38 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.00 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy100()"> Arabic Guy v1.00 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.27 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy127()"> Arabic Guy v1.27 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.32 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy132()"> Arabic Guy v1.32 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Arabic Guy v1.33 (L1 + R1)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_arabicGuy133()"> Arabic Guy v1.33 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Expulsion v4.0 - 1.38'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Expulsion()"> Expulsion v4.0 - 1.38 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Lamance v0.9 - 1.38 (Right + Square)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Lamance()"> Lamance v0.9 - 1.38 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.32'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_WildeModz132()"> WildeModz-1.32 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.33'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_WildeModz133()"> WildeModz-1.33 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.38'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_WildeModz138()"> WildeModz-1.38 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.46'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_WildeModz146()"> WildeModz-1.46 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.47'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_WildeModz147()"> WildeModz-1.47 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.32'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz132()"> WildeModz-1.32 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.33'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz133()"> WildeModz-1.33 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.38'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz138()"> WildeModz-1.38 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.46'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz146()"> WildeModz-1.46 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - WildeModz-1.47'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_WildeModz147()"> WildeModz-1.47 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.33'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_beefQueef133()"> Beef Queef Mod v1.33 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.34'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_beefQueef134()"> Beef Queef Mod v1.34 </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.38d'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_beefQueef138()"> Beef Queef Mod v1.38d </button>
-<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.47'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_beefQueef147()"> Beef Queef Mod v1.47 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.33'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_beefQueef133()"> Beef Queef Mod v1.33 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.34'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_beefQueef134()"> Beef Queef Mod v1.34 </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.38d'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_beefQueef138()"> Beef Queef Mod v1.38d </button>
+<button class="btn" onmouseover="msgs.innerHTML='GTA V Mod - Beef Queef Mod v1.47'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_beefQueef147()"> Beef Queef Mod v1.47 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.00'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Oysters100()"> RDR2 v1.00 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.13'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Oysters113()"> RDR2 v1.13 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.19'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Oysters119()"> RDR2 v1.19 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.24'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Oysters124()"> RDR2 v1.24 </button>
-<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.29'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_Oysters129()"> RDR2 v1.29 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.00'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters100()"> RDR2 v1.00 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.13'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters113()"> RDR2 v1.13 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.19'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters119()"> RDR2 v1.19 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.24'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters124()"> RDR2 v1.24 </button>
+<button class="btn" onmouseover="msgs.innerHTML='Red Dead Redemption 2 Mod - Oysters Menu v1.29'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_Oysters129()"> RDR2 v1.29 </button>
 <br>
-<button class="btn" onmouseover="msgs.innerHTML='Return to Main Menu'" onmouseout="msgs.innerHTML='PS4 9.00 FW Host v3.0 by GamerHack'" onclick="load_menu()" style="margin-bottom: 179px"> Return </button>
+<button class="btn" onmouseover="msgs.innerHTML='Return to Main Menu'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="load_menu()" style="margin-bottom: 179px"> Return </button>
 </div>
 <br>
-<h1 style="margin-top: 22px;">Special Thanks to:<a href="https://twitter.com/sleirsgoevy" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@sleirsgoevy</a>ChendoChap<a href="https://twitter.com/Znullptr" style="color: #f31414;margin-left: 10px;margin-right: 10px;">@Znullptr</a>SiSTR0</h1>
 <script>
 function jbdone(){
 document.getElementById("menu").style.display = "block";
@@ -492,7 +496,7 @@ load_poc();
 }
 
 function load_southbridge(){
-LoadedMSG = "Payload Loaded ..."
+LoadedMSG = LudoraI18n.t('payload.loaded')
 PLfile = "southbridge.bin";
 load_poc();
 }

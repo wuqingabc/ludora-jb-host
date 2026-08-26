@@ -2,6 +2,7 @@
   "name": "ludora-jb-host",
   "private": true,
   "scripts": {
+    "test:host": "node --test jb/test/*.test.mjs",
     "verify:host-pages": "node scripts/check-host-pages.mjs",
     "verify:host-runtime": "node scripts/verify-host-runtime.mjs"
   }
