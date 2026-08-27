@@ -22,6 +22,7 @@ window.LudoraI18nDictionaries['en-US'] = {
   'cache.complete': 'Offline cache installed',
   'cache.reopen': 'Close and reopen the browser',
   'cache.error': 'Offline cache installation failed. Clear browser data and try again.',
+  'payload.title': 'PS4 9.00 FW GoldHEN Host',
   'payload.loading': 'Loading GoldHEN. Please wait.',
   'payload.loaded': 'GoldHEN loaded',
   'payload.failed': 'Load failed. Clear browser data and try again.',

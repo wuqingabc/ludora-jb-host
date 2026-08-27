@@ -22,6 +22,7 @@ window.LudoraI18nDictionaries['zh-CN'] = {
   'cache.complete': '离线缓存安装完成',
   'cache.reopen': '请关闭并重新打开浏览器',
   'cache.error': '离线缓存安装失败，请清理浏览器数据后重试',
+  'payload.title': 'PS4 9.00 固件 GoldHEN 主机入口',
   'payload.loading': '正在加载 GoldHEN，请稍候',
   'payload.loaded': 'GoldHEN 已加载',
   'payload.failed': '加载失败，请清理浏览器数据后重试',

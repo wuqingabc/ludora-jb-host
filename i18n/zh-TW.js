@@ -22,6 +22,7 @@ window.LudoraI18nDictionaries['zh-TW'] = {
   'cache.complete': '離線快取安裝完成',
   'cache.reopen': '請關閉並重新開啟瀏覽器',
   'cache.error': '離線快取安裝失敗，請清除瀏覽器資料後重試',
+  'payload.title': 'PS4 9.00 韌體 GoldHEN 主機入口',
   'payload.loading': '正在載入 GoldHEN，請稍候',
   'payload.loaded': 'GoldHEN 已載入',
   'payload.failed': '載入失敗，請清除瀏覽器資料後重試',
