@@ -20,10 +20,10 @@ if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 <h1>PS4 9.00 FW GoldHEN Ludora Host</h1>
 <hr>
 <br>
-<h1 id="msgs" style="font-size: 30px;margin-top: 77px;margin-bottom: 455px;" data-i18n="payload.loading" data-i18n="payload.loading" data-i18n="payload.loading" data-i18n="payload.loading" data-i18n="payload.loading">Loading GoldHEN v2.4b18.10... Please Wait</h1>
+<h1 id="msgs" style="font-size: 30px;margin-top: 77px;margin-bottom: 455px;" data-i18n="payload.loading">Loading GoldHEN v2.4b18.10... Please Wait</h1>
 <script>
 function allset(){
-msgs.innerHTML = LoadedMSG
+msgs.innerHTML = (window.LudoraI18n ? LudoraI18n.t('payload.loaded') : LoadedMSG)
 }
 
 function load_poc(){
@@ -50,7 +50,7 @@ function load_poc(){
 }
 
 function jbdone(){
-LoadedMSG = "GoldHEN v2.4b18.10 Loaded ...";
+LoadedMSG = window.LudoraI18n ? LudoraI18n.t('payload.loaded') : "GoldHEN v2.4b18.10 Loaded ...";
 PLfile = "goldhen_2.4b18.10.bin";
 setTimeout(load_poc, 500);
 }

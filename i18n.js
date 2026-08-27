@@ -29,7 +29,12 @@
   }
 
   function chooseLocale() {
-    var requested = queryLocale() || cookieLocale() || storageLocale() || navigator.language || '';
+    var explicit = queryLocale() || cookieLocale() || storageLocale() || '';
+    // PS4/PS5 WebKit does not reliably expose the console system language.
+    // Keep console visits Chinese by default, while preserving explicit locale
+    // selection for previews and future language controls.
+    var playStation = /PlayStation\s*[45]/i.test((navigator && navigator.userAgent) || '');
+    var requested = explicit || (playStation ? DEFAULT_LOCALE : ((navigator && navigator.language) || ''));
     locale = normalize(requested);
     if (!SUPPORTED[locale]) locale = DEFAULT_LOCALE;
   }
