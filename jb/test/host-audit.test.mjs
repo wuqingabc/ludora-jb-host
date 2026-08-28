@@ -26,6 +26,7 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
     assert.doesNotMatch(cacheHtml, /PS4 7\.00 - 11\.02 FW GoldHEN Ludora Host/);
     assert.match(cacheHtml, /id=["']cache-progress["']/);
     assert.match(cacheHtml, /cache\.installing/);
+    assert.match(cacheHtml, /manifest=["'][^"']+\?rev=7["']/);
     assert.match(cacheHtml, /location\.replace\(['"]index\.html['"]\)/);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
