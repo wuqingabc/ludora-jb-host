@@ -23,37 +23,17 @@
     show("pkgStage.failed", "Ludora installation failed. Please restart and try again.");
   }
 
-  function uploadPackage(buffer, hash) {
+  function uploadPackageDirect() {
     var req = new XMLHttpRequest();
     req.open("POST", PKG_URL, true);
     req.setRequestHeader("Content-Type", "application/octet-stream");
-    req.setRequestHeader("X-Ludora-PKG-SHA256", hash);
-    req.upload.onprogress = function (event) {
-      if (event.lengthComputable) show("pkgStage.transferring", "Transferring Ludora package: {progress}%", { progress: Math.round(event.loaded / event.total * 100) }, Math.round(event.loaded / event.total * 100));
-    };
+    req.setRequestHeader("X-Ludora-PKG-Direct", "1");
     req.onload = function () {
       if (req.status >= 200 && req.status < 300) show("pkgStage.starting", "Starting Ludora...");
       else fail();
     };
     req.onerror = fail;
-    req.send(buffer);
-  }
-
-  function downloadPackage() {
-    var req = new XMLHttpRequest();
-    req.open("GET", PKG_URL, true);
-    req.responseType = "arraybuffer";
-    req.onprogress = function (event) {
-      if (event.lengthComputable) show("pkgStage.downloading", "Preparing Ludora package: {progress}%", { progress: Math.round(event.loaded / event.total * 100) }, Math.round(event.loaded / event.total * 100));
-    };
-    req.onload = function () {
-      var hash = req.getResponseHeader("X-Ludora-PKG-SHA256");
-      if (req.status !== 200 || !req.response || !hash) return fail();
-      show("pkgStage.verifying", "Package ready. Verifying...");
-      uploadPackage(req.response, hash);
-    };
-    req.onerror = fail;
-    req.send();
+    req.send("");
   }
 
   function sendReceiver() {
@@ -62,7 +42,10 @@
     req.onload = function () {
       if (req.status < 200 || req.status >= 300) return fail();
       show("pkgStage.receiver", "Preparing Ludora package receiver...");
-      setTimeout(downloadPackage, 1200);
+      setTimeout(function () {
+        show("pkgStage.transferring", "Sending Ludora package to the console...");
+        uploadPackageDirect();
+      }, 1200);
     };
     req.onerror = fail;
     req.send("");
