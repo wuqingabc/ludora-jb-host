@@ -1693,16 +1693,15 @@ export async function kexploit() {
   await init();
   const _init_t2 = performance.now();
 
+  let alreadyLoaded = false;
   try {
     chain.sys('setuid', 0);
+    alreadyLoaded = true;
   } catch (e) {
     localStorage.ExploitLoaded = "no";
   }
 
-  if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
-    return new Promise(() => {});
-  }
+  if (alreadyLoaded) return true;
 
   const current_core = get_current_core();
   const current_rtprio = get_current_rtprio();
@@ -1864,7 +1863,14 @@ function runPayload(path, onLoaded) {
   xhr.send();
 }
 
-kexploit().then(() => {
+kexploit().then((alreadyLoaded) => {
+	if (alreadyLoaded) {
+		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
+		setTimeout(() => {
+			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
+		}, 500);
+		return;
+	}
 	setTimeout(() => {
 		runPayload("../goldhen-config-stage.elf", function () {
 			runPayload("./goldhen_2.4b18.10.bin", function () {
