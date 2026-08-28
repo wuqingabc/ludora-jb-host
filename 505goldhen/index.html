@@ -27,7 +27,6 @@ function load_payload(){
 req1=null;
 var req1=new XMLHttpRequest();
 req1.open('GET',PLfile);req1.responseType="arraybuffer";
-req1.send();
  req1.onreadystatechange=function(){
   if (req1.readyState==4){
    var padding1=new Uint8Array(4 - (req1.response.byteLength % 4) % 4);
@@ -50,6 +49,7 @@ req1.send();
    setTimeout(runPAYLOAD1,100);
   }
  };
+ req1.send();
 }
 
 function success(){

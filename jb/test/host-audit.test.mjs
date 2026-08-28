@@ -71,10 +71,26 @@ test('stale exploit markers cannot suppress the post-GoldHEN handoff', () => {
 });
 
 test('GoldHEN payload XHR handlers are installed before requests are sent', () => {
-  for (const relativePath of ['g2all/700/lapse.js', 'g2all/900/lapse.js']) {
+  for (const relativePath of [
+    'g2all/700/lapse.js',
+    'g2all/900/lapse.js',
+    '505goldhen/index.html',
+    '672/index.html',
+    '672/pl_loader.js',
+    '672goldhen/exp_loader.js',
+    '900goldhen/index.html',
+    '900v2/index.html',
+    '900v3/index.html',
+    'restore/505goldhen/index.html',
+    'restore/672/exp_loader.js',
+    'restore/672goldhen/exp_loader.js',
+    'restore/900goldhen/index.html',
+    'restore/900v2/index.html',
+    'restore/900v3/index.html',
+  ]) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     const runPayload = source.indexOf('function runPayload');
-    const handler = source.indexOf('onreadystatechange = function', runPayload);
+    const handler = source.indexOf('onreadystatechange', runPayload);
     const send = source.indexOf('.send();', runPayload);
     assert.ok(handler >= 0, `${relativePath}: missing payload XHR handler`);
     assert.ok(send > handler, `${relativePath}: payload XHR sent before handler registration`);

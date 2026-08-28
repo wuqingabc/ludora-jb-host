@@ -131,7 +131,6 @@ function load_poc(){
   var req = new XMLHttpRequest();
   req.responseType = "arraybuffer";
   req.open('GET', PLfile);
-  req.send();
   req.onreadystatechange = function () {
     if (req.readyState == 4) {
     PLD = req.response;
@@ -148,6 +147,7 @@ function load_poc(){
 	setTimeout(allset, 50);
     }
   };
+  req.send();
 }
     else {
         setTimeout(poc, 1500);

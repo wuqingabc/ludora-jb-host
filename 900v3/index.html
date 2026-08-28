@@ -139,7 +139,6 @@ function load_poc(){
  var req = new XMLHttpRequest();
  req.responseType = "arraybuffer";
  req.open('GET', PLfile);
- req.send();
  req.onreadystatechange = function () {
   if (req.readyState == 4) {
    PLD = req.response;
@@ -156,6 +155,7 @@ function load_poc(){
    allset();
   }
  };
+ req.send();
 }
 
 function load_binloader(){
