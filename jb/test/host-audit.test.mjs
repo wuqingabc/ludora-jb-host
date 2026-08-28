@@ -94,4 +94,28 @@ test('every AppCache manifest is safe for real progress accounting', () => {
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
   assert.match(i18n, /var section = 'CACHE'/);
+  const cachePages = {
+    '505/cache.html': '505/cache.manifest',
+    '505goldhen/cache.html': '505goldhen/cache.manifest',
+    '672/index.html': '672/cache.manifest',
+    '672goldhen/index.html': '672goldhen/cache.manifest',
+    '702/index.html': '702/cache.manifest',
+    '75x/index.html': '75x/cache.manifest',
+    '900goldhen/cache.html': '900goldhen/cache.manifest',
+    '900v2/index.html': '900v2/cache.manifest',
+    '900v3/cache.html': '900v3/cache.manifest',
+    'g2all/cache700.html': 'g2all/700.manifest',
+    'g2all/cache900.html': 'g2all/900.manifest',
+    'g2all/cachecss.html': 'g2all/css.manifest',
+  };
+  for (const [pagePath, manifestPath] of Object.entries(cachePages)) {
+    const page = readFileSync(new URL(`../../${pagePath}`, import.meta.url), 'utf8');
+    const manifest = readFileSync(new URL(`../../${manifestPath}`, import.meta.url), 'utf8');
+    const count = manifest.split(/\r?\n/).reduce((total, line) => {
+      const value = line.trim();
+      if (!value || value.startsWith('#') || /^(CACHE|NETWORK|FALLBACK):/.test(value) || value === '*') return total;
+      return total + 1;
+    }, 0);
+    assert.match(page, new RegExp(`data-cache-total=["']${count}["']`), pagePath);
+  }
 });

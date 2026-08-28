@@ -105,7 +105,7 @@
     if (!window.applicationCache || !document.documentElement.hasAttribute('manifest')) return;
     var progress = 0;
     var hasTotal = false;
-    var manifestTotal = 0;
+    var manifestTotal = Number(document.documentElement.getAttribute('data-cache-total')) || 0;
     var loadedEntries = 0;
     function manifestEntryCount(text) {
       // AppCache uses CACHE as the default section after the manifest header.
@@ -120,6 +120,7 @@
       return count;
     }
     function readManifestTotal() {
+      if (manifestTotal > 0) return;
       var manifest = document.documentElement.getAttribute('manifest');
       if (!manifest || !window.XMLHttpRequest) return;
       try {
@@ -169,8 +170,8 @@
       if (node) { node.style.width = '100%'; if (node.parentNode.classList) node.parentNode.classList.remove('indeterminate'); }
       hasTotal = true;
     }
-    window.applicationCache.addEventListener('checking', function () { update(0, false); }, false);
-    window.applicationCache.addEventListener('downloading', function () { update(0, false); }, false);
+    window.applicationCache.addEventListener('checking', function () { update(0, manifestTotal > 0); }, false);
+    window.applicationCache.addEventListener('downloading', function () { update(0, manifestTotal > 0); }, false);
     window.applicationCache.addEventListener('progress', function (event) {
       loadedEntries = Math.max(loadedEntries, Number(event && event.loaded) || 0);
       var total = Number(event && event.total) || manifestTotal;
