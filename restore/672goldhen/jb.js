@@ -11,6 +11,6 @@ if (main_ret == 179 || main_ret == 0){
 	setTimeout(function(){var script = document.createElement('script');script.src ="exp_loader.js";document.getElementsByTagName('head')[0].appendChild(script);}, 1500);
     } 
 	else {
-	window.msgs.innerHTML="Failed to Load! - Restart your Console.";
+	window.msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t('payload.failed') : "Load failed. Restart your console and try again.";
     }
 }

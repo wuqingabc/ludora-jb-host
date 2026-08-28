@@ -27,6 +27,11 @@ window.LudoraI18nDictionaries['zh-CN'] = {
   'payload.loading': '正在加载 GoldHEN，请稍候',
   'payload.loaded': 'GoldHEN 已加载',
   'payload.failed': '加载失败，请清理浏览器数据后重试',
+  'payload.jailbreakFailed': '越狱失败，请重启主机后重试',
+  'payload.unsupported': '不支持的固件版本',
+  'payload.timingFailed': '越狱时序失败，请重新加载页面后重试',
+  'payload.alreadyLoaded': 'GoldHEN 已经加载',
+  'payload.configuring': '正在准备 GoldHEN 配置…',
   'pkgStage.starting': '正在准备鲁哆啦安装…',
   'pkgStage.receiver': '正在启动鲁哆啦安装接收器…',
   'pkgStage.downloading': '正在准备鲁哆啦安装包：{progress}%',
@@ -53,6 +58,8 @@ window.LudoraI18nDictionaries['zh-CN'] = {
   'legacy.restore': '恢复主机入口',
   'legacy.donation': '支持鲁哆啦',
   'legacy.deviceOnly': '请使用 PS4 浏览器访问'
+  ,'legacy.contentNotFound': '内容未找到，请清理浏览器数据后重新安装缓存'
+  ,'legacy.unsupportedFirmware': '不支持的固件版本：{firmware}'
   ,'legacy.rootTitle': '鲁哆啦 Ludora · 主机入口'
   ,'legacy.multiFirmwareTitle': '鲁哆啦 Ludora · PS4 浏览器主机入口'
 };

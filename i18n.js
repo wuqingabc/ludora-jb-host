@@ -86,7 +86,8 @@
       '鲁哆啦 Ludora · 主机入口': 'legacy.rootTitle',
       '鲁哆啦 Ludora · 主機入口': 'legacy.rootTitle',
       'For Donations (Only in Cryptocurrencies)': 'legacy.donation',
-      'Only for PS4 with Firmware 7.00 to 11.02': 'legacy.deviceOnly'
+      'Only for PS4 with Firmware 7.00 to 11.02': 'legacy.deviceOnly',
+      'Content not Found! - Clear Browser Data and Re-Install Cache ...': 'legacy.contentNotFound'
     };
     var all = scope.getElementsByTagName ? scope.getElementsByTagName('*') : [];
     var i;
@@ -202,6 +203,8 @@
     if (/Insert the USB now/i.test(text)) text = translate('usb.insert');
     else if (/Jailbreak Done/i.test(text)) text = translate('usb.jailbreakDone');
     else if (/webkit exploit failed/i.test(text)) text = translate('payload.failed');
+    else if (/Exploit timing failed/i.test(text)) text = translate('payload.timingFailed');
+    else if (/Unsupported Firmware/i.test(text)) text = translate('payload.unsupported');
     nativeAlert.call(window, text);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { apply(document); });

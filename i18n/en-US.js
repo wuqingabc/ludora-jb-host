@@ -27,6 +27,11 @@ window.LudoraI18nDictionaries['en-US'] = {
   'payload.loading': 'Loading GoldHEN. Please wait.',
   'payload.loaded': 'GoldHEN loaded',
   'payload.failed': 'Load failed. Clear browser data and try again.',
+  'payload.jailbreakFailed': 'Jailbreak failed. Restart your console and try again.',
+  'payload.unsupported': 'Unsupported firmware.',
+  'payload.timingFailed': 'Exploit timing failed. Please reload the page and try again.',
+  'payload.alreadyLoaded': 'GoldHEN is already loaded.',
+  'payload.configuring': 'Preparing GoldHEN configuration…',
   'pkgStage.starting': 'Preparing Ludora installation…',
   'pkgStage.receiver': 'Starting the Ludora package receiver…',
   'pkgStage.downloading': 'Preparing Ludora package: {progress}%',
@@ -53,6 +58,8 @@ window.LudoraI18nDictionaries['en-US'] = {
   'legacy.restore': 'Restore host entry',
   'legacy.donation': 'Support Ludora',
   'legacy.deviceOnly': 'Open in a PS4 browser'
+  ,'legacy.contentNotFound': 'Content not found. Clear browser data and reinstall the cache.'
+  ,'legacy.unsupportedFirmware': 'Unsupported firmware: {firmware}'
   ,'legacy.rootTitle': 'Ludora · Console entry'
   ,'legacy.multiFirmwareTitle': 'Ludora · PS4 Browser Host'
 };

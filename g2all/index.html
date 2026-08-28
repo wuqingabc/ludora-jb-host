@@ -19,12 +19,16 @@ var fwVersion = isPS4 ? match[1] : "Unknown";
 var fwNum = parseFloat(fwVersion);
 
 function onScriptError() {
-    msgs.innerHTML = "Content not Found! - Clear Browser Data and Re-Install Cache ...";
+    msgs.innerHTML = window.LudoraI18n
+        ? LudoraI18n.t("legacy.contentNotFound")
+        : "Content not found. Clear browser data and reinstall the cache.";
 }
 
 if (!isPS4) {
     document.addEventListener("DOMContentLoaded", () => {
-        msgs.innerHTML = "Only for PS4 with Firmware 7.00 to 11.02";
+        msgs.innerHTML = window.LudoraI18n
+            ? LudoraI18n.t("legacy.deviceOnly")
+            : "Open in a PS4 browser";
     });
 } else {
     if (window.applicationCache.status == '0') {
@@ -36,7 +40,9 @@ if (!isPS4) {
             window.location.replace("cachecss.html?rev=7");
         } else {
             document.addEventListener("DOMContentLoaded", () => {
-                msgs.innerHTML = 'Unsupported Firmware: <span style="color: red;">' + fwVersion + '</span>';
+                msgs.innerHTML = window.LudoraI18n
+                    ? LudoraI18n.t("legacy.unsupportedFirmware", { firmware: fwVersion })
+                    : 'Unsupported firmware: <span style="color: red;">' + fwVersion + '</span>';
             });
         }
     } else {

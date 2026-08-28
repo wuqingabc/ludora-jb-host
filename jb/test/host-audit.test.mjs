@@ -43,9 +43,42 @@ test('g2all exploit failures are surfaced instead of becoming unhandled rejectio
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(source, /main\(\)\.catch\(/, relativePath);
     assert.match(source, /Exploit timing failed/, relativePath);
+    assert.match(source, /payload\.timingFailed/, relativePath);
+    assert.doesNotMatch(source, /msgs\.innerHTML\s*=\s*["']Exploit timing failed/, relativePath);
   }
   const psfree900 = readFileSync(new URL('../../g2all/900/psfree.js', import.meta.url), 'utf8');
   assert.match(psfree900, /maxRetries = 6/);
+});
+
+test('all g2all user-facing runtime messages use the shared i18n dictionary', () => {
+  const dictionaries = [
+    readFileSync(new URL('../../i18n/en-US.js', import.meta.url), 'utf8'),
+    readFileSync(new URL('../../i18n/zh-CN.js', import.meta.url), 'utf8'),
+    readFileSync(new URL('../../i18n/zh-TW.js', import.meta.url), 'utf8'),
+  ].join('\n');
+  for (const key of [
+    'payload.timingFailed',
+    'payload.alreadyLoaded',
+    'payload.configuring',
+    'payload.jailbreakFailed',
+    'payload.unsupported',
+    'legacy.contentNotFound',
+    'legacy.unsupportedFirmware',
+  ]) assert.match(dictionaries, new RegExp(`['"]${key.replace('.', '\\.') }['"]`), key);
+
+  const runtime = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
+  assert.match(runtime, /payload\.timingFailed/);
+  assert.match(runtime, /legacy\.contentNotFound/);
+  assert.match(runtime, /payload\.unsupported/);
+  for (const relativePath of [
+    'g2all/700/lapse.js',
+    'g2all/900/lapse.js',
+    'g2all/css/main.js',
+  ]) {
+    const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(source, /LudoraI18n\.t\("payload\.(alreadyLoaded|configuring|failed|loaded)"\)/, relativePath);
+    assert.doesNotMatch(source, /msgs\.innerHTML\s*=\s*["']GoldHEN is Already Loaded|msgs\.innerHTML\s*=\s*["']Failed to Load/, relativePath);
+  }
 });
 
 test('the zrm browser chain includes every runtime asset and supported offset table', () => {
