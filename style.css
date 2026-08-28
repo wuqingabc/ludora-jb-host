@@ -42,3 +42,21 @@ body > h1:last-of-type { margin-top: 24px !important; padding: 18px 0; color: va
 .cache-progress.indeterminate > span { width: 0; }
 select { min-height: 38px; margin: 8px; border: 1px solid var(--ld-line); border-radius: 7px; background: var(--ld-panel-strong); color: var(--ld-text); }
 @media (max-width: 720px) { body { width: calc(100% - 24px); } h1 { padding: 18px 14px; font-size: 20px; } #menu, #mods, #crypto, #tools, #lnx, #progress { padding: 14px 10px; } .btn, button { width: min(100%, 360px); margin: 6px auto; } }
+
+/* PSFree 9.00 relies on the original WebKit focus/History/frameset layout.
+   Keep the Ludora presentation layer out of that sensitive DOM path. */
+html.ludora-legacy-document {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+body.ludora-legacy-host { overflow: hidden; }
+body.ludora-legacy-host {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+body.ludora-legacy-host::before { display: none; }
+body.ludora-legacy-host * { box-sizing: content-box !important; transition: none !important; }

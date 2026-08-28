@@ -158,6 +158,18 @@ test('zrm only starts the existing Ludora post-exploit stage after a clean paylo
   assert.doesNotMatch(stage, /GamerHack|raw-game\.com/i);
 });
 
+test('legacy g2all entry keeps the exploit-sensitive browser layout isolated from the Ludora UI layer', () => {
+  const page = readFileSync(new URL('../../g2all/index.html', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../../style.css', import.meta.url), 'utf8');
+  assert.match(page, /<html[^>]*class=["']ludora-legacy-document["']/);
+  assert.match(page, /class=["']ludora-legacy-host["']/);
+  assert.match(css, /html\.ludora-legacy-document[^}]*overflow:\s*hidden/s);
+  assert.match(css, /ludora-legacy-host[^{]*\{[^}]*overflow:\s*hidden/s);
+  assert.match(css, /body\.ludora-legacy-host[^}]*width:\s*auto/s);
+  assert.match(css, /ludora-legacy-host\s+\*[^}]*box-sizing:\s*content-box\s*!important/s);
+  assert.match(css, /ludora-legacy-host::before[^}]*display:\s*none/s);
+});
+
 test('every offline-cache page uses the shared localized progress runtime', () => {
   for (const file of collectHostPages()) {
     const html = readFileSync(file, 'utf8');
