@@ -1863,20 +1863,18 @@ function runPayload(path, onLoaded) {
   xhr.send();
 }
 
-kexploit().then((alreadyLoaded) => {
-	if (alreadyLoaded) {
-		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
-		setTimeout(() => {
-			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-		}, 500);
-		return;
-	}
-	setTimeout(() => {
+	function startGoldhenChain() {
 		runPayload("../goldhen-config-stage.elf", function () {
 			runPayload("./goldhen_2.4b18.10.bin", function () {
+				msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.loaded") : "GoldHEN loaded.";
 				if (window.LudoraPkgStage) window.LudoraPkgStage.start();
 			});
 		});
+	}
+
+kexploit().then(() => {
+	setTimeout(() => {
+		startGoldhenChain();
 		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
 	},500);
 }).catch(() => {
