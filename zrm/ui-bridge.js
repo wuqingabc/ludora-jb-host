@@ -6,10 +6,11 @@
   }
   function state(text, className) {
     var value = String(text || '');
-    var key = /ALL DONE|payload/i.test(value) && !/FAILED|NO REBOOT|REBOOT/i.test(value)
+    var key = /^ALL DONE$/i.test(value)
       ? 'zrm.payloadReady'
       : /REBOOT|poisoned|kernel.*needed/i.test(value) ? 'zrm.rebootRequired'
       : /FAILED|no commit|no offsets/i.test(value) ? 'zrm.failed'
+      : /payload/i.test(value) ? 'payload.loading'
       : /lapse/i.test(value) ? 'zrm.lapse'
       : /poops/i.test(value) ? 'zrm.poops' : null;
     var node = document.getElementById('state');

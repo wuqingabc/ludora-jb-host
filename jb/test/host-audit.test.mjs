@@ -147,6 +147,7 @@ test('zrm only starts the existing Ludora post-exploit stage after a clean paylo
   const bridge = readFileSync(new URL('../../zrm/ui-bridge.js', import.meta.url), 'utf8');
   assert.match(bridge, /payloadReady:\s*true/);
   assert.match(bridge, /LudoraPkgStage\.start/);
+  assert.match(bridge, /\^ALL DONE\$/i);
   assert.match(bridge, /rebootRequired|zrm\.rebootRequired/);
   for (const relativePath of ['zrm/chain_lapse.js', 'zrm/chain_poops.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
