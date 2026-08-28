@@ -54,7 +54,14 @@ function mark(tag, detail) {
     outEl.scrollTop = outEl.scrollHeight;
     post(tag, detail);
 }
-function state(t, c) { stateEl.textContent = t; stateEl.className = c || ""; }
+function state(t, c) {
+    const localized = window.LudoraI18n && window.LudoraI18n.t;
+    if (localized && /loading the payload|payload\.\.\.|loading lapse chain/i.test(String(t))) {
+        t = localized("payload.loading");
+    }
+    stateEl.textContent = t;
+    stateEl.className = c || "";
+}
 
 let passCount = 0, failCount = 0;
 function check(name, ok, detail) {

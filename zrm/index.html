@@ -47,6 +47,11 @@
     function setState(t, c) { stateEl.textContent = t; stateEl.className = c || ""; }
     function setCache(t, ok) { cacheEl.textContent = t; cacheEl.className = ok ? "cacheok" : ""; }
     var params = new URLSearchParams(location.search);
+    function tr(key, fallback, params) {
+        return window.LudoraI18n && window.LudoraI18n.t
+            ? window.LudoraI18n.t(key, params)
+            : fallback;
+    }
 
     var key = null, fwnum = null;
     var m = /PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
@@ -73,11 +78,11 @@
     detEl.innerHTML = "firmware <b>" + (key || "unknown") + "</b>"
         + " &middot; bug <b>" + (bug || "none") + "</b> &middot; " + why;
 
-    if (!bug) { setState("当前固件暂不支持", "bad"); return; }
+    if (!bug) { setState(tr("host.unsupported", "当前固件暂不支持"), "bad"); return; }
 
     var target = (bug === "lapse" ? "run_lapse.html" : "run_poops.html")
         + location.search;
-    function go() { setState("loading " + bug + " chain...", "warn");
+    function go() { setState(tr("payload.loading", "正在准备主机入口，请稍候") + " · " + bug, "warn");
                     location.replace(target); }
 
     function waitForTap(msg, action) {
@@ -102,26 +107,26 @@
         go();
     } else if (ac.status === ac.UPDATEREADY) {
         try { ac.swapCache(); } catch (e) {}
-        setCache("update downloaded", true);
-        waitForTap("UPDATE READY -- press X or tap to reload & run",
+        setCache(tr("cache.complete", "离线缓存安装完成"), true);
+        waitForTap(tr("cache.reopen", "请关闭并重新打开浏览器"),
                    function () { location.reload(); });
     } else {
         setCache("正在检查离线缓存…");
         ac.addEventListener("downloading",
-            function () { setCache("caching for offline (first run)..."); }, false);
+            function () { setCache(tr("cache.installing", "正在安装离线缓存：0%", { progress: 0 })); }, false);
         ac.addEventListener("progress", function (e) {
             if (e && e.total)
-                setCache("caching " + Math.round((e.loaded / e.total) * 100) + "%");
+                setCache(tr("cache.installing", "正在安装离线缓存：{progress}%", { progress: Math.round((e.loaded / e.total) * 100) }));
         }, false);
 
         ac.addEventListener("cached", function () {
             setCache("离线缓存安装完成", true);
-            waitForTap("CACHED (first run) -- press X or tap to run", go);
+            waitForTap(tr("cache.reopen", "请关闭并重新打开浏览器"), go);
         }, false);
         ac.addEventListener("updateready", function () {
             try { ac.swapCache(); } catch (e) {}
-            setCache("update downloaded", true);
-            waitForTap("UPDATE READY -- press X or tap to reload & run",
+            setCache(tr("cache.complete", "离线缓存安装完成"), true);
+            waitForTap(tr("cache.reopen", "请关闭并重新打开浏览器"),
                        function () { location.reload(); });
         }, false);
 
@@ -131,11 +136,11 @@
         }, false);
         ac.addEventListener("error", function () {
             setCache("离线缓存暂不可用");
-            waitForTap("CACHE FAILED -- press X or tap to run anyway", go);
+            waitForTap(tr("cache.error", "离线缓存安装失败，请清理浏览器数据后重试"), go);
         }, false);
         ac.addEventListener("obsolete", function () {
             setCache("离线缓存需要更新");
-            waitForTap("CACHE OBSOLETE -- press X or tap to run", go);
+            waitForTap(tr("cache.error", "离线缓存需要更新"), go);
         }, false);
     }
 })();

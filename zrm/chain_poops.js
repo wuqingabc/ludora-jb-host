@@ -60,7 +60,14 @@ function mark(tag, detail) {
 }
 
 function trace(tag, detail) { if (VERBOSE) mark(tag, detail); else post(tag, detail); }
-function state(t, c) { stateEl.textContent = t; stateEl.className = c || ""; }
+function state(t, c) {
+    const localized = window.LudoraI18n && window.LudoraI18n.t;
+    if (localized && /loading the payload|payload\.\.\.|loading poops chain/i.test(String(t))) {
+        t = localized("payload.loading");
+    }
+    stateEl.textContent = t;
+    stateEl.className = c || "";
+}
 function check(name, ok, detail) {
     if (ok) { passCount++; mark("PROOF-OK", name + (detail ? "  " + detail : "")); }
     else { failCount++; mark("PROOF-FAIL", name + (detail ? "  " + detail : "")); }
