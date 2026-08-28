@@ -113,9 +113,10 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     const manifest = readFileSync(new URL(`../../${manifestPath}`, import.meta.url), 'utf8');
     const count = manifest.split(/\r?\n/).reduce((total, line) => {
       const value = line.trim();
-      if (!value || value.startsWith('#') || /^(CACHE|NETWORK|FALLBACK):/.test(value) || value === '*') return total;
+      if (!value || value.startsWith('#') || value === 'CACHE MANIFEST' || /^(CACHE|NETWORK|FALLBACK):/.test(value) || value === '*') return total;
       return total + 1;
     }, 0);
-    assert.match(page, new RegExp(`data-cache-total=["']${count}["']`), pagePath);
+    // package-jb-host.mjs adds four shared i18n resources to every manifest.
+    assert.match(page, new RegExp(`data-cache-total=["']${count + 4}["']`), pagePath);
   }
 });
