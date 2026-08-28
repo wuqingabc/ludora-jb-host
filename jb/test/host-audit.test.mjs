@@ -50,13 +50,11 @@ test('g2all exploit failures are surfaced instead of becoming unhandled rejectio
   assert.match(psfree900, /maxRetries = 3/);
 });
 
-test('g2all UAF retries clean up failed attempts before retrying', () => {
+test('g2all keeps the upstream UAF lifecycle untouched', () => {
   for (const relativePath of ['g2all/700/psfree.js', 'g2all/900/psfree.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
-    assert.match(source, /finally\s*\{/i, relativePath);
-    assert.match(source, /removeEventListener\(['"]popstate['"]/i, relativePath);
-    assert.match(source, /input\.remove\(\)/, relativePath);
-    assert.match(source, /foo\.remove\(\)/, relativePath);
+    assert.doesNotMatch(source, /finally\s*\{/i, relativePath);
+    assert.doesNotMatch(source, /completed\s*=\s*false/, relativePath);
   }
 });
 
