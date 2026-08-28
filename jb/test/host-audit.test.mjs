@@ -51,6 +51,16 @@ test('g2all exploit failures are surfaced instead of becoming unhandled rejectio
   assert.match(psfree900, /maxRetries = 3/);
 });
 
+test('g2all UAF retries clean up failed attempts before retrying', () => {
+  for (const relativePath of ['g2all/700/psfree.js', 'g2all/900/psfree.js']) {
+    const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(source, /finally\s*\{/i, relativePath);
+    assert.match(source, /removeEventListener\(['"]popstate['"]/i, relativePath);
+    assert.match(source, /input\.remove\(\)/, relativePath);
+    assert.match(source, /foo\.remove\(\)/, relativePath);
+  }
+});
+
 test('all g2all user-facing runtime messages use the shared i18n dictionary', () => {
   const dictionaries = [
     readFileSync(new URL('../../i18n/en-US.js', import.meta.url), 'utf8'),

