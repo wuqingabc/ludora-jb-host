@@ -47,7 +47,7 @@ test('g2all exploit failures are surfaced instead of becoming unhandled rejectio
     assert.doesNotMatch(source, /msgs\.innerHTML\s*=\s*["']Exploit timing failed/, relativePath);
   }
   const psfree900 = readFileSync(new URL('../../g2all/900/psfree.js', import.meta.url), 'utf8');
-  assert.match(psfree900, /maxRetries = 6/);
+  assert.match(psfree900, /maxRetries = 3/);
 });
 
 test('all g2all user-facing runtime messages use the shared i18n dictionary', () => {

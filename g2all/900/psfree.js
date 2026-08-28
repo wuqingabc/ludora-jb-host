@@ -772,11 +772,8 @@ async function make_arw(reader, view2, pop) {
     make_arw._buffer = bt.buffer;
 }
 
-// UAF retry wrapper for improved stability with GoldHEN v2.4b18.10.
-// PS4 WebKit can deliver a stale popstate while the previous browser history
-// transition is still being torn down. Keep the retry finite, but give the
-// heap a few more clean attempts before surfacing a recoverable error.
-async function uaf_ssv_with_retry(fsets, index, save_pop = false, maxRetries = 6) {
+// UAF retry wrapper for improved stability with GoldHen v2.4b18.8
+async function uaf_ssv_with_retry(fsets, index, save_pop = false, maxRetries = 3) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             return await uaf_ssv(fsets, index, save_pop);
