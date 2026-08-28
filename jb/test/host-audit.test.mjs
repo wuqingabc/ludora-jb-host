@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { existsSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { auditHostTree, collectHostPages } from '../../scripts/audit-host-pages.mjs';
 
 test('discovers every user-facing HTML page in the Host tree', () => {
@@ -79,4 +80,18 @@ test('every offline-cache page uses the shared localized progress runtime', () =
     const file = new URL(`../../g2all/${relativePath}`, import.meta.url);
     assert.doesNotMatch(readFileSync(file, 'utf8'), /\\/, relativePath);
   }
+});
+
+test('every AppCache manifest is safe for real progress accounting', () => {
+  const manifestFiles = readdirSync(new URL('../../', import.meta.url), { recursive: true })
+    .filter((file) => file.endsWith('.manifest'));
+  assert.equal(manifestFiles.length, 12);
+  for (const relativePath of manifestFiles) {
+    const manifest = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
+    assert.doesNotMatch(manifest, /\\/, relativePath);
+    assert.match(manifest, /progress-v4/, relativePath);
+  }
+  const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
+  assert.match(i18n, /var section = 'CACHE'/);
 });

@@ -108,7 +108,8 @@
     var manifestTotal = 0;
     var loadedEntries = 0;
     function manifestEntryCount(text) {
-      var section = '';
+      // AppCache uses CACHE as the default section after the manifest header.
+      var section = 'CACHE';
       var count = 0;
       String(text || '').split(/\r?\n/).forEach(function (line) {
         line = line.replace(/^\s+|\s+$/g, '');
