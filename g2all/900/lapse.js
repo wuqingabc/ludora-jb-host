@@ -1798,6 +1798,20 @@ function array_from_address(addr, size) {
     return og_array;
 }
 
+var ludoraStageAttempts = 0;
+function startLudoraStage() {
+    if (window.LudoraPkgStage && typeof window.LudoraPkgStage.start === "function") {
+        window.LudoraPkgStage.start();
+        return;
+    }
+    if (++ludoraStageAttempts > 12) {
+        msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("pkgStage.unavailable") : "Ludora installation stage is unavailable.";
+        return;
+    }
+    log("Ludora package stage is not ready; retrying...");
+    setTimeout(startLudoraStage, 500);
+}
+
 function runPayload(PLfile, onLoaded) {
   var loader_addr = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
   var tmpStubArray = array_from_address(loader_addr, 1);
@@ -1832,9 +1846,9 @@ function runPayload(PLfile, onLoaded) {
 kexploit().then(() => {
 	setTimeout(() => {
 		runPayload("./goldhen_2.4b18.10.bin", function () {
-			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			else msgs.innerHTML = LudoraI18n.t("pkgStage.unavailable");
+			startLudoraStage();
 		});
+		setTimeout(startLudoraStage, 6000);
 		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
 	},500);
 }).catch(() => {

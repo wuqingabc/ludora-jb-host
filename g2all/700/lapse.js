@@ -1806,6 +1806,20 @@ function array_from_address(addr, size) {
   return og_array;
 }
 
+var ludoraStageAttempts = 0;
+function startLudoraStage() {
+  if (window.LudoraPkgStage && typeof window.LudoraPkgStage.start === "function") {
+    window.LudoraPkgStage.start();
+    return;
+  }
+  if (++ludoraStageAttempts > 12) {
+    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("pkgStage.unavailable") : "Ludora installation stage is unavailable.";
+    return;
+  }
+  log("Ludora package stage is not ready; retrying...");
+  setTimeout(startLudoraStage, 500);
+}
+
 function runPayload(path, onLoaded) {
   // Why xhr instead of fetch? More universal support, more control, better errors, etc.
   log(`loading ${path}`);
@@ -1867,9 +1881,9 @@ function runPayload(path, onLoaded) {
 kexploit().then(() => {
 	setTimeout(() => {
 		runPayload("./goldhen_2.4b18.10.bin", function () {
-			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			else msgs.innerHTML = LudoraI18n.t("pkgStage.unavailable");
+			startLudoraStage();
 		});
+		setTimeout(startLudoraStage, 6000);
 		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
 	},500);
 }).catch(() => {
