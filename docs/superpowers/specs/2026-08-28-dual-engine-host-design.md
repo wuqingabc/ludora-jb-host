@@ -1,7 +1,7 @@
 # Ludora Dual-Engine PS4 Host Design
 
 **Date:** 2026-08-28  
-**Status:** Approved in conversation; awaiting written-spec review  
+**Status:** Approved in conversation and written-spec review
 **Scope:** Web host integration only. PKG source and released package contents are out of scope.
 
 ## Goal
