@@ -47,4 +47,5 @@ window.LudoraI18nDictionaries['zh-TW'] = {
   'legacy.donation': '支援魯哆啦',
   'legacy.deviceOnly': '請使用 PS4 瀏覽器訪問'
   ,'legacy.rootTitle': '魯哆啦 Ludora · 主機入口'
+  ,'legacy.multiFirmwareTitle': '魯哆啦 Ludora · PS4 瀏覽器主機入口'
 };

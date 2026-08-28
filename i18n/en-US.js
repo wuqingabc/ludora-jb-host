@@ -47,4 +47,5 @@ window.LudoraI18nDictionaries['en-US'] = {
   'legacy.donation': 'Support Ludora',
   'legacy.deviceOnly': 'Open in a PS4 browser'
   ,'legacy.rootTitle': 'Ludora · Console entry'
+  ,'legacy.multiFirmwareTitle': 'Ludora · PS4 Browser Host'
 };

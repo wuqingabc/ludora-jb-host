@@ -20,6 +20,12 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
   const html = readFileSync(new URL('../../g2all/index.html', import.meta.url), 'utf8');
   assert.match(html, /900\/alert\.js/);
   assert.doesNotMatch(html, /exfathax|Insert the USB|pOOBs4/i);
+  for (const page of ['cache700.html', 'cache900.html', 'cachecss.html']) {
+    const cacheHtml = readFileSync(new URL(`../../g2all/${page}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(cacheHtml, /PS4 7\.00 - 11\.02 FW GoldHEN Ludora Host/);
+    assert.match(cacheHtml, /id=["']cache-progress["']/);
+    assert.match(cacheHtml, /cache\.installing/);
+  }
 });
 
 test('the zrm browser chain includes every runtime asset and supported offset table', () => {
