@@ -9,7 +9,7 @@
 <title>PS4 7.50 - 7.55 FW Host v1.5 · Ludora</title>
 <link rel="stylesheet" href="../style.css">
 <script>
-function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});}else{window.msgs.innerHTML=LudoraI18n.t('cache.installingUnknown');}}
+function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});}}
 function DisplayCacheProgress(){setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.complete');},1000);setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.reopen');},3000);}if(window.applicationCache){if(window.applicationCache){window.applicationCache.addEventListener("progress",DLProgress,false);window.applicationCache.oncached=function(e){DisplayCacheProgress();};window.applicationCache.onupdateready=function(e){DisplayCacheProgress();};}}
 document.cookie = 'kex=1';
 </script>

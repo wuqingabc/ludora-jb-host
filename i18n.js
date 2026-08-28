@@ -105,6 +105,34 @@
     if (!window.applicationCache || !document.documentElement.hasAttribute('manifest')) return;
     var progress = 0;
     var hasTotal = false;
+    var manifestTotal = 0;
+    var loadedEntries = 0;
+    function manifestEntryCount(text) {
+      var section = '';
+      var count = 0;
+      String(text || '').split(/\r?\n/).forEach(function (line) {
+        line = line.replace(/^\s+|\s+$/g, '');
+        if (!line || line.charAt(0) === '#') return;
+        if (/^(CACHE|NETWORK|FALLBACK):/.test(line)) { section = line.split(':', 1)[0]; return; }
+        if (section === 'CACHE' && line !== '*') count += 1;
+      });
+      return count;
+    }
+    function readManifestTotal() {
+      var manifest = document.documentElement.getAttribute('manifest');
+      if (!manifest || !window.XMLHttpRequest) return;
+      try {
+        var request = new XMLHttpRequest();
+        request.open('GET', manifest, true);
+        request.onreadystatechange = function () {
+          if (request.readyState === 4 && (request.status === 200 || request.status === 0)) {
+            manifestTotal = manifestEntryCount(request.responseText);
+            if (manifestTotal > 0 && !hasTotal) update((loadedEntries / manifestTotal) * 100, true);
+          }
+        };
+        request.send(null);
+      } catch (error) {}
+    }
     function bar() {
       var node = document.getElementById('ludora-cache-progress');
       if (node) return node;
@@ -143,12 +171,15 @@
     window.applicationCache.addEventListener('checking', function () { update(0, false); }, false);
     window.applicationCache.addEventListener('downloading', function () { update(0, false); }, false);
     window.applicationCache.addEventListener('progress', function (event) {
-      update(event && event.total ? (event.loaded / event.total) * 100 : 0, !!(event && event.total));
+      loadedEntries = Math.max(loadedEntries, Number(event && event.loaded) || 0);
+      var total = Number(event && event.total) || manifestTotal;
+      update(total > 0 ? (loadedEntries / total) * 100 : 0, total > 0);
     }, false);
     window.applicationCache.addEventListener('cached', complete, false);
     window.applicationCache.addEventListener('updateready', complete, false);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { update(progress, hasTotal); });
     else update(progress, hasTotal);
+    readManifestTotal();
   }
 
   chooseLocale();

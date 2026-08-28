@@ -31,7 +31,9 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
   assert.match(i18n, /installCacheProgress/);
   assert.match(i18n, /ludora-cache-progress/);
   assert.match(i18n, /cache\.installingUnknown/);
-  assert.match(i18n, /indeterminate/);
+  assert.match(i18n, /manifestEntryCount/);
+  assert.match(i18n, /event\.loaded/);
+  assert.doesNotMatch(readFileSync(new URL('../../style.css', import.meta.url), 'utf8'), /ludora-cache-progress/);
 });
 
 test('the zrm browser chain includes every runtime asset and supported offset table', () => {
@@ -72,5 +74,9 @@ test('every offline-cache page uses the shared localized progress runtime', () =
     if (!/manifest=["']/i.test(html)) continue;
     assert.match(html, /i18n\.js/i, file);
     assert.doesNotMatch(html, /Starting Cache Installation|Installing Offline Cache/i, file);
+  }
+  for (const relativePath of ['700.manifest', '900.manifest', 'css.manifest']) {
+    const file = new URL(`../../g2all/${relativePath}`, import.meta.url);
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /\\/, relativePath);
   }
 });

@@ -12,7 +12,7 @@
 <body>
 <script>
 history.replaceState(null,null,'index.html');var histlength=history.length;history.go(-histlength);
-function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});document.getElementById('cache-progress').style.width=Percent+'%';document.getElementById('cache-progress').parentNode.classList.remove('indeterminate');}else{window.msgs.innerHTML=LudoraI18n.t('cache.installingUnknown');document.getElementById('cache-progress').style.width='38%';document.getElementById('cache-progress').parentNode.classList.add('indeterminate');}}
+function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});document.getElementById('cache-progress').style.width=Percent+'%';document.getElementById('cache-progress').parentNode.classList.remove('indeterminate');}}
 var cacheFinished=false;function DisplayCacheProgress(){if(cacheFinished)return;cacheFinished=true;document.getElementById('cache-progress').style.width='100%';document.getElementById('cache-progress').parentNode.classList.remove('indeterminate');window.msgs.innerHTML=LudoraI18n.t('cache.complete');setTimeout(function(){location.replace('index.html');},1200);}function PollCache(){if(window.applicationCache&&(window.applicationCache.status===window.applicationCache.IDLE||window.applicationCache.status===window.applicationCache.UPDATEREADY))DisplayCacheProgress();}setInterval(PollCache,500);
 window.applicationCache.addEventListener("progress",DLProgress,false);
 window.applicationCache.oncached=function(e){DisplayCacheProgress();};

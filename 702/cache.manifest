@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# Ludora UI cache revision 2026-08-28-progress-v3
+# Ludora UI cache revision 2026-08-28-progress-v4
 
 CACHE: 
 ../img.jpg
@@ -47,36 +47,36 @@ ps4.js
 todex.js
 utils.js
 WildeModz-1.46.js
-BinLoader\index.html
-BinLoader\int64.js
-BinLoader\ps4.js
-BinLoader\rop.js
-BinLoader\userland.js
-BinLoader\utils.js
-PS4Debug\index.html
-PS4Debug\int64.js
-PS4Debug\ps4.js
-PS4Debug\ps4debug.js
-PS4Debug\rop.js
-PS4Debug\userland.js
-PS4Debug\utils.js
-WebActivator\702.js
-WebActivator\c-code.js
-WebActivator\frontend.js
-WebActivator\int64.js
-WebActivator\jb.js
-WebActivator\mira.js
-WebActivator\ps4.js
-WebActivator\utils.js
-WebActivator\web-activator.html
-WebActivator\web-activator.js
-WebRTE\index.html
-WebRTE\int64.js
-WebRTE\ps4.js
-WebRTE\rop.js
-WebRTE\userland.js
-WebRTE\utils.js
-WebRTE\webrte.js
+BinLoader/index.html
+BinLoader/int64.js
+BinLoader/ps4.js
+BinLoader/rop.js
+BinLoader/userland.js
+BinLoader/utils.js
+PS4Debug/index.html
+PS4Debug/int64.js
+PS4Debug/ps4.js
+PS4Debug/ps4debug.js
+PS4Debug/rop.js
+PS4Debug/userland.js
+PS4Debug/utils.js
+WebActivator/702.js
+WebActivator/c-code.js
+WebActivator/frontend.js
+WebActivator/int64.js
+WebActivator/jb.js
+WebActivator/mira.js
+WebActivator/ps4.js
+WebActivator/utils.js
+WebActivator/web-activator.html
+WebActivator/web-activator.js
+WebRTE/index.html
+WebRTE/int64.js
+WebRTE/ps4.js
+WebRTE/rop.js
+WebRTE/userland.js
+WebRTE/utils.js
+WebRTE/webrte.js
 
 NETWORK: 
 * 
