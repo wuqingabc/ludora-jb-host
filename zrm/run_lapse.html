@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN" manifest="cache.appcache">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>鲁哆啦 Ludora · Lapse 入口</title>
+<script src="../i18n/zh-CN.js"></script>
+<script src="../i18n/zh-TW.js"></script>
+<script src="../i18n/en-US.js"></script>
+<script src="../i18n.js"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="zrm.css">
+<style>
+  html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8;
+               font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
+  #wrap { padding:16px 18px; }
+  #state { font-size:22px; font-weight:700; margin:0 0 10px; }
+  #out { white-space:pre-wrap; font:12px/1.45 Consolas, monospace;
+         background:#11151b; border:1px solid #1e2732; border-radius:5px;
+         padding:10px 12px; height:calc(100vh - 141px); overflow-y:auto; }
+  .ok { color:#7fd0a0; } .bad { color:#d08a7f; } .warn { color:#d8c07f; }
+  #brand { text-align:center; padding:8px 10px; background:#0e1116;
+           border-bottom:1px solid #1e2732; }
+  #brand img { width:28px; height:28px; margin-right:8px; border-radius:50%;
+               vertical-align:middle; }
+  #brand b { font-size:15px; font-weight:700; letter-spacing:.14em;
+             color:#e6ebf2; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker">Lapse</span></div>
+<div id="wrap">
+  <div class="eyebrow" data-i18n="payload.title">主机入口</div>
+  <div id="state" data-i18n="payload.loading">正在加载主机入口，请稍候</div>
+  <div id="out"></div>
+  <div class="ad-slot ad-slot-runtime"><span>ADVERTISEMENT</span><strong>鲁哆啦广告位</strong></div>
+</div>
+<script type="module">import "./chain_lapse.js";</script>
+</body>
+</html>
