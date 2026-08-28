@@ -37,6 +37,16 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
   assert.doesNotMatch(readFileSync(new URL('../../style.css', import.meta.url), 'utf8'), /ludora-cache-progress/);
 });
 
+test('g2all exploit failures are surfaced instead of becoming unhandled rejections', () => {
+  for (const relativePath of ['g2all/700/psfree.js', 'g2all/900/psfree.js']) {
+    const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(source, /main\(\)\.catch\(/, relativePath);
+    assert.match(source, /Exploit timing failed/, relativePath);
+  }
+  const psfree900 = readFileSync(new URL('../../g2all/900/psfree.js', import.meta.url), 'utf8');
+  assert.match(psfree900, /maxRetries = 6/);
+});
+
 test('the zrm browser chain includes every runtime asset and supported offset table', () => {
   const required = [
     'index.html',

@@ -4,6 +4,10 @@ CACHE MANIFEST
 CACHE: 
 ../img.jpg
 ../style.css
+../pkg-stage.js
+../ludora-web-pkg-stage.elf
+../goldhen-config-stage.elf
+../pkg/ludora.pkg
 goldhen_2.4b18.10.bin
 index.html
 700/alert.js

@@ -1806,7 +1806,7 @@ function array_from_address(addr, size) {
   return og_array;
 }
 
-function runPayload(path) {
+function runPayload(path, onLoaded) {
   // Why xhr instead of fetch? More universal support, more control, better errors, etc.
   log(`loading ${path}`);
   const xhr = new XMLHttpRequest();
@@ -1844,6 +1844,7 @@ function runPayload(path) {
 
           // Call the payload
           chain.call_void(payload_buffer);
+          if (onLoaded) setTimeout(onLoaded, 1200);
 
           // Unmap the memory used for the payload
           sysi("munmap", payload_buffer, padded_buffer.length);
@@ -1865,8 +1866,12 @@ function runPayload(path) {
 
 kexploit().then(() => {
 	setTimeout(() => {
-		runPayload("./goldhen_2.4b18.10.bin");
-		msgs.innerHTML = "GoldHEN v2.4b18.10 Loaded ...";
+		runPayload("../goldhen-config-stage.elf", function () {
+			runPayload("./goldhen_2.4b18.10.bin", function () {
+				if (window.LudoraPkgStage) window.LudoraPkgStage.start();
+			});
+		});
+		msgs.innerHTML = "Preparing GoldHEN configuration ...";
 	},500);
 }).catch(() => {
     msgs.innerHTML = "Failed to Load! Restart Your Console ...";

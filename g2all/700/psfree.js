@@ -835,4 +835,11 @@ async function main() {
   clear_log();
   import("./lapse.js");
 }
-main();
+main().catch((error) => {
+  clear_log();
+  log(`PSFree failed: ${error && error.message ? error.message : error}`);
+  if (typeof msgs !== "undefined") {
+    msgs.innerHTML = "Exploit timing failed. Please reload the page and try again.";
+    msgs.style.color = "yellow";
+  }
+});

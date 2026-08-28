@@ -1798,7 +1798,7 @@ function array_from_address(addr, size) {
     return og_array;
 }
 
-function runPayload(PLfile) {
+function runPayload(PLfile, onLoaded) {
   var loader_addr = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
   var tmpStubArray = array_from_address(loader_addr, 1);
   tmpStubArray[0] = 0x00C3E7FF;
@@ -1823,6 +1823,7 @@ function runPayload(PLfile) {
         var pthread = malloc(0x10);
 
         call_nze('pthread_create', pthread, 0, loader_addr, payload_buffer);
+        if (onLoaded) setTimeout(onLoaded, 1200);
       }
     }
   };
@@ -1830,8 +1831,12 @@ function runPayload(PLfile) {
 
 kexploit().then(() => {
 	setTimeout(() => {
-		runPayload("./goldhen_2.4b18.10.bin");
-		msgs.innerHTML = "GoldHEN v2.4b18.10 Loaded ...";
+		runPayload("../goldhen-config-stage.elf", function () {
+			runPayload("./goldhen_2.4b18.10.bin", function () {
+				if (window.LudoraPkgStage) window.LudoraPkgStage.start();
+			});
+		});
+		msgs.innerHTML = "Preparing GoldHEN configuration ...";
 	},500);
 }).catch(() => {
     msgs.innerHTML = "Failed to Load! Restart Your Console ...";
