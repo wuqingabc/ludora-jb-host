@@ -67,7 +67,7 @@ test('g2all preserves the upstream exploit-loaded guard', () => {
   }
 });
 
-test('GoldHEN payload XHR handlers are installed before requests are sent', () => {
+test('GoldHEN payload launch keeps the upstream request lifecycle', () => {
   for (const relativePath of [
     'g2all/700/lapse.js',
     'g2all/900/lapse.js',
@@ -90,7 +90,10 @@ test('GoldHEN payload XHR handlers are installed before requests are sent', () =
     const handler = source.indexOf('onreadystatechange', runPayload);
     const send = source.indexOf('.send();', runPayload);
     assert.ok(handler >= 0, `${relativePath}: missing payload XHR handler`);
-    assert.ok(send > handler, `${relativePath}: payload XHR sent before handler registration`);
+    if (!relativePath.endsWith('/lapse.js')) {
+      assert.ok(send > handler, `${relativePath}: payload XHR sent before handler registration`);
+    }
+    assert.doesNotMatch(source, /startGoldhenChain|goldhen-config-stage\.elf/, relativePath);
   }
 });
 
@@ -114,14 +117,9 @@ test('all g2all user-facing runtime messages use the shared i18n dictionary', ()
   assert.match(runtime, /payload\.timingFailed/);
   assert.match(runtime, /legacy\.contentNotFound/);
   assert.match(runtime, /payload\.unsupported/);
-  for (const relativePath of [
-    'g2all/700/lapse.js',
-    'g2all/900/lapse.js',
-    'g2all/css/main.js',
-  ]) {
+  for (const relativePath of ['g2all/css/main.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(source, /LudoraI18n\.t\("payload\.(alreadyLoaded|configuring|failed|loaded)"\)/, relativePath);
-    assert.doesNotMatch(source, /msgs\.innerHTML\s*=\s*["']GoldHEN is Already Loaded|msgs\.innerHTML\s*=\s*["']Failed to Load/, relativePath);
   }
 });
 

@@ -1693,9 +1693,8 @@ export async function kexploit() {
     } catch (e) {
         localStorage.ExploitLoaded = "no";
     }
-
     if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
-        msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
+        msgs.innerHTML = "GoldHEN is Already Loaded ...";
         return new Promise(() => {});
     }
  
@@ -1798,7 +1797,7 @@ function array_from_address(addr, size) {
     return og_array;
 }
 
-function runPayload(PLfile, onLoaded) {
+function runPayload(PLfile) {
   var loader_addr = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
   var tmpStubArray = array_from_address(loader_addr, 1);
   tmpStubArray[0] = 0x00C3E7FF;
@@ -1806,6 +1805,7 @@ function runPayload(PLfile, onLoaded) {
   var req = new XMLHttpRequest();
   req.responseType = "arraybuffer";
   req.open('GET', PLfile);
+  req.send();
 
   req.onreadystatechange = function () {
     if (req.readyState == 4) {
@@ -1822,28 +1822,17 @@ function runPayload(PLfile, onLoaded) {
         var pthread = malloc(0x10);
 
         call_nze('pthread_create', pthread, 0, loader_addr, payload_buffer);
-        if (onLoaded) setTimeout(onLoaded, 1200);
       }
     }
   };
-  req.send();
 }
-
-	function startGoldhenChain() {
-		runPayload("../goldhen-config-stage.elf", function () {
-			runPayload("./goldhen_2.4b18.10.bin", function () {
-				msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.loaded") : "GoldHEN loaded.";
-				if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			});
-		});
-	}
 
 kexploit().then(() => {
 	setTimeout(() => {
-		startGoldhenChain();
-		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
+		runPayload("./goldhen_2.4b18.10.bin");
+		msgs.innerHTML = "GoldHEN v2.4b18.10 Loaded ...";
 	},500);
 }).catch(() => {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.failed") : "Load failed. Restart your console and try again.";
+    msgs.innerHTML = "Failed to Load! Restart Your Console ...";
 	msgs.style.color = "yellow";
 });

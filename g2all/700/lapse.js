@@ -1700,7 +1700,7 @@ export async function kexploit() {
   }
 
   if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
+    msgs.innerHTML = "GoldHEN is Already Loaded ...";
     return new Promise(() => {});
   }
 
@@ -1806,7 +1806,7 @@ function array_from_address(addr, size) {
   return og_array;
 }
 
-function runPayload(path, onLoaded) {
+function runPayload(path) {
   // Why xhr instead of fetch? More universal support, more control, better errors, etc.
   log(`loading ${path}`);
   const xhr = new XMLHttpRequest();
@@ -1844,7 +1844,6 @@ function runPayload(path, onLoaded) {
 
           // Call the payload
           chain.call_void(payload_buffer);
-          if (onLoaded) setTimeout(onLoaded, 1200);
 
           // Unmap the memory used for the payload
           sysi("munmap", payload_buffer, padded_buffer.length);
@@ -1864,21 +1863,12 @@ function runPayload(path, onLoaded) {
   xhr.send();
 }
 
-	function startGoldhenChain() {
-		runPayload("../goldhen-config-stage.elf", function () {
-			runPayload("./goldhen_2.4b18.10.bin", function () {
-				msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.loaded") : "GoldHEN loaded.";
-				if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			});
-		});
-	}
-
 kexploit().then(() => {
 	setTimeout(() => {
-		startGoldhenChain();
-		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
+		runPayload("./goldhen_2.4b18.10.bin");
+		msgs.innerHTML = "GoldHEN v2.4b18.10 Loaded ...";
 	},500);
 }).catch(() => {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.failed") : "Load failed. Restart your console and try again.";
+    msgs.innerHTML = "Failed to Load! Restart Your Console ...";
     msgs.style.color = "yellow";
 });
