@@ -88,7 +88,9 @@ test('every offline-cache page uses the shared localized progress runtime', () =
   }
   for (const relativePath of ['700.manifest', '900.manifest', 'css.manifest']) {
     const file = new URL(`../../g2all/${relativePath}`, import.meta.url);
-    assert.doesNotMatch(readFileSync(file, 'utf8'), /\\/, relativePath);
+    const manifest = readFileSync(file, 'utf8');
+    assert.doesNotMatch(manifest, /\\/, relativePath);
+    assert.doesNotMatch(manifest, /(?:^|\n)\.\.\/pkg\/ludora\.pkg(?:\n|$)/, relativePath);
   }
 });
 
@@ -100,7 +102,11 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     const manifest = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
-    assert.match(manifest, /progress-v5/, relativePath);
+    if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
+      assert.match(manifest, /progress-v6/, relativePath);
+    } else {
+      assert.match(manifest, /progress-v5/, relativePath);
+    }
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
   assert.match(i18n, /var section = 'CACHE'/);
