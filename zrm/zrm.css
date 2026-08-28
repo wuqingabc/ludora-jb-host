@@ -15,4 +15,7 @@ body { width: min(1180px, calc(100% - 48px)); padding-bottom: 56px; }
 .ad-slot small { color: #6b7398; }
 .ad-slot-runtime { grid-row: 3 / span 3; }
 #out { grid-column: 1; width: 100%; height: min(52vh, 520px); margin: 0; padding: 18px; border: 1px solid rgba(210,220,255,.12); border-radius: 14px; background: rgba(12,16,35,.86); color: #c7cbea; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+#msgs { grid-column: 1; color: #f3b942; font-size: 16px; min-height: 24px; }
+.cache-progress { grid-column: 1; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(210,220,255,.14); }
+.cache-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: #f3b942; transition: width .12s linear; }
 @media (max-width: 760px) { body { width: calc(100% - 24px); } #wrap { grid-template-columns: 1fr; gap: 18px; padding-top: 28px; } .ad-slot, .ad-slot-runtime { grid-column: 1; grid-row: auto; min-height: 140px; } #state, #det, #cache, .route-note, #out { grid-column: 1; } }

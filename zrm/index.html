@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" manifest="cache.appcache">
+<html lang="zh-CN" manifest="cache.appcache" data-cache-total="22">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -35,6 +35,7 @@
   <div id="state" data-i18n="host.loading">正在准备主机入口，请稍候</div>
   <div id="det"></div>
   <div id="cache" data-i18n="cache.installing">正在安装离线缓存：0%</div>
+  <div class="cache-progress" aria-label="Cache progress"><span id="cache-progress"></span></div>
   <div class="ad-slot" aria-label="Advertisement"><span>ADVERTISEMENT</span><strong>鲁哆啦广告位</strong><small>为主机玩家保留的展示空间</small></div>
   <div class="route-note" data-i18n="payload.loading">浏览器链路准备中</div>
 </div>
@@ -45,7 +46,11 @@
     var detEl = document.getElementById("det");
     var cacheEl = document.getElementById("cache");
     function setState(t, c) { stateEl.textContent = t; stateEl.className = c || ""; }
-    function setCache(t, ok) { cacheEl.textContent = t; cacheEl.className = ok ? "cacheok" : ""; }
+    var cacheBar = document.getElementById("cache-progress");
+    function setCache(t, ok, progress) {
+        cacheEl.textContent = t; cacheEl.className = ok ? "cacheok" : "";
+        if (typeof progress === "number") cacheBar.style.width = Math.max(0, Math.min(100, progress)) + "%";
+    }
     var params = new URLSearchParams(location.search);
     function tr(key, fallback, params) {
         return window.LudoraI18n && window.LudoraI18n.t
@@ -100,38 +105,38 @@
     if (!ac || !document.documentElement.hasAttribute("manifest")) {
         go();
     } else if (!navigator.onLine) {
-        setCache("离线缓存已就绪", true);
+        setCache("离线缓存已就绪", true, 100);
         go();
     } else if (ac.status === ac.IDLE) {
-        setCache("缓存已就绪", true);
+        setCache("缓存已就绪", true, 100);
         go();
     } else if (ac.status === ac.UPDATEREADY) {
         try { ac.swapCache(); } catch (e) {}
-        setCache(tr("cache.complete", "离线缓存安装完成"), true);
-        waitForTap(tr("cache.reopen", "请关闭并重新打开浏览器"),
-                   function () { location.reload(); });
+        setCache(tr("cache.complete", "离线缓存安装完成"), true, 100);
+        setTimeout(go, 250);
     } else {
         setCache("正在检查离线缓存…");
         ac.addEventListener("downloading",
-            function () { setCache(tr("cache.installing", "正在安装离线缓存：0%", { progress: 0 })); }, false);
+            function () { setCache(tr("cache.installing", "正在安装离线缓存：0%", { progress: 0 }), false, 0); }, false);
         ac.addEventListener("progress", function (e) {
-            if (e && e.total)
-                setCache(tr("cache.installing", "正在安装离线缓存：{progress}%", { progress: Math.round((e.loaded / e.total) * 100) }));
+            var total = e && e.total ? e.total : 22;
+            var loaded = e && e.loaded ? e.loaded : 0;
+            var progress = Math.round((loaded / total) * 100);
+            setCache(tr("cache.installing", "正在安装离线缓存：{progress}%", { progress: progress }), false, progress);
         }, false);
 
         ac.addEventListener("cached", function () {
-            setCache("离线缓存安装完成", true);
-            waitForTap(tr("cache.reopen", "请关闭并重新打开浏览器"), go);
+            setCache(tr("cache.complete", "离线缓存安装完成"), true, 100);
+            setTimeout(go, 250);
         }, false);
         ac.addEventListener("updateready", function () {
             try { ac.swapCache(); } catch (e) {}
-            setCache(tr("cache.complete", "离线缓存安装完成"), true);
-            waitForTap(tr("cache.reopen", "请关闭并重新打开浏览器"),
-                       function () { location.reload(); });
+            setCache(tr("cache.complete", "离线缓存安装完成"), true, 100);
+            setTimeout(go, 250);
         }, false);
 
         ac.addEventListener("noupdate", function () {
-            setCache("离线缓存已就绪", true);
+            setCache("离线缓存已就绪", true, 100);
             go();
         }, false);
         ac.addEventListener("error", function () {

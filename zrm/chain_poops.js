@@ -61,6 +61,10 @@ function mark(tag, detail) {
 
 function trace(tag, detail) { if (VERBOSE) mark(tag, detail); else post(tag, detail); }
 function state(t, c) {
+    if (window.LudoraZrmUI && window.LudoraZrmUI.state) {
+        window.LudoraZrmUI.state(t, c);
+        return;
+    }
     const localized = window.LudoraI18n && window.LudoraI18n.t;
     if (localized && /loading the payload|payload\.\.\.|loading poops chain/i.test(String(t))) {
         t = localized("payload.loading");
