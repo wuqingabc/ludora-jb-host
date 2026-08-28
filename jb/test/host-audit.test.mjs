@@ -26,6 +26,9 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
     assert.match(cacheHtml, /id=["']cache-progress["']/);
     assert.match(cacheHtml, /cache\.installing/);
   }
+  const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
+  assert.match(i18n, /installCacheProgress/);
+  assert.match(i18n, /ludora-cache-progress/);
 });
 
 test('the zrm browser chain includes every runtime asset and supported offset table', () => {
@@ -57,5 +60,14 @@ test('the zrm browser chain includes every runtime asset and supported offset ta
   const offsets = readFileSync(new URL('../../zrm/ps4_offsets.js', import.meta.url), 'utf8');
   for (const firmware of ['11.00', '11.50', '12.00', '12.50', '13.00']) {
     assert.match(offsets, new RegExp(`['"]${firmware}['"]`), firmware);
+  }
+});
+
+test('every offline-cache page uses the shared localized progress runtime', () => {
+  for (const file of collectHostPages()) {
+    const html = readFileSync(file, 'utf8');
+    if (!/manifest=["']/i.test(html)) continue;
+    assert.match(html, /i18n\.js/i, file);
+    assert.doesNotMatch(html, /Starting Cache Installation|Installing Offline Cache/i, file);
   }
 });

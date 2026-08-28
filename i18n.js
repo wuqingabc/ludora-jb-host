@@ -101,6 +101,45 @@
     if (document.title) document.title = document.title.replace(/\s+by\s+Ludora/gi, ' · Ludora');
   }
 
+  function installCacheProgress() {
+    if (!window.applicationCache || !document.documentElement.hasAttribute('manifest')) return;
+    var progress = 0;
+    function bar() {
+      var node = document.getElementById('ludora-cache-progress');
+      if (node) return node;
+      var anchor = document.getElementById('msgs') || document.body.firstElementChild;
+      if (!anchor || !anchor.parentNode) return null;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'cache-progress';
+      wrapper.setAttribute('aria-label', translate('cache.installing', { progress: progress }));
+      node = document.createElement('span');
+      node.id = 'ludora-cache-progress';
+      wrapper.appendChild(node);
+      anchor.parentNode.insertBefore(wrapper, anchor.nextSibling);
+      return node;
+    }
+    function update(value) {
+      progress = Math.max(0, Math.min(100, Number(value) || 0));
+      var node = bar();
+      if (node) node.style.width = progress + '%';
+      var message = document.getElementById('msgs');
+      if (message && progress < 100) message.innerHTML = translate('cache.installing', { progress: Math.round(progress) });
+    }
+    function complete() {
+      var node = bar();
+      if (node) node.style.width = '100%';
+    }
+    window.applicationCache.addEventListener('checking', function () { update(0); }, false);
+    window.applicationCache.addEventListener('downloading', function () { update(0); }, false);
+    window.applicationCache.addEventListener('progress', function (event) {
+      update(event && event.total ? (event.loaded / event.total) * 100 : 0);
+    }, false);
+    window.applicationCache.addEventListener('cached', complete, false);
+    window.applicationCache.addEventListener('updateready', complete, false);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { update(progress); });
+    else update(progress);
+  }
+
   chooseLocale();
   window.LudoraI18n = {
     t: translate,
@@ -123,4 +162,5 @@
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { apply(document); });
   else apply(document);
+  installCacheProgress();
 }(window, document));
