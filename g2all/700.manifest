@@ -1,12 +1,9 @@
 CACHE MANIFEST
-# Ludora UI cache revision 2026-08-28-progress-v6
+# Ludora UI cache revision 2026-08-28-progress-v7
 
 CACHE: 
 ../img.jpg
 ../style.css
-../pkg-stage.js
-../ludora-web-pkg-stage.elf
-../goldhen-config-stage.elf
 goldhen_2.4b18.10.bin
 index.html
 700/alert.js
