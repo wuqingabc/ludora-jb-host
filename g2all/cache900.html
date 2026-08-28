@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html manifest="900.manifest?rev=9" data-cache-total="30">
+<html manifest="900.manifest" data-cache-total="31">
 <head>
 <meta name="ludora-host" content="1">
 <script src="../i18n/zh-CN.js"></script>
 <script src="../i18n/zh-TW.js"></script>
 <script src="../i18n/en-US.js"></script>
 <script src="../i18n.js"></script>
+<script src="../pkg-stage.js"></script>
 <title>Ludora · PS4 Browser Cache</title>
 <link rel="stylesheet" href="../style.css">
 </head>
@@ -23,6 +24,7 @@ window.applicationCache.onerror=function(e){window.msgs.innerHTML=LudoraI18n.t('
 <hr>
 <br>
 <h1 id=msgs data-i18n="cache.installingUnknown" style="font-size: 30px;margin-top: 77px;margin-bottom: 120px;">正在安装离线缓存…</h1>
+<p id="pkg-stage-status" aria-live="polite" data-i18n="pkgStage.idle">鲁哆啦安装阶段待命</p>
 <div class="cache-progress" aria-hidden="true"><span id="cache-progress"></span></div>
 </body>
 </html>

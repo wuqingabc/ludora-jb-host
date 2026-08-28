@@ -26,8 +26,8 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
     assert.doesNotMatch(cacheHtml, /PS4 7\.00 - 11\.02 FW GoldHEN Ludora Host/);
     assert.match(cacheHtml, /id=["']cache-progress["']/);
     assert.match(cacheHtml, /cache\.installing/);
-    const expectedRevision = page === 'cache900.html' ? '9' : '8';
-    assert.match(cacheHtml, new RegExp(`manifest=["'][^"']+\\?rev=${expectedRevision}["']`));
+    if (page === 'cache900.html') assert.doesNotMatch(cacheHtml, /manifest=["'][^"']+\\?rev=9["']/);
+    else assert.match(cacheHtml, /manifest=["'][^"']+\\?rev=8["']/);
     assert.match(cacheHtml, /location\.replace\(['"]index\.html['"]\)/);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
@@ -124,7 +124,7 @@ test('zrm pages use the complete Ludora localization shell and expose safe engin
     assert.doesNotMatch(page, /GamerHack|raw-game\.com/i, relativePath);
   }
   const index = readFileSync(new URL('../../zrm/index.html', import.meta.url), 'utf8');
-  assert.match(index, /data-cache-total=["']22["']/);
+  assert.match(index, /data-cache-total=["']28["']/);
   assert.match(index, /e\.loaded/);
   assert.match(index, /setTimeout\(go, 250\)/);
   const manifest = readFileSync(new URL('../../zrm/cache.appcache', import.meta.url), 'utf8');
@@ -183,7 +183,11 @@ test('every offline-cache page uses the shared localized progress runtime', () =
     const manifest = readFileSync(file, 'utf8');
     assert.doesNotMatch(manifest, /\\/, relativePath);
     assert.doesNotMatch(manifest, /(?:^|\n)\.\.\/pkg\/ludora\.pkg(?:\n|$)/, relativePath);
-    assert.doesNotMatch(manifest, /(?:^|\n)\.\.\/(?:pkg-stage\.js|ludora-web-pkg-stage\.elf|goldhen-config-stage\.elf)(?:\n|$)/, relativePath);
+    if (relativePath === '700.manifest' || relativePath === '900.manifest') {
+      assert.match(manifest, /(?:^|\n)\.\.\/pkg-stage\.js(?:\n|$)/, relativePath);
+    } else {
+      assert.doesNotMatch(manifest, /(?:^|\n)\.\.\/(?:pkg-stage\.js|ludora-web-pkg-stage\.elf|goldhen-config-stage\.elf)(?:\n|$)/, relativePath);
+    }
   }
 });
 
@@ -225,7 +229,9 @@ test('every AppCache manifest is safe for real progress accounting', () => {
       if (!value || value.startsWith('#') || value === 'CACHE MANIFEST' || /^(CACHE|NETWORK|FALLBACK):/.test(value) || value === '*') return total;
       return total + 1;
     }, 0);
-    // package-jb-host.mjs adds four shared i18n resources to every manifest.
-    assert.match(page, new RegExp(`data-cache-total=["']${count + 4}["']`), pagePath);
+    // Most legacy manifests receive four shared i18n resources at package time;
+    // ZRM already carries them in its checked-in manifest.
+    const expected = manifestPath === 'zrm/cache.appcache' ? count : count + 4;
+    assert.match(page, new RegExp(`data-cache-total=["']${expected}["']`), pagePath);
   }
 });

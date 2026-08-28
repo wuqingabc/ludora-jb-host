@@ -1866,10 +1866,9 @@ function runPayload(path, onLoaded) {
 
 kexploit().then(() => {
 	setTimeout(() => {
-		runPayload("../goldhen-config-stage.elf", function () {
-			runPayload("./goldhen_2.4b18.10.bin", function () {
-				if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			});
+		runPayload("./goldhen_2.4b18.10.bin", function () {
+			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
+			else msgs.innerHTML = LudoraI18n.t("pkgStage.unavailable");
 		});
 		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
 	},500);

@@ -12,6 +12,8 @@
 
   function show(key, fallback, values, progress) {
     if (global.msgs) global.msgs.innerHTML = text(key, fallback, values);
+    var status = document.getElementById("pkg-stage-status");
+    if (status) status.innerHTML = text(key, fallback, values);
     var bar = document.getElementById("cache-progress");
     if (bar && typeof progress === "number") {
       bar.style.width = progress + "%";
@@ -32,7 +34,7 @@
       if (event.lengthComputable) show("pkgStage.transferring", "Transferring Ludora package: {progress}%", { progress: Math.round(event.loaded / event.total * 100) }, Math.round(event.loaded / event.total * 100));
     };
     req.onload = function () {
-      if (req.status >= 200 && req.status < 300) show("pkgStage.starting", "Starting Ludora...");
+      if (req.status >= 200 && req.status < 300) show("pkgStage.complete", "Ludora package sent; finishing installation...");
       else fail();
     };
     req.onerror = fail;
@@ -58,7 +60,7 @@
 
   function sendReceiver() {
     var req = new XMLHttpRequest();
-    req.open("POST", "/jb/host/payload/ludora-web-pkg-stage.elf", true);
+    req.open("POST", ELF_URL, true);
     req.onload = function () {
       if (req.status < 200 || req.status >= 300) return fail();
       show("pkgStage.receiver", "Preparing Ludora package receiver...");
