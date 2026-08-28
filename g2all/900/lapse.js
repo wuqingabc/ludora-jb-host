@@ -1805,7 +1805,6 @@ function runPayload(PLfile, onLoaded) {
   var req = new XMLHttpRequest();
   req.responseType = "arraybuffer";
   req.open('GET', PLfile);
-  req.send();
 
   req.onreadystatechange = function () {
     if (req.readyState == 4) {
@@ -1826,6 +1825,7 @@ function runPayload(PLfile, onLoaded) {
       }
     }
   };
+  req.send();
 }
 
 kexploit().then((alreadyLoaded) => {
