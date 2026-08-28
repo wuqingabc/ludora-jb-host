@@ -26,7 +26,7 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
     assert.doesNotMatch(cacheHtml, /PS4 7\.00 - 11\.02 FW GoldHEN Ludora Host/);
     assert.match(cacheHtml, /id=["']cache-progress["']/);
     assert.match(cacheHtml, /cache\.installing/);
-    assert.match(cacheHtml, /manifest=["'][^"']+\?rev=7["']/);
+    assert.match(cacheHtml, /manifest=["'][^"']+\?rev=8["']/);
     assert.match(cacheHtml, /location\.replace\(['"]index\.html['"]\)/);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
@@ -138,7 +138,7 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
     if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
-      assert.match(manifest, /progress-v7/, relativePath);
+      assert.match(manifest, /progress-v8/, relativePath);
     } else {
       assert.match(manifest, /progress-v5/, relativePath);
     }
