@@ -33,11 +33,11 @@ if (!isPS4) {
 } else {
     if (window.applicationCache.status == '0') {
         if (fwNum >= 7.00 && fwNum <= 8.52) {
-            window.location.replace("cache700.html?rev=8");
+            window.location.replace("cache700.html");
         } else if (fwNum >= 9.00 && fwNum <= 9.60) {
-            window.location.replace("cache900.html?rev=9");
+            window.location.replace("cache900.html");
         } else if (fwNum >= 10.00 && fwNum <= 11.02) {
-            window.location.replace("cachecss.html?rev=8");
+            window.location.replace("cachecss.html");
         } else {
             document.addEventListener("DOMContentLoaded", () => {
                 msgs.innerHTML = window.LudoraI18n
