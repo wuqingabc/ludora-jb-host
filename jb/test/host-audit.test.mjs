@@ -61,12 +61,12 @@ test('g2all UAF retries clean up failed attempts before retrying', () => {
   }
 });
 
-test('stale exploit markers cannot suppress the post-GoldHEN handoff', () => {
+test('g2all preserves the upstream exploit-loaded guard', () => {
   for (const relativePath of ['g2all/700/lapse.js', 'g2all/900/lapse.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
-    assert.doesNotMatch(source, /return new Promise\(\(\) => \{\}\)/, relativePath);
-    assert.match(source, /LudoraPkgStage\.start\(\)/, relativePath);
-    assert.match(source, /alreadyLoaded[\s\S]*goldhen-config-stage\.elf[\s\S]*goldhen_2\.4b18\.10\.bin[\s\S]*LudoraPkgStage\.start/, relativePath);
+    assert.match(source, /localStorage\.ExploitLoaded === ["']yes["']/, relativePath);
+    assert.match(source, /sessionStorage\.ExploitLoaded != ["']yes["']/, relativePath);
+    assert.match(source, /return new Promise\(\(\) => \{\}\)/, relativePath);
   }
 });
 

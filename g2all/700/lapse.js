@@ -1693,15 +1693,16 @@ export async function kexploit() {
   await init();
   const _init_t2 = performance.now();
 
-  let alreadyLoaded = false;
   try {
     chain.sys('setuid', 0);
-    alreadyLoaded = true;
   } catch (e) {
     localStorage.ExploitLoaded = "no";
   }
 
-  if (alreadyLoaded) return true;
+  if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
+    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
+    return new Promise(() => {});
+  }
 
   const current_core = get_current_core();
   const current_rtprio = get_current_rtprio();
