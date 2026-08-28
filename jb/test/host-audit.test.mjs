@@ -90,7 +90,7 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     const manifest = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
-    assert.match(manifest, /progress-v4/, relativePath);
+    assert.match(manifest, /progress-v5/, relativePath);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
   assert.match(i18n, /var section = 'CACHE'/);
