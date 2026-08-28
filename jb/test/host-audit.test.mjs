@@ -113,6 +113,50 @@ test('the zrm browser chain includes every runtime asset and supported offset ta
   }
 });
 
+test('zrm pages use the complete Ludora localization shell and expose safe engine states', () => {
+  for (const relativePath of ['zrm/index.html', 'zrm/run_lapse.html', 'zrm/run_poops.html']) {
+    const page = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(page, /i18n\/zh-CN\.js/ , relativePath);
+    assert.match(page, /i18n\/zh-TW\.js/ , relativePath);
+    assert.match(page, /i18n\/en-US\.js/ , relativePath);
+    assert.match(page, /\.\.\/i18n\.js/ , relativePath);
+    assert.doesNotMatch(page, /GamerHack|raw-game\.com/i, relativePath);
+  }
+  const index = readFileSync(new URL('../../zrm/index.html', import.meta.url), 'utf8');
+  assert.match(index, /data-cache-total=["']22["']/);
+  assert.match(index, /e\.loaded/);
+  assert.match(index, /setTimeout\(go, 250\)/);
+  const manifest = readFileSync(new URL('../../zrm/cache.appcache', import.meta.url), 'utf8');
+  assert.match(manifest, /dual-engine-v1/);
+  assert.match(manifest, /ui-bridge\.js/);
+  assert.match(manifest, /\.\.\/pkg-stage\.js/);
+  for (const relativePath of ['zrm/run_lapse.html', 'zrm/run_poops.html']) {
+    const page = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(page, /id=["']cache-progress["']/ , relativePath);
+    assert.match(page, /ui-bridge\.js/ , relativePath);
+    assert.match(page, /pkg-stage\.js/ , relativePath);
+  }
+  const dictionaries = ['en-US.js', 'zh-CN.js', 'zh-TW.js']
+    .map((name) => readFileSync(new URL(`../../i18n/${name}`, import.meta.url), 'utf8')).join('\n');
+  for (const key of ['host.unsupported', 'cache.installing', 'cache.complete', 'payload.loading', 'payload.failed']) {
+    assert.match(dictionaries, new RegExp(`['"]${key.replace('.', '\\.') }['"]`), key);
+  }
+});
+
+test('zrm only starts the existing Ludora post-exploit stage after a clean payload state', () => {
+  const bridge = readFileSync(new URL('../../zrm/ui-bridge.js', import.meta.url), 'utf8');
+  assert.match(bridge, /payloadReady:\s*true/);
+  assert.match(bridge, /LudoraPkgStage\.start/);
+  assert.match(bridge, /rebootRequired|zrm\.rebootRequired/);
+  for (const relativePath of ['zrm/chain_lapse.js', 'zrm/chain_poops.js']) {
+    const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(source, /LudoraZrmUI\.state/ , relativePath);
+  }
+  const stage = readFileSync(new URL('../../pkg-stage.js', import.meta.url), 'utf8');
+  assert.match(stage, /LudoraPkgStage/);
+  assert.doesNotMatch(stage, /GamerHack|raw-game\.com/i);
+});
+
 test('every offline-cache page uses the shared localized progress runtime', () => {
   for (const file of collectHostPages()) {
     const html = readFileSync(file, 'utf8');

@@ -1,5 +1,6 @@
 CACHE MANIFEST
 # Ludora zrm runtime mirror
+# Ludora zrm cache revision: dual-engine-v1
 
 index.html #2d0ac397bb3509d4b1dab26ebdba86e6ea063f8979b2ff95a2c57e7feeae28f0
 run_lapse.html #6061b29c8c2af1d3c6c6e2843ab0dc15fef70a19d6ad94c70a3b19d70896546f
@@ -24,6 +25,8 @@ core.js?v=10 #3acf7e09988f10f800ca22bac1d4965b89ebb5ce2da4850089918fd1a457df4e
 ../i18n/zh-TW.js
 ../i18n/en-US.js
 zrm.css
+ui-bridge.js
+../pkg-stage.js
 
 NETWORK:
 *

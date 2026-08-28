@@ -16,10 +16,12 @@ for (const page of pages) {
   const html = readFileSync(join(root, page), 'utf8');
   for (const [, ref] of html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)) {
     if (/^(?:https?:|data:)/i.test(ref)) continue;
-    if (!existsSync(join(root, page, '..', ref))) failures.push(`${page}: missing script ${ref}`);
+    const localRef = ref.split(/[?#]/, 1)[0];
+    if (!existsSync(join(root, page, '..', localRef))) failures.push(`${page}: missing script ${ref}`);
   }
   const manifest = html.match(/manifest=["']([^"']+)["']/i)?.[1];
-  if (manifest && !existsSync(join(root, page, '..', manifest))) failures.push(`${page}: missing manifest ${manifest}`);
+  const localManifest = manifest?.split(/[?#]/, 1)[0];
+  if (localManifest && !existsSync(join(root, page, '..', localManifest))) failures.push(`${page}: missing manifest ${manifest}`);
 }
 if (failures.length) {
   console.error(failures.join('\n'));
