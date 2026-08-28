@@ -104,9 +104,14 @@
   function installCacheProgress() {
     if (!window.applicationCache || !document.documentElement.hasAttribute('manifest')) return;
     var progress = 0;
+    var hasTotal = false;
     function bar() {
       var node = document.getElementById('ludora-cache-progress');
       if (node) return node;
+      node = document.getElementById('cacheBar');
+      if (node) return node;
+      var existing = document.querySelector('.cache-progress > span');
+      if (existing) return existing;
       var anchor = document.getElementById('msgs') || document.body.firstElementChild;
       if (!anchor || !anchor.parentNode) return null;
       var wrapper = document.createElement('div');
@@ -118,26 +123,32 @@
       anchor.parentNode.insertBefore(wrapper, anchor.nextSibling);
       return node;
     }
-    function update(value) {
+    function update(value, totalKnown) {
+      hasTotal = totalKnown;
       progress = Math.max(0, Math.min(100, Number(value) || 0));
       var node = bar();
-      if (node) node.style.width = progress + '%';
+      var wrapper = node && (node.id === 'cacheBar' ? node : node.parentNode);
+      if (wrapper && wrapper.classList) wrapper.classList.toggle('indeterminate', !hasTotal);
+      if (node && hasTotal) node.style.width = progress + '%';
       var message = document.getElementById('msgs');
-      if (message && progress < 100) message.innerHTML = translate('cache.installing', { progress: Math.round(progress) });
+      if (message && progress < 100) message.innerHTML = hasTotal
+        ? translate('cache.installing', { progress: Math.round(progress) })
+        : translate('cache.installingUnknown');
     }
     function complete() {
       var node = bar();
-      if (node) node.style.width = '100%';
+      if (node) { node.style.width = '100%'; if (node.parentNode.classList) node.parentNode.classList.remove('indeterminate'); }
+      hasTotal = true;
     }
-    window.applicationCache.addEventListener('checking', function () { update(0); }, false);
-    window.applicationCache.addEventListener('downloading', function () { update(0); }, false);
+    window.applicationCache.addEventListener('checking', function () { update(0, false); }, false);
+    window.applicationCache.addEventListener('downloading', function () { update(0, false); }, false);
     window.applicationCache.addEventListener('progress', function (event) {
-      update(event && event.total ? (event.loaded / event.total) * 100 : 0);
+      update(event && event.total ? (event.loaded / event.total) * 100 : 0, !!(event && event.total));
     }, false);
     window.applicationCache.addEventListener('cached', complete, false);
     window.applicationCache.addEventListener('updateready', complete, false);
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { update(progress); });
-    else update(progress);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { update(progress, hasTotal); });
+    else update(progress, hasTotal);
   }
 
   chooseLocale();

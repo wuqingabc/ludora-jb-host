@@ -19,6 +19,7 @@ window.LudoraI18nDictionaries['en-US'] = {
   'actions.refresh': 'Refresh page',
   'actions.return': 'Return',
   'cache.installing': 'Installing offline cache: {progress}%',
+  'cache.installingUnknown': 'Installing offline cache…',
   'cache.complete': 'Offline cache installed',
   'cache.reopen': 'Close and reopen the browser',
   'cache.error': 'Offline cache installation failed. Clear browser data and try again.',

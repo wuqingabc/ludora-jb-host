@@ -19,6 +19,7 @@ window.LudoraI18nDictionaries['zh-CN'] = {
   'actions.refresh': '刷新页面',
   'actions.return': '返回',
   'cache.installing': '正在安装离线缓存：{progress}%',
+  'cache.installingUnknown': '正在安装离线缓存…',
   'cache.complete': '离线缓存安装完成',
   'cache.reopen': '请关闭并重新打开浏览器',
   'cache.error': '离线缓存安装失败，请清理浏览器数据后重试',

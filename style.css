@@ -39,5 +39,8 @@ body > h1:last-of-type { margin-top: 24px !important; padding: 18px 0; color: va
 #log_area h1 { border: 0; background: transparent; color: var(--ld-gold); font-size: 18px !important; }
 .cache-progress { width: min(720px, 88%); height: 14px; margin: 20px auto 0; overflow: hidden; border: 1px solid rgba(243,185,66,.35); border-radius: 999px; background: rgba(10,13,28,.72); }
 .cache-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f3b942, #ffd469); transition: width .15s ease; }
+.cache-progress.indeterminate > span { width: 38%; animation: ludora-cache-progress 1.15s ease-in-out infinite; }
+.cache-bar.indeterminate { width: 38% !important; animation: ludora-cache-progress 1.15s ease-in-out infinite; }
+@keyframes ludora-cache-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(290%); } }
 select { min-height: 38px; margin: 8px; border: 1px solid var(--ld-line); border-radius: 7px; background: var(--ld-panel-strong); color: var(--ld-text); }
 @media (max-width: 720px) { body { width: calc(100% - 24px); } h1 { padding: 18px 14px; font-size: 20px; } #menu, #mods, #crypto, #tools, #lnx, #progress { padding: 14px 10px; } .btn, button { width: min(100%, 360px); margin: 6px auto; } }

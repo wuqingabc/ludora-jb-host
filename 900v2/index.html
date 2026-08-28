@@ -15,7 +15,7 @@
 </head>
 <body>
 <script>
-function DLProgress(e){Percent=(Math.round(e.loaded / e.total * 100));for (let i=0; i<57; i++){document.getElementsByTagName("button")[i].removeAttribute("onmouseover");}for (let i=0; i<57; i++){document.getElementsByTagName("button")[i].removeAttribute("onmouseout");}window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});}
+function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});}else{window.msgs.innerHTML=LudoraI18n.t('cache.installingUnknown');}for (let i=0; i<57; i++){if(document.getElementsByTagName("button")[i])document.getElementsByTagName("button")[i].removeAttribute("onmouseover");}for (let i=0; i<57; i++){if(document.getElementsByTagName("button")[i])document.getElementsByTagName("button")[i].removeAttribute("onmouseout");}}
 function DisplayCacheProgress(){setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.complete');},1000);setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.reopen');},3000);}if(window.applicationCache){if(window.applicationCache){window.applicationCache.addEventListener("progress",DLProgress,false);window.applicationCache.oncached=function(e){DisplayCacheProgress();};window.applicationCache.onupdateready=function(e){DisplayCacheProgress();};}}
 </script>
 <h1 id="msgs">PS4 9.00 FW Host v2.8 · Ludora</h1>

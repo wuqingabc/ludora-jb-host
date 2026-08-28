@@ -29,6 +29,8 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
   assert.match(i18n, /installCacheProgress/);
   assert.match(i18n, /ludora-cache-progress/);
+  assert.match(i18n, /cache\.installingUnknown/);
+  assert.match(i18n, /indeterminate/);
 });
 
 test('the zrm browser chain includes every runtime asset and supported offset table', () => {

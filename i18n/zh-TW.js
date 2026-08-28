@@ -19,6 +19,7 @@ window.LudoraI18nDictionaries['zh-TW'] = {
   'actions.refresh': '重新整理頁面',
   'actions.return': '返回',
   'cache.installing': '正在安裝離線快取：{progress}%',
+  'cache.installingUnknown': '正在安裝離線快取…',
   'cache.complete': '離線快取安裝完成',
   'cache.reopen': '請關閉並重新開啟瀏覽器',
   'cache.error': '離線快取安裝失敗，請清除瀏覽器資料後重試',

@@ -12,7 +12,7 @@
 <body>
 <script>
 history.replaceState(null,null,'index.html');var histlength=history.length;history.go(-histlength);
-function DLProgress(e){Percent=e.total ? Math.round(e.loaded / e.total * 100) : 0;window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});document.getElementById('cache-progress').style.width=Percent+'%';}
+function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});document.getElementById('cache-progress').style.width=Percent+'%';document.getElementById('cache-progress').parentNode.classList.remove('indeterminate');}else{window.msgs.innerHTML=LudoraI18n.t('cache.installingUnknown');document.getElementById('cache-progress').style.width='38%';document.getElementById('cache-progress').parentNode.classList.add('indeterminate');}}
 function DisplayCacheProgress(){document.getElementById('cache-progress').style.width='100%';window.msgs.innerHTML=LudoraI18n.t('cache.complete');setTimeout(function(){window.msgs.innerHTML=LudoraI18n.t('cache.reopen');},1500);}
 window.applicationCache.addEventListener("progress",DLProgress,false);
 window.applicationCache.oncached=function(e){DisplayCacheProgress();};

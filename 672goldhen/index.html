@@ -12,7 +12,7 @@
 </head>
 <body onload="if(localStorage.cached672=='yes')setTimeout(load_goldhen, 50);">
 <script>
-window.applicationCache.onprogress=function(a){document.getElementById("msgs").innerHTML=LudoraI18n.t('cache.installing',{progress:a.total?Math.round(100*(a.loaded/a.total)):0})};
+window.applicationCache.onprogress=function(a){document.getElementById("msgs").innerHTML=a&&a.total?LudoraI18n.t('cache.installing',{progress:Math.round(100*(a.loaded/a.total))}):LudoraI18n.t('cache.installingUnknown')};
 window.applicationCache.oncached=function(){setTimeout(function(){document.getElementById("msgs").innerHTML="'+LudoraI18n.t('cache.complete')+'";},1500);setTimeout(function(){document.getElementById("msgs").innerHTML="'+LudoraI18n.t('cache.reopen')+'"; },3500);localStorage.cached672="yes";};
 window.applicationCache.onnoupdate=function(){localStorage.cached672="yes";};
 window.applicationCache.onerror=function(){localStorage.cached672="yes";};

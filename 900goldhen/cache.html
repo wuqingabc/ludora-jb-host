@@ -20,7 +20,7 @@ function setCacheProgress(progress){
 }
 function DLProgress(e){
   if(e && e.total>0) setCacheProgress((e.loaded/e.total)*100);
-  else setCacheProgress(0);
+  else { var bar=document.getElementById('cacheBar'); if(bar) bar.className='cache-bar indeterminate'; if(document.getElementById('msgs')) document.getElementById('msgs').innerHTML=LudoraI18n.t('cache.installingUnknown'); }
 }
 function DisplayCacheProgress(){
   var bar=document.getElementById('cacheBar');var message=document.getElementById('msgs');
