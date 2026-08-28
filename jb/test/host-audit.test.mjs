@@ -242,9 +242,9 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
     if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
-      assert.match(manifest, /progress-v8/, relativePath);
+      assert.match(manifest, /progress-v9/, relativePath);
     } else {
-      assert.match(manifest, /progress-v5/, relativePath);
+      assert.match(manifest, /progress-v9/, relativePath);
     }
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
