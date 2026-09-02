@@ -7,6 +7,9 @@
 <script src="../i18n/en-US.js"></script>
 <script src="../i18n.js"></script>
 <script src="../pkg-stage.js"></script>
+<script src="../config-stage.js"></script>
+<script src="../binloader-probe.js"></script>
+<script src="../autorun-stage.js"></script>
 <title>Ludora · PS4 Browser Host</title>
 <link rel="stylesheet" href="../style.css">
 </head>
@@ -31,11 +34,14 @@ if (!isPS4) {
             : "Open in a PS4 browser";
     });
 } else {
+    var diagnosticQuery = new URLSearchParams(window.location.search).get("diagnose") === "pre"
+        ? "?diagnose=pre"
+        : "";
     if (window.applicationCache.status == '0') {
         if (fwNum >= 7.00 && fwNum <= 8.52) {
             window.location.replace("cache700.html?rev=8");
         } else if (fwNum >= 9.00 && fwNum <= 9.60) {
-            window.location.replace("cache900.html");
+            window.location.replace("cache900.html" + diagnosticQuery);
         } else if (fwNum >= 10.00 && fwNum <= 11.02) {
             window.location.replace("cachecss.html?rev=8");
         } else {
