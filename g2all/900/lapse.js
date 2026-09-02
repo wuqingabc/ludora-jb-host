@@ -1873,10 +1873,11 @@ function preGoldhenText(key, fallback, values) {
   return window.LudoraI18n ? LudoraI18n.t(key, values || {}) : fallback;
 }
 
-function preGoldhenTrace(traceId, firmware, stage, code, result, detail) {
+  function preGoldhenTrace(traceId, firmware, stage, code, result, detail) {
   try {
     var request = new XMLHttpRequest();
     request.open('POST', '/jb/diag', true);
+    request.setRequestHeader('X-Ludora-Diagnostic', 'pre-goldhen');
     request.setRequestHeader('Content-Type', 'application/json');
     request.send(JSON.stringify({ traceId: traceId, firmware: firmware, stage: stage, code: code, result: result, detail: detail }));
   } catch (error) {
@@ -1948,6 +1949,7 @@ function runPreGoldhenDiagnostic() {
   var request = new XMLHttpRequest();
   request.responseType = 'arraybuffer';
   request.open('GET', './ludora-pre-goldhen-probe.bin', true);
+  request.setRequestHeader('X-Ludora-Diagnostic', 'pre-goldhen');
   request.onreadystatechange = function () {
     if (request.readyState !== 4 || settled) return;
     if (request.status !== 200 || !request.response) {
@@ -2019,7 +2021,15 @@ kexploit().then(() => {
     }
     startGoldhen();
   }, 500);
-}).catch(() => {
-  msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t('payload.failed') : 'Load failed. Restart your console and try again.';
+}).catch((error) => {
+  var diagnostic = new URLSearchParams(window.location.search).get('diagnose') === 'pre';
+  if (diagnostic) {
+    var traceId = 'pg-kex-' + Date.now().toString(16);
+    var detail = error && error.message ? error.message : String(error || 'unknown error');
+    preGoldhenTrace(traceId, '9.00', 'kexploit-failed', 0, -1, detail);
+    msgs.textContent = preGoldhenText('preGoldhen.kexploitFailed', 'JB stage failed before the diagnostic payload started.\nTrace: {trace}\nDetail: {detail}', { trace: traceId, detail: detail });
+  } else {
+    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t('payload.failed') : 'Load failed. Restart your console and try again.';
+  }
   msgs.style.color = 'yellow';
 });

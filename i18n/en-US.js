@@ -62,6 +62,7 @@ window.LudoraI18nDictionaries['en-US'] = {
   'preGoldhen.dispatchFailedDetailed': 'pthread_create failed before the payload could start.',
   'preGoldhen.dispatchError': 'Diagnostic dispatch failed: {detail}.',
   'preGoldhen.networkFailed': 'Payload download failed: network error.',
+  'preGoldhen.kexploitFailed': 'JB stage failed before the diagnostic payload started.\nTrace: {trace}\nDetail: {detail}',
   'preGoldhen.invalidPayload': 'The diagnostic payload is not an executable raw binary.',
   'preGoldhen.stage.dispatch': 'dispatch',
   'preGoldhen.stage.entry': 'entry acknowledgement',

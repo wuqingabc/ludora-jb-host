@@ -62,6 +62,7 @@ window.LudoraI18nDictionaries['zh-CN'] = {
   'preGoldhen.dispatchFailedDetailed': 'pthread_create 在 Payload 启动前失败。',
   'preGoldhen.dispatchError': '诊断派发失败：{detail}。',
   'preGoldhen.networkFailed': 'Payload 下载失败：网络错误。',
+  'preGoldhen.kexploitFailed': '诊断 Payload 启动前的 JB 阶段失败。\n追踪编号：{trace}\n详情：{detail}',
   'preGoldhen.invalidPayload': '诊断 Payload 不是可执行的原始二进制。',
   'preGoldhen.stage.dispatch': '派发',
   'preGoldhen.stage.entry': '入口确认',
