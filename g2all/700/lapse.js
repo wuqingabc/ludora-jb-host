@@ -1700,8 +1700,11 @@ export async function kexploit() {
   }
 
   if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
-    return new Promise(() => {});
+    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "A previous kernel state was detected. Verifying the GoldHEN preflight payload…";
+    // The localStorage flag only says that the kernel stage completed before;
+    // it does not prove that GoldHEN is currently running. Let the caller run
+    // the fresh marker probe and the proven GoldHEN payload stage.
+    return;
   }
 
   const current_core = get_current_core();
@@ -1806,7 +1809,14 @@ function array_from_address(addr, size) {
   return og_array;
 }
 
-function runPayload(path, onLoaded) {
+function runPayload(path, onLoaded, onError) {
+  var settled = false;
+  function fail(reason) {
+    if (settled) return;
+    settled = true;
+    log(`runPayload failed for ${path}: ${reason}`);
+    if (onError) setTimeout(function () { onError(reason); }, 0);
+  }
   // Why xhr instead of fetch? More universal support, more control, better errors, etc.
   log(`loading ${path}`);
   const xhr = new XMLHttpRequest();
@@ -1818,6 +1828,12 @@ function runPayload(path, onLoaded) {
       // If response code is "OK"
       if (xhr.status === 200) {
         try {
+          var header = new Uint8Array(xhr.response, 0, Math.min(4, xhr.response.byteLength));
+          if (header.length === 4 && header[0] === 0x7f && header[1] === 0x45 && header[2] === 0x4c && header[3] === 0x46) {
+            log('runPayload refused ELF input; this loader accepts raw shellcode only');
+            fail('ELF input');
+            return;
+          }
           // Allocate a buffer with length rounded up to the next multiple of 4 bytes for Uint32 alignment
           const padding_length = (4 - (xhr.response.byteLength % 4)) % 4;
           const padded_buffer = new Uint8Array(xhr.response.byteLength + padding_length);
@@ -1844,6 +1860,7 @@ function runPayload(path, onLoaded) {
 
           // Call the payload
           chain.call_void(payload_buffer);
+          settled = true;
           if (onLoaded) setTimeout(onLoaded, 1200);
 
           // Unmap the memory used for the payload
@@ -1851,18 +1868,20 @@ function runPayload(path, onLoaded) {
         } catch (e) {
           // Caught error while trying to execute payload
           log(`error in runPayload: ${e.message}`);
+          fail(e && e.message ? e.message : String(e));
         }
       } else {
         // Some other HTTP response code (eg. 404)
-        log(`error retrieving payload, ${xhr.status}`);
+        fail(`HTTP ${xhr.status}`);
       }
     }
   };
   xhr.onerror = function () {
-    log("network error");
+    fail("network error");
   };
   xhr.send();
 }
+window.LudoraRunPayload = runPayload;
 
 kexploit().then(() => {
 	setTimeout(() => {
@@ -1871,7 +1890,7 @@ kexploit().then(() => {
 			else msgs.innerHTML = LudoraI18n.t("pkgStage.unavailable");
 		});
 		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
-	},500);
+	}, 500);
 }).catch(() => {
     msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.failed") : "Load failed. Restart your console and try again.";
     msgs.style.color = "yellow";

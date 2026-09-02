@@ -51,6 +51,37 @@ test('g2all exploit failures are surfaced instead of becoming unhandled rejectio
   assert.match(psfree900, /maxRetries = 3/);
 });
 
+test('the 9.00 pre-GoldHEN diagnostic is observable and cannot gate the proven GoldHEN loader', () => {
+  const source = readFileSync(new URL('../../g2all/900/lapse.js', import.meta.url), 'utf8');
+  assert.match(source, /function runPreGoldhenDiagnostic\(/);
+  assert.match(source, /PRE_GOLDHEN_STATUS_OFFSET\s*=\s*0x1000/);
+  assert.match(source, /pthread_create/);
+  assert.match(source, /PRE_GOLDHEN_DIAG_TIMEOUT_MS/);
+  assert.match(source, /\/jb\/diag/);
+  assert.match(source, /new URLSearchParams\(window\.location\.search\)/);
+  assert.match(source, /params\.get\('diagnose'\) === 'pre'/);
+  assert.match(source, /runPayload\(["']\.\/goldhen_2\.4b18\.10\.bin/);
+  assert.doesNotMatch(source, /verifyProbeThenLoadGoldhen/);
+  assert.doesNotMatch(source, /runPayload\(["']\.\/ludora-notification\.bin/);
+
+  const status = readFileSync(new URL('../../payloads/pre-goldhen-probe/status.h', import.meta.url), 'utf8');
+  assert.match(status, /LUDORA_PRE_GOLDHEN_MAGIC/);
+  assert.match(status, /LUDORA_PRE_GOLDHEN_STAGE_ENTRY/);
+  assert.match(status, /LUDORA_PRE_GOLDHEN_STAGE_FILE_WRITE/);
+  assert.match(status, /LUDORA_PRE_GOLDHEN_STAGE_NOTIFY/);
+  assert.match(status, /LUDORA_PRE_GOLDHEN_STAGE_DONE/);
+
+  const payload = readFileSync(new URL('../../payloads/pre-goldhen-probe/main.c', import.meta.url), 'utf8');
+  assert.match(payload, /syscall4\(594/);
+  assert.match(payload, /syscall3\(591/);
+  assert.match(payload, /sceKernelSendNotificationRequest/);
+  assert.match(payload, /\/data\/\.ludora-pre-goldhen-probe-v2/);
+
+  const crt = readFileSync(new URL('../../payloads/pre-goldhen-probe/crt0.s', import.meta.url), 'utf8');
+  assert.match(crt, /\[rdi \+ 0x1000\]/);
+  assert.match(crt, /LUDORA_PRE_GOLDHEN_MAGIC/);
+});
+
 test('g2all UAF retries clean up failed blur attempts before retrying', () => {
   for (const relativePath of ['g2all/700/psfree.js', 'g2all/900/psfree.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
@@ -70,6 +101,12 @@ test('all g2all user-facing runtime messages use the shared i18n dictionary', ()
   for (const key of [
     'payload.timingFailed',
     'payload.alreadyLoaded',
+    'preGoldhen.resetExisting',
+    'preGoldhen.createFresh',
+    'preGoldhen.markerVerified',
+    'preGoldhen.diagnosticStatus',
+    'preGoldhen.entryNotObserved',
+    'preGoldhen.stage.notify',
     'payload.configuring',
     'payload.jailbreakFailed',
     'payload.unsupported',
@@ -89,6 +126,14 @@ test('all g2all user-facing runtime messages use the shared i18n dictionary', ()
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(source, /LudoraI18n\.t\("payload\.(alreadyLoaded|configuring|failed|loaded)"\)/, relativePath);
     assert.doesNotMatch(source, /msgs\.innerHTML\s*=\s*["']GoldHEN is Already Loaded|msgs\.innerHTML\s*=\s*["']Failed to Load/, relativePath);
+    if (relativePath === 'g2all/900/lapse.js') {
+      // This is part of the upstream exploit state machine: when its persistent
+      // kernel-state flag is set, it must not re-enter the exploit automatically.
+      // The optional diagnostic lives after a fresh successful kexploit only.
+      assert.match(source, /localStorage\.ExploitLoaded === "yes"[\s\S]*?return new Promise\(\(\) => \{\}\)/);
+    } else {
+      assert.doesNotMatch(source, /return new Promise\(\(\) => \{\}\)/, relativePath);
+    }
   }
 });
 
@@ -196,7 +241,7 @@ test('every offline-cache page uses the shared localized progress runtime', () =
     if (relativePath === '700.manifest' || relativePath === '900.manifest') {
       assert.match(manifest, /(?:^|\n)\.\.\/pkg-stage\.js(?:\n|$)/, relativePath);
     } else {
-      assert.doesNotMatch(manifest, /(?:^|\n)\.\.\/(?:pkg-stage\.js|ludora-web-pkg-stage\.elf|goldhen-config-stage\.elf)(?:\n|$)/, relativePath);
+      assert.doesNotMatch(manifest, /(?:^|\n)\.\.\/(?:autorun-stage\.js|config-stage\.js|binloader-probe\.js|pkg-stage\.js|ludora-web-pkg-stage\.elf|ludora-web-autorun-receiver\.elf|ludora_autorun\.elf|ludora-web-binloader-probe\.elf|goldhen-config-stage\.elf)(?:\n|$)/, relativePath);
     }
   }
 });
@@ -210,7 +255,7 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
     if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
-      assert.match(manifest, /progress-v8/, relativePath);
+      assert.match(manifest, /pre-goldhen-diagnostics-v17/, relativePath);
     } else {
       assert.match(manifest, /progress-v5/, relativePath);
     }
@@ -243,5 +288,21 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     // ZRM already carries them in its checked-in manifest.
     const expected = manifestPath === 'zrm/cache.appcache' ? count : count + 4;
     assert.match(page, new RegExp(`data-cache-total=["']${expected}["']`), pagePath);
+  }
+});
+
+test('the raw payload loaders keep rejecting ELF input', () => {
+  const probe = readFileSync(new URL('../../binloader-probe.js', import.meta.url), 'utf8');
+  assert.match(probe, /binloaderProbe/);
+  assert.match(probe, /return true/);
+  assert.match(probe, /LudoraRunNotificationProbe/);
+  assert.doesNotMatch(probe, /LudoraRunPayload\(/);
+
+  for (const relativePath of ['g2all/700/lapse.js', 'g2all/900/lapse.js']) {
+    const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    assert.match(source, /goldhen_2\.4b18\.10\.bin/ , relativePath);
+    assert.doesNotMatch(source, /LudoraBinloaderProbe\.start/ , relativePath);
+    assert.doesNotMatch(source, /ludora-web-binloader-probe\.elf/ , relativePath);
+    assert.match(source, /runPayload refused ELF input/, relativePath);
   }
 });

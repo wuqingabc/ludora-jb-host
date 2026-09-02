@@ -1798,7 +1798,14 @@ function array_from_address(addr, size) {
     return og_array;
 }
 
-function runPayload(PLfile, onLoaded) {
+function runPayload(PLfile, onLoaded, onError) {
+  var settled = false;
+  function fail(reason) {
+    if (settled) return;
+    settled = true;
+    log(`runPayload failed for ${PLfile}: ${reason}`);
+    if (onError) setTimeout(function () { onError(reason); }, 0);
+  }
   var loader_addr = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
   var tmpStubArray = array_from_address(loader_addr, 1);
   tmpStubArray[0] = 0x00C3E7FF;
@@ -1812,6 +1819,12 @@ function runPayload(PLfile, onLoaded) {
     if (req.readyState == 4) {
       if (req.status === 200 && req.response) {
         var PLD = req.response;
+        var header = new Uint8Array(PLD, 0, Math.min(4, PLD.byteLength));
+        if (header.length === 4 && header[0] === 0x7f && header[1] === 0x45 && header[2] === 0x4c && header[3] === 0x46) {
+          log('runPayload refused ELF input; this loader accepts raw shellcode only');
+          fail('ELF input');
+          return;
+        }
         var payload_buffer = chain.sysp('mmap', 0, PLD.byteLength * 4, 7, 0x1002, -1, 0);
         var pl = array_from_address(payload_buffer, PLD.byteLength * 4);
         var padding = new Uint8Array(4 - (req.response.byteLength % 4) % 4);
@@ -1823,21 +1836,190 @@ function runPayload(PLfile, onLoaded) {
         var pthread = malloc(0x10);
 
         call_nze('pthread_create', pthread, 0, loader_addr, payload_buffer);
+        settled = true;
         if (onLoaded) setTimeout(onLoaded, 1200);
+      } else {
+        fail(`HTTP ${req.status}`);
       }
     }
   };
+  req.onerror = function () { fail('network error'); };
+}
+window.LudoraRunPayload = runPayload;
+
+const PRE_GOLDHEN_STATUS_OFFSET = 0x1000;
+const PRE_GOLDHEN_STATUS_WORDS = 8;
+const PRE_GOLDHEN_DIAG_TIMEOUT_MS = 5000;
+const PRE_GOLDHEN_MAGIC = 0x4c445047;
+const PRE_GOLDHEN_STAGE_DONE = 0x7f;
+const PRE_GOLDHEN_STAGE_FAILED = 0x80;
+
+function preGoldhenStageSlug(stage) {
+  return ({
+    0: 'dispatch', 1: 'entry', 2: 'file-open', 3: 'file-write', 4: 'file-close',
+    5: 'module-load', 6: 'symbol-resolve', 7: 'notify', 0x7f: 'done', 0x80: 'failed',
+  })[stage] || ('unknown-' + stage);
+}
+
+function preGoldhenStageName(stage) {
+  var key = 'preGoldhen.stage.' + ({
+    0: 'dispatch', 1: 'entry', 2: 'fileOpen', 3: 'fileWrite', 4: 'fileClose',
+    5: 'moduleLoad', 6: 'symbolResolve', 7: 'notify', 0x7f: 'done', 0x80: 'failed',
+  })[stage];
+  return window.LudoraI18n && key !== 'preGoldhen.stage.undefined' ? LudoraI18n.t(key) : preGoldhenStageSlug(stage);
+}
+
+function preGoldhenText(key, fallback, values) {
+  return window.LudoraI18n ? LudoraI18n.t(key, values || {}) : fallback;
+}
+
+function preGoldhenTrace(traceId, firmware, stage, code, result, detail) {
+  try {
+    var request = new XMLHttpRequest();
+    request.open('POST', '/jb/diag', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.send(JSON.stringify({ traceId: traceId, firmware: firmware, stage: stage, code: code, result: result, detail: detail }));
+  } catch (error) {
+    log('pre-GoldHEN trace transport failed: ' + error);
+  }
+}
+
+function preGoldhenStatusText(traceId, status, extra) {
+  var stage = preGoldhenStageName(status.stage);
+  return preGoldhenText('preGoldhen.diagnosticStatus', 'Ludora pre-GoldHEN diagnostic\nTrace: {trace}\nStage: {stage} ({code})\nResult: {result}\nDetail: {detail0}, {detail1}', {
+    trace: traceId, stage: stage, code: status.stage, result: status.result, detail0: status.detail0, detail1: status.detail1,
+  }) + (extra ? '\n' + extra : '');
+}
+
+// This path deliberately does not call runPayload(). GoldHEN's loader remains
+// untouched; here we control the allocation and can observe a status page that
+// the raw payload writes before its C entry point.
+function runPreGoldhenDiagnostic() {
+  var traceId = 'pg-' + Date.now().toString(16) + '-' + Math.floor(Math.random() * 0xffff).toString(16);
+  var firmware = (navigator.userAgent.match(/PlayStation 4[ /]([\d.]+)/i) || [])[1] || '9.00';
+  var settled = false;
+  var interval = null;
+  var deadline = Date.now() + PRE_GOLDHEN_DIAG_TIMEOUT_MS;
+  var lastSequence = -1;
+  var statusView = null;
+
+  function finish(message, status) {
+    if (settled) return;
+    settled = true;
+    if (interval !== null) clearInterval(interval);
+    msgs.textContent = preGoldhenStatusText(traceId, status || { stage: 0, result: 0, detail0: 0, detail1: 0 }, message + '\n' + preGoldhenText('preGoldhen.goldhenNotStarted', 'GoldHEN was intentionally not started in diagnostic mode.'));
+    msgs.style.color = status && status.stage === PRE_GOLDHEN_STAGE_DONE ? '#9dff9d' : 'yellow';
+  }
+
+  function snapshot() {
+    return {
+      magic: statusView[0] >>> 0,
+      version: statusView[1] >>> 0,
+      stage: statusView[2] >>> 0,
+      result: statusView[3] | 0,
+      detail0: statusView[4] >>> 0,
+      detail1: statusView[5] >>> 0,
+      sequence: statusView[6] >>> 0,
+    };
+  }
+
+  function poll() {
+    var status = snapshot();
+    if (status.sequence !== lastSequence) {
+      lastSequence = status.sequence;
+      msgs.textContent = preGoldhenStatusText(traceId, status, preGoldhenText('preGoldhen.collecting', 'Collecting direct payload evidence…'));
+      preGoldhenTrace(traceId, firmware, preGoldhenStageSlug(status.stage), status.stage, status.result, 'detail=' + status.detail0 + ',' + status.detail1);
+    }
+    if (status.magic === PRE_GOLDHEN_MAGIC && (status.stage === PRE_GOLDHEN_STAGE_DONE || status.stage === PRE_GOLDHEN_STAGE_FAILED)) {
+      finish(status.stage === PRE_GOLDHEN_STAGE_DONE ? 'Probe completed successfully.' : 'Probe failed at ' + preGoldhenStageName(status.detail0) + '.', status);
+      return;
+    }
+    if (Date.now() >= deadline) {
+      var detail = status.magic === PRE_GOLDHEN_MAGIC
+        ? preGoldhenText('preGoldhen.timeoutAfterStage', 'Timed out after reaching {stage}.', { stage: preGoldhenStageName(status.stage) })
+        : preGoldhenText('preGoldhen.entryNotObserved', 'Thread was dispatched but the payload entry acknowledgement was not observed.');
+      preGoldhenTrace(traceId, firmware, 'timeout', status.stage, status.result, detail);
+      finish(detail, status);
+    }
+  }
+
+  msgs.textContent = preGoldhenText('preGoldhen.downloading', 'Ludora pre-GoldHEN diagnostic\nTrace: {trace}\nDownloading raw payload…', { trace: traceId });
+  preGoldhenTrace(traceId, firmware, 'download', 0, 0, 'diagnostic requested');
+  var request = new XMLHttpRequest();
+  request.responseType = 'arraybuffer';
+  request.open('GET', './ludora-pre-goldhen-probe.bin', true);
+  request.onreadystatechange = function () {
+    if (request.readyState !== 4 || settled) return;
+    if (request.status !== 200 || !request.response) {
+      preGoldhenTrace(traceId, firmware, 'download-failed', request.status, 0, 'HTTP ' + request.status);
+      finish(preGoldhenText('preGoldhen.downloadFailed', 'Payload download failed: HTTP {status}.', { status: request.status }));
+      return;
+    }
+    try {
+      var data = new Uint8Array(request.response);
+      if (data.length < 4 || (data[0] === 0x7f && data[1] === 0x45 && data[2] === 0x4c && data[3] === 0x46)) {
+        throw Error(preGoldhenText('preGoldhen.invalidPayload', 'The diagnostic payload is not an executable raw binary.'));
+      }
+      var payloadBytes = (data.byteLength + 3) & ~3;
+      var payloadPages = (payloadBytes + 0xfff) & ~0xfff;
+      // array_from_address() uses the legacy g2all typed-array length layout.
+      // Reserve the same 4x headroom as the known-good GoldHEN runPayload()
+      // path, then keep the status page at the fixed base + 0x1000 address.
+      var mappingBytes = (payloadPages + 0x1000) * 4;
+      var payloadBase = chain.sysp('mmap', 0, mappingBytes, 7, 0x1002, -1, 0);
+      var payloadWords = array_from_address(payloadBase, mappingBytes / 4);
+      payloadWords.fill(0, 0, mappingBytes / 4);
+      var padded = new Uint8Array(payloadBytes);
+      padded.set(data, 0);
+      payloadWords.set(new Uint32Array(padded.buffer), 0);
+      statusView = array_from_address(payloadBase.add(PRE_GOLDHEN_STATUS_OFFSET), PRE_GOLDHEN_STATUS_WORDS);
+      statusView.fill(0, 0, PRE_GOLDHEN_STATUS_WORDS);
+
+      var loaderAddress = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
+      var loaderStub = array_from_address(loaderAddress, 1);
+      loaderStub[0] = 0x00C3E7FF; // jmp rdi; ret
+      var pthread = malloc(0x10);
+      var dispatchResult = chain.call_int('pthread_create', pthread, 0, loaderAddress, payloadBase);
+      var dispatchStatus = { stage: 0, result: dispatchResult, detail0: 0, detail1: 0 };
+      msgs.textContent = preGoldhenStatusText(traceId, dispatchStatus, preGoldhenText('preGoldhen.waitingEntry', 'pthread_create returned {result}. Waiting for payload entry acknowledgement…', { result: dispatchResult }));
+      preGoldhenTrace(traceId, firmware, 'pthread-create', 0, dispatchResult, 'raw payload bytes=' + data.byteLength);
+      if (dispatchResult !== 0) {
+        finish(preGoldhenText('preGoldhen.dispatchFailedDetailed', 'pthread_create failed before the payload could start.'), dispatchStatus);
+        return;
+      }
+      interval = setInterval(poll, 100);
+      poll();
+    } catch (error) {
+      var detail = error && error.message ? error.message : String(error);
+      preGoldhenTrace(traceId, firmware, 'dispatch-error', 0, -1, detail);
+      finish(preGoldhenText('preGoldhen.dispatchError', 'Diagnostic dispatch failed: {detail}.', { detail: detail }));
+    }
+  };
+  request.onerror = function () {
+    preGoldhenTrace(traceId, firmware, 'download-error', 0, -1, 'network error');
+    finish(preGoldhenText('preGoldhen.networkFailed', 'Payload download failed: network error.'));
+  };
+  request.send();
+}
+
+function startGoldhen() {
+  runPayload('./goldhen_2.4b18.10.bin', function () {
+    if (window.LudoraPkgStage) window.LudoraPkgStage.start();
+    else msgs.innerHTML = LudoraI18n.t('pkgStage.unavailable');
+  });
+  msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t('payload.configuring') : 'Preparing GoldHEN configuration…';
 }
 
 kexploit().then(() => {
-	setTimeout(() => {
-		runPayload("./goldhen_2.4b18.10.bin", function () {
-			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			else msgs.innerHTML = LudoraI18n.t("pkgStage.unavailable");
-		});
-		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
-	},500);
+  setTimeout(() => {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('diagnose') === 'pre') {
+      runPreGoldhenDiagnostic();
+      return;
+    }
+    startGoldhen();
+  }, 500);
 }).catch(() => {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.failed") : "Load failed. Restart your console and try again.";
-	msgs.style.color = "yellow";
+  msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t('payload.failed') : 'Load failed. Restart your console and try again.';
+  msgs.style.color = 'yellow';
 });
