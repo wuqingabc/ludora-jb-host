@@ -1,10 +1,11 @@
 CACHE MANIFEST
 # Ludora zrm runtime mirror
-# Ludora zrm cache revision: dual-engine-v1
+# Ludora zrm cache revision: dual-engine-v3-store-ad-copy
 
-index.html #2d0ac397bb3509d4b1dab26ebdba86e6ea063f8979b2ff95a2c57e7feeae28f0
-run_lapse.html #6061b29c8c2af1d3c6c6e2843ab0dc15fef70a19d6ad94c70a3b19d70896546f
-run_poops.html #fa0beee58f8e29fdc62861c55f78916f4d9711b66696aacd311f4edd7f2b5c21
+index.html #34d3e598bc2c402bd377ac47a81836aab23a046f99e387f0bd40a57335700d67
+run_lapse.html #ae1d3a1dc535f1d2714a8b3b31000f83a8986bbe039c8d2bc74656581030a444
+run_poops.html #5e8df3060de5db67871308e0aec9da004190e5b466cae15cc141fadecd90c25a
+../store-qr.png #7253643b3222951b93fb21731a5484c044a1492b6ffa291fdee0427bba0bcdfd
 chain_lapse.js #fd0cc044e03be88d1c89089a7d8dbb2d2c9ea2f3a485f0ab9089bb36d92d1a34
 chain_poops.js #c41d147644d97656ba2f6c85ba1b61f3c8315e16c2367772035d56d2336babdd
 core.js #3acf7e09988f10f800ca22bac1d4965b89ebb5ce2da4850089918fd1a457df4e

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" manifest="cache.appcache" data-cache-total="28">
+<html lang="zh-CN" manifest="cache.appcache" data-cache-total="16">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,7 +9,7 @@
 <script src="../i18n/en-US.js"></script>
 <script src="../i18n.js"></script>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="zrm.css">
+<link rel="stylesheet" href="13x.css">
 <style>
   html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8;
                font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
@@ -37,7 +37,6 @@
   <div id="cache" data-i18n="cache.installing">正在安装离线缓存：0%</div>
   <div class="cache-progress" aria-label="Cache progress"><span id="cache-progress"></span></div>
   <div class="ad-slot" aria-label="鲁哆啦在线下载"><img src="../store-qr.png" alt="扫码前往鲁哆啦商店"><span>免光盘·免U盘</span><strong>鲁哆啦在线下载</strong><small>联网直接下载安装，即下即玩</small></div>
-  <div class="route-note" data-i18n="payload.loading">浏览器链路准备中</div>
 </div>
 
 <script>
@@ -58,37 +57,30 @@
             : fallback;
     }
 
+    // Firmwares this build has a hardware-measured kernel table for. jb.js
+    // still runs its own kernel-table-present gate, so this is UX only.
+    // KEEP IN SYNC with ps4_offsets.js and src/lib/jb-host-adapter.ts in
+    // ludora-site (nativeHostTarget / isNativeHostPathAllowed): 13.02-13.52.
+    var SUPPORTED = { 1302: 1, 1304: 1, 1350: 1, 1352: 1 };
+
     var key = null, fwnum = null;
     var m = /PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
     if (m) {
-        var minor = parseInt(m[2], 16);
-        var ms = minor.toString(16);
-        if (ms.length < 2) ms = "0" + ms;
+        var minor = parseInt(m[2], 10);
+        var ms = minor < 10 ? "0" + minor : String(minor);
         key = m[1] + "." + ms;
-        fwnum = parseInt(m[1], 10) * 100 + parseInt(ms, 10);
+        fwnum = parseInt(m[1], 10) * 100 + minor;
     }
-    var bug = null, why = "";
-    var forced = params.get("bug");
-    if (forced === "lapse" || forced === "poops") {
-        bug = forced; why = "forced via ?bug=" + forced;
-    } else if (!key) {
-        why = "user-agent is not a PlayStation 4";
-    } else if (fwnum <= 1202) {
-        bug = "lapse"; why = key + " <= 12.02";
-    } else if (fwnum >= 1250) {
-        bug = "poops"; why = key + " >= 12.50";
-    } else {
-        why = key + " -- no working bug (lapse ends at 12.02, poops needs 12.50)";
-    }
+
+    var forced = params.get("force") === "1";
+    var supported = forced || (fwnum !== null && SUPPORTED[fwnum] === 1);
     detEl.innerHTML = "firmware <b>" + (key || "unknown") + "</b>"
-        + " &middot; bug <b>" + (bug || "none") + "</b> &middot; " + why;
+        + (supported ? " &middot; <b>supported</b>" : " &middot; not in this build's kernel table");
 
-    if (!bug) { setState(tr("host.unsupported", "当前固件暂不支持"), "bad"); return; }
+    if (!supported) { setState(tr("payload.unsupported", "不支持的固件版本"), "bad"); return; }
 
-    var target = (bug === "lapse" ? "run_lapse.html" : "run_poops.html")
-        + location.search;
-    function go() { setState(tr("payload.loading", "正在准备主机入口，请稍候") + " · " + bug, "warn");
-                    location.replace(target); }
+    var target = "jb.html" + location.search;
+    function go() { setState(tr("payload.loading", "正在准备主机入口，请稍候"), "warn"); location.replace(target); }
 
     function waitForTap(msg, action) {
         setState(msg, "warn");
@@ -119,7 +111,7 @@
         ac.addEventListener("downloading",
             function () { setCache(tr("cache.installing", "正在安装离线缓存：0%", { progress: 0 }), false, 0); }, false);
         ac.addEventListener("progress", function (e) {
-            var total = e && e.total ? e.total : 22;
+            var total = e && e.total ? e.total : 16;
             var loaded = e && e.loaded ? e.loaded : 0;
             var progress = Math.round((loaded / total) * 100);
             setCache(tr("cache.installing", "正在安装离线缓存：{progress}%", { progress: progress }), false, progress);

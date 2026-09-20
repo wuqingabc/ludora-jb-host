@@ -205,6 +205,14 @@
     else if (/webkit exploit failed/i.test(text)) text = translate('payload.failed');
     else if (/Exploit timing failed/i.test(text)) text = translate('payload.timingFailed');
     else if (/Unsupported Firmware/i.test(text)) text = translate('payload.unsupported');
+    else if (/Jailbreak failed/i.test(text)) text = translate('payload.jailbreakFailed');
+    else if (/Must be 16 characters/i.test(text)) text = translate('payload.psnIdFormat');
+    else if (/Waiting for Payload\.\.\. Send it/i.test(text)) text = translate('payload.waitingForPayload');
+    else if (/PSN ID set successfully/i.test(text)) text = translate('payload.psnIdSet');
+    else {
+      var allSetMatch = /Total Time (\d+) minutes? and (\d+) seconds?/i.exec(text);
+      if (allSetMatch) text = translate('payload.allSet', { minutes: allSetMatch[1], seconds: allSetMatch[2] });
+    }
     nativeAlert.call(window, text);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { apply(document); });

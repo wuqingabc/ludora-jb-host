@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta name="ludora-host" content="1">
+<meta charset="utf-8">
 <script src="../i18n/zh-CN.js"></script>
 <script src="../i18n/zh-TW.js"></script>
 <script src="../i18n/en-US.js"></script>
@@ -17,7 +18,7 @@ if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 <h1>PS4 5.05 FW GoldHEN Ludora Host</h1>
 <hr>
 <br>
-<h1 id=msgs style="font-size: 30px;margin-top: 77px;margin-bottom: 455px;" data-i18n="payload.loading" data-i18n="payload.loading" data-i18n="payload.loading" data-i18n="payload.loading" data-i18n="payload.loading">Loading GoldHEN v2.4b18.10... Please Wait</h1>
+<h1 id=msgs style="font-size: 30px;margin-top: 77px;margin-bottom: 455px;" data-i18n="payload.loading">正在加载 GoldHEN，请稍候</h1>
 <script>
 function allset(){
 msgs.innerHTML = LoadedMSG
@@ -53,7 +54,7 @@ req1.send();
 }
 
 function success(){
-LoadedMSG = "GoldHEN v2.4b18.10 Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.loaded') : "GoldHEN loaded";
 PLfile = "goldhen_2.4b18.10.bin";
 load_payload();
 }

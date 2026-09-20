@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta name="ludora-host" content="1">
+<meta charset="utf-8">
 <script src="../i18n/zh-CN.js"></script>
 <script src="../i18n/zh-TW.js"></script>
 <script src="../i18n/en-US.js"></script>
@@ -129,14 +130,14 @@ tempC.value=60;
 
 function load_goldhenbeta(){
 msgs.innerHTML = "Loading GoldHEN v2.4b18.10... Please Wait";
-LoadedMSG = "GoldHEN v2.4b18.10 Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "GoldHEN v2.4b18.10"}) : "GoldHEN v2.4b18.10 loaded";
 PLfile = "goldhen_2.4b18.10.bin";
 load_payload();
 }
 
 function load_goldhen23(){
 msgs.innerHTML = "Loading GoldHEN v2.3... Please Wait";
-LoadedMSG = "GoldHEN v2.3 Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "GoldHEN v2.3"}) : "GoldHEN v2.3 loaded";
 PLfile = "goldhen_2.3_505.bin";
 load_payload();
 }
@@ -147,210 +148,210 @@ msgs.innerHTML = "Waiting for Payload... Send it using the PS4 IP and port 9020"
 
 function load_todex(){
 msgs.innerHTML = "Loading ToDex... Please Wait"
-LoadedMSG = "ToDex Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "ToDex"}) : "ToDex loaded";
 PLfile = "todex.bin";
 load_payload();
 }
 
 function load_dumper(){
 msgs.innerHTML = "Loading Game-Dumper... Please Wait";
-LoadedMSG = "Game-Dumper Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Game-Dumper"}) : "Game-Dumper loaded";
 PLfile = "dumper.bin";
 load_payload();
 }
 
 function load_ftp(){
 msgs.innerHTML = "Loading FTP... Please Wait"
-LoadedMSG = "FTP Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "FTP"}) : "FTP loaded";
 PLfile = "ftp.bin";
 load_payload();
 }
 
 function load_app2usb(){
 msgs.innerHTML = "Loading App2USB... Please Wait"
-LoadedMSG = "App2USB Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "App2USB"}) : "App2USB loaded"
 PLfile = "app2usb.bin";
 load_payload();
 }
 
 function load_dbackup(){
 msgs.innerHTML = "Loading DB Backup... Please Wait"
-LoadedMSG = "DB Backup Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "DB Backup"}) : "DB Backup loaded"
 PLfile = "backup.bin";
 load_payload();
 }
 
 function load_dbrestore(){
 msgs.innerHTML = "Loading DB Restore... Please Wait"
-LoadedMSG = "DB Restore Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "DB Restore"}) : "DB Restore loaded"
 PLfile = "restore.bin";
 load_payload();
 }
 
 function load_enablebUpdates(){
 msgs.innerHTML = "Loading Enable Updates... Please Wait"
-LoadedMSG = "Enable Updates Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Enable Updates"}) : "Enable Updates loaded"
 PLfile = "enable-updates.bin";
 load_payload();
 }
 
 function load_disableUpdates(){
 msgs.innerHTML = "Loading Disable Updates... Please Wait"
-LoadedMSG = "Disable Updates Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Disable Updates"}) : "Disable Updates loaded"
 PLfile = "disable-updates.bin";
 load_payload();
 }
 
 function load_kernelDump(){
 msgs.innerHTML = "Loading Kernel Dumper... Please Wait"
-LoadedMSG = "Kernel Dumper Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Kernel Dumper"}) : "Kernel Dumper loaded"
 PLfile = "kernel-dumper.bin";
 load_payload();
 }
 
 function load_ps4debug(){
 msgs.innerHTML = "Loading PS4 Debug... Please Wait"
-LoadedMSG = "PS4 Debug Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "PS4 Debug"}) : "PS4 Debug loaded"
 PLfile = "ps4debug100.bin";
 load_payload();
 }
 
 function load_rifRen(){
 msgs.innerHTML = "Loading RIF Renamer... Please Wait"
-LoadedMSG = "RIF Renamer Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "RIF Renamer"}) : "RIF Renamer loaded"
 PLfile = "rif-renamer.bin";
 load_payload();
 }
 
 function load_ren(){
 msgs.innerHTML = "Loading Remote Play... Please Wait"
-LoadedMSG = "Remote Play ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Remote Play"}) : "Remote Play loaded"
 PLfile = "PS4ren.bin";
 load_payload();
 }
 
 function load_webrte(){
 msgs.innerHTML = "Loading WebRTE... Please Wait"
-LoadedMSG = "WebRTE Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WebRTE"}) : "WebRTE loaded"
 PLfile = "webrte.bin";
 load_payload();
 }
 
 function load_parental(){
 msgs.innerHTML = "Parental Controls... Please Wait"
-LoadedMSG = "Parental Controls Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Parental Controls"}) : "Parental Controls loaded"
 PLfile = "parental-controls.bin";
 load_payload();
 }
 
 function load_toolbox(){
 msgs.innerHTML = "Loading Orbis-Toolbox... Please Wait"
-LoadedMSG = "Orbis-Toolbox Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Orbis-Toolbox"}) : "Orbis-Toolbox loaded"
 PLfile = "Orbis-Toolbox-505.bin";
 load_payload();
 }
 
 function load_fanthreshold(){
 msgs.innerHTML = "Loading Fan Threshold... Please Wait"
-LoadedMSG = "Fan Threshold Loaded ✔";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Fan Threshold"}) : "Fan Threshold loaded";
 PLfile = "fan-threshold"+tempC.value+".bin";
 load_payload();
 }
 
 function load_arabicGuy100(){
 msgs.innerHTML = "Loading Arabic Guy v1.00... Please Wait";
-LoadedMSG = "Arabic Guy v1.00 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.00"}) : "Arabic Guy v1.00 loaded"
 PLfile = "arabic-guy100.bin";
 load_payload();
 }
 
 function load_arabicGuy127(){
 msgs.innerHTML = "Loading Arabic Guy v1.27... Please Wait";
-LoadedMSG = "Arabic Guy v1.27 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.27"}) : "Arabic Guy v1.27 loaded"
 PLfile = "arabic-guy127.bin";
 load_payload();
 }
 
 function load_arabicGuy132(){
 msgs.innerHTML = "Loading Arabic Guy v1.32... Please Wait";
-LoadedMSG = "Arabic Guy v1.32 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.32"}) : "Arabic Guy v1.32 loaded"
 PLfile = "arabic-guy132.bin";
 load_payload();
 }
 
 function load_arabicGuy133(){
 msgs.innerHTML = "Loading Arabic Guy v1.33... Please Wait";
-LoadedMSG = "Arabic Guy v1.33 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.33"}) : "Arabic Guy v1.33 loaded"
 PLfile = "arabic-guy133.bin";
 load_payload();
 }
 
 function load_Lamance(){
 msgs.innerHTML = "Loading Lamance v0.9... Please Wait";
-LoadedMSG = "Lamance v0.9 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Lamance v0.9"}) : "Lamance v0.9 loaded"
 PLfile = "Lamance-v0.9-1.38.bin";
 load_payload();
 }
 
 function load_WildeModz132(){
 msgs.innerHTML = "Loading WildeModz-1.32... Please Wait";
-LoadedMSG = "WildeModz-1.32 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.32"}) : "WildeModz-1.32 loaded"
 PLfile = "WildeModz-1.32.bin";
 load_payload();
 }
 
 function load_WildeModz133(){
 msgs.innerHTML = "Loading WildeModz-1.33... Please Wait";
-LoadedMSG = "WildeModz-1.33 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.33"}) : "WildeModz-1.33 loaded"
 PLfile = "WildeModz-1.33.bin";
 load_payload();
 }
 
 function load_WildeModz138(){
 msgs.innerHTML = "Loading WildeModz-1.38... Please Wait";
-LoadedMSG = "WildeModz-1.38 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.38"}) : "WildeModz-1.38 loaded"
 PLfile = "WildeModz-1.38.bin";
 load_payload();
 }
 
 function load_WildeModz146(){
 msgs.innerHTML = "Loading WildeModz-1.46... Please Wait";
-LoadedMSG = "WildeModz-1.46 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.46"}) : "WildeModz-1.46 loaded"
 PLfile = "WildeModz-1.46.bin";
 load_payload();
 }
 
 function load_Oysters100(){
 msgs.innerHTML = "Loading Oysters Menu v1.00... Please Wait";
-LoadedMSG = "Oysters Menu v1.00 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.00"}) : "Oysters Menu v1.00 loaded"
 PLfile = "OystersMenu-v1.00.bin";
 load_payload();
 }
 
 function load_Oysters113(){
 msgs.innerHTML = "Loading Oysters Menu v1.13... Please Wait";
-LoadedMSG = "Oysters Menu v1.13 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.13"}) : "Oysters Menu v1.13 loaded"
 PLfile = "OystersMenu-v1.13.bin";
 load_payload();
 }
 
 function load_Oysters119(){
 msgs.innerHTML = "Loading Oysters Menu v1.19... Please Wait";
-LoadedMSG = "Oysters Menu v1.19 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.19"}) : "Oysters Menu v1.19 loaded"
 PLfile = "OystersMenu-v1.19.bin";
 load_payload();
 }
 
 function load_Oysters124(){
 msgs.innerHTML = "Loading Oysters Menu v1.24... Please Wait";
-LoadedMSG = "Oysters Menu v1.24 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.24"}) : "Oysters Menu v1.24 loaded"
 PLfile = "OystersMenu-v1.24.bin";
 load_payload();
 }
 
 function load_Oysters129(){
 msgs.innerHTML = "Loading Oysters Menu v1.29... Please Wait";
-LoadedMSG = "Oysters Menu v1.29 Loaded ✔"
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.29"}) : "Oysters Menu v1.29 loaded"
 PLfile = "OystersMenu-v1.29.bin";
 load_payload();
 }

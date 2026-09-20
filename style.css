@@ -1,47 +1,77 @@
 /* Ludora host presentation layer. Runtime scripts and DOM IDs remain upstream-compatible. */
 :root {
   color-scheme: dark;
-  --ld-bg: #0a0d1c;
-  --ld-bg-2: #10142a;
-  --ld-panel: rgba(20, 25, 54, .96);
-  --ld-panel-strong: #141936;
-  --ld-line: rgba(210, 220, 255, .09);
-  --ld-text: #edf0fc;
-  --ld-muted: #a4abcd;
-  --ld-soft: #6b7398;
-  --ld-gold: #f3b942;
-  --ld-gold-strong: #ffd469;
+  /* Palette matched to ludora-site's /jb page (src/pages/jb/index.astro) so the
+     two products read as one brand. Values here are the source of truth for
+     this repo; keep them in sync if ludora-site's tokens change. */
+  --ld-bg: #080a1c;
+  --ld-bg-2: #111530;
+  --ld-panel: rgba(21, 26, 61, .92);
+  --ld-panel-strong: #151a3d;
+  --ld-line: rgba(165, 174, 232, .18);
+  --ld-text: #f4f5ff;
+  --ld-muted: #a2a8c5;
+  --ld-soft: #727a9f;
+  --ld-gold: #f8c44f;
+  --ld-gold-strong: #ffd97a;
+  --ld-gold-ink: #241a04;
   font-family: Arial, Helvetica, sans-serif;
   background: var(--ld-bg);
   color: var(--ld-text);
 }
 * { box-sizing: border-box; }
 html { min-width: 320px; min-height: 100%; background: var(--ld-bg); color: var(--ld-text); text-align: center; overflow-x: hidden; overflow-y: auto; }
-body { width: min(1200px, calc(100% - 40px)); min-height: 100vh; margin: 0 auto; padding: 0 0 48px; background: radial-gradient(ellipse at 78% 22%, rgba(74, 99, 232, .18), transparent 38%), var(--ld-bg); color: var(--ld-text); }
-body::before { content: "LUDORA  /  DEVICE ACCESS"; display: block; padding: 22px 0 16px; border-bottom: 1px solid var(--ld-line); color: var(--ld-gold); font-size: 12px; font-weight: bold; letter-spacing: .2em; text-align: left; }
-h1 { margin: 0; padding: 20px 26px; color: var(--ld-text); font-size: 24px; line-height: 1.25; font-weight: bold; letter-spacing: -.02em; text-shadow: none; }
+body { width: min(1200px, calc(100% - 40px)); min-height: 100vh; margin: 0 auto; padding: 0 0 48px; background: radial-gradient(ellipse at 78% 22%, rgba(83, 102, 214, .16), transparent 38%), var(--ld-bg); color: var(--ld-text); }
+body::before { content: "LUDORA  /  DEVICE ACCESS"; display: block; padding: 26px 2px 18px; margin-bottom: 4px; border-bottom: 1px solid var(--ld-line); background: linear-gradient(180deg, rgba(248, 196, 79, .06), transparent); color: var(--ld-gold); font-size: 12px; font-weight: bold; letter-spacing: .22em; text-align: left; }
+h1 { margin: 0; padding: 22px 28px; color: var(--ld-text); font-size: 24px; line-height: 1.3; font-weight: bold; letter-spacing: -.02em; text-shadow: none; }
 hr { height: 1px; margin: 0 0 24px; border: 0; background: var(--ld-line); }
 a { color: var(--ld-gold-strong); text-decoration: none; }
-a:hover, a:focus { color: #fff0bd; }
-body > h1:first-of-type, body > #msgs:first-child, body > #msgs { border: 1px solid var(--ld-line); border-bottom: 0; border-radius: 14px 14px 0 0; background: rgba(25, 36, 77, .72); }
-#menu, #mods, #crypto, #tools, #lnx, #progress { width: 100%; margin: 0 auto; padding: 24px; border: 1px solid var(--ld-line); border-radius: 0 0 14px 14px; background: var(--ld-panel); }
-#menu h1, #mods h1, #crypto h1, #progress h1 { padding: 10px 0 14px; border: 0; background: transparent; color: var(--ld-muted); font-size: 15px !important; letter-spacing: .04em; }
-.btn, button { display: inline-block; min-width: 220px; min-height: 48px; margin: 7px 5px; padding: 11px 18px; border: 1px solid rgba(243, 185, 66, .42); border-radius: 8px; background: linear-gradient(180deg, #29345f, #171d3d); color: var(--ld-text); font: bold 16px/1.2 Arial, Helvetica, sans-serif; text-align: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255,255,255,.15); transition: background .12s ease, transform .12s ease, border-color .12s ease; }
-.btn:hover, .btn:focus, button:hover, button:focus { border-color: var(--ld-gold-strong); background: linear-gradient(180deg, #35477e, #202957); outline: none; }
-.btn:active, button:active { transform: translateY(1px); }
-.btn-onln { border-color: rgba(120, 216, 231, .65); background: #164c67; }
-.btn-toolbox { background: #5a3c43; }
-.btn-ps5 { background: #30385d; }
+a:hover, a:focus { color: #fff3d6; }
+body > h1:first-of-type, body > #msgs:first-child, body > #msgs {
+  border: 1px solid var(--ld-line); border-bottom: 0; border-radius: 20px 20px 0 0;
+  background: linear-gradient(180deg, rgba(30, 38, 84, .82), rgba(21, 26, 61, .82));
+}
+#menu, #mods, #crypto, #tools, #lnx, #progress {
+  width: 100%; margin: 0 auto; padding: 28px 24px; border: 1px solid var(--ld-line); border-radius: 0 0 20px 20px;
+  background: var(--ld-panel); box-shadow: 0 24px 60px rgba(2, 3, 12, .45);
+}
+#menu h1, #mods h1, #crypto h1, #progress h1 { padding: 10px 0 16px; border: 0; background: transparent; color: var(--ld-muted); font-size: 15px !important; letter-spacing: .04em; }
+.btn, button {
+  display: inline-block; min-width: 220px; min-height: 56px; margin: 8px 6px; padding: 13px 20px;
+  border: 1px solid var(--ld-line); border-radius: 14px;
+  background: linear-gradient(180deg, #232c5c, #131736);
+  color: var(--ld-text); font: bold 16px/1.25 Arial, Helvetica, sans-serif; text-align: center; cursor: pointer;
+  box-shadow: 0 10px 24px rgba(2, 3, 14, .35), inset 0 1px 0 rgba(255, 255, 255, .12);
+  transition: background .12s ease, transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.btn:hover, .btn:focus, button:hover, button:focus {
+  border-color: var(--ld-gold);
+  background: linear-gradient(180deg, #2c3670, #171c42);
+  box-shadow: 0 0 0 3px rgba(248, 196, 79, .22), 0 12px 28px rgba(2, 3, 14, .4), inset 0 1px 0 rgba(255, 255, 255, .14);
+  outline: none;
+}
+.btn:active, button:active { transform: translateY(1px); box-shadow: 0 4px 12px rgba(2, 3, 14, .35), inset 0 1px 0 rgba(255, 255, 255, .1); }
+.btn-primary {
+  border-color: transparent; background: linear-gradient(180deg, var(--ld-gold-strong), var(--ld-gold));
+  color: var(--ld-gold-ink); box-shadow: 0 10px 26px rgba(248, 196, 79, .28), inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+.btn-primary:hover, .btn-primary:focus {
+  background: linear-gradient(180deg, #ffe6a3, var(--ld-gold-strong));
+  box-shadow: 0 0 0 3px rgba(248, 196, 79, .3), 0 12px 30px rgba(248, 196, 79, .34), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.btn-onln { border-color: rgba(120, 216, 231, .5); background: linear-gradient(180deg, #1b5b78, #123b4f); }
+.btn-toolbox { background: linear-gradient(180deg, #6b4650, #45262e); }
+.btn-ps5 { background: linear-gradient(180deg, #2f3a72, #1b2247); }
 #msgs, #msgs2 { min-height: 86px; margin: 0 auto; color: var(--ld-gold-strong) !important; font-size: 28px !important; line-height: 1.35; }
 #progress #msgs2, body > #msgs[style*="margin-bottom"], body > h1[style*="margin-bottom"] { min-height: 330px; padding-top: 120px; padding-bottom: 110px; }
 body > h1:last-of-type { margin-top: 24px !important; padding: 18px 0; color: var(--ld-soft); font-size: 13px !important; font-weight: normal; }
 #log_area { padding: 24px; color: var(--ld-muted); }
 #log_area h1 { border: 0; background: transparent; color: var(--ld-gold); font-size: 18px !important; }
-.cache-progress { width: min(720px, 88%); height: 14px; margin: 20px auto 0; overflow: hidden; border: 1px solid rgba(243,185,66,.35); border-radius: 999px; background: rgba(10,13,28,.72); }
-.cache-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f3b942, #ffd469); transition: width .15s ease; }
+.cache-progress { width: min(720px, 88%); height: 14px; margin: 22px auto 0; overflow: hidden; border: 1px solid rgba(248, 196, 79, .3); border-radius: 999px; background: rgba(8, 10, 28, .72); }
+.cache-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--ld-gold), var(--ld-gold-strong)); transition: width .15s ease; }
 .cache-progress.indeterminate > span { width: 0; }
-select { min-height: 38px; margin: 8px; border: 1px solid var(--ld-line); border-radius: 7px; background: var(--ld-panel-strong); color: var(--ld-text); }
-@media (max-width: 720px) { body { width: calc(100% - 24px); } h1 { padding: 18px 14px; font-size: 20px; } #menu, #mods, #crypto, #tools, #lnx, #progress { padding: 14px 10px; } .btn, button { width: min(100%, 360px); margin: 6px auto; } }
+select { min-height: 38px; margin: 8px; border: 1px solid var(--ld-line); border-radius: 10px; background: var(--ld-panel-strong); color: var(--ld-text); }
+@media (max-width: 720px) { body { width: calc(100% - 24px); } h1 { padding: 18px 14px; font-size: 20px; } #menu, #mods, #crypto, #tools, #lnx, #progress { padding: 16px 12px; } .btn, button { width: min(100%, 360px); margin: 6px auto; } }
 
 /* PSFree 9.00 relies on the original WebKit focus/History/frameset layout.
    Keep the Ludora presentation layer out of that sensitive DOM path. */
@@ -59,4 +89,8 @@ body.ludora-legacy-host {
   background: transparent;
 }
 body.ludora-legacy-host::before { display: none; }
+/* Pages that render their own brand header (zrm/13x-style dark cards) opt out
+   of just the injected top strip, without losing the rest of the presentation
+   layer the way .ludora-legacy-host does. */
+body.ludora-custom-brand::before { display: none; }
 body.ludora-legacy-host * { box-sizing: content-box !important; transition: none !important; }

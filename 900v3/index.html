@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta name="ludora-host" content="1">
+<meta charset="utf-8">
 <script src="../i18n/zh-CN.js"></script>
 <script src="../i18n/zh-TW.js"></script>
 <script src="../i18n/en-US.js"></script>
@@ -21,7 +22,7 @@ if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 <hr>
 <br>
 <div id="progress">
-<h1 id="msgs2" style="font-size: 30px;margin-top: 77px;margin-bottom: 412px;">Loading Jailbreak... Please Wait</h1>
+<h1 id="msgs2" style="font-size: 30px;margin-top: 77px;margin-bottom: 412px;" data-i18n="legacy.loadingJailbreak">Loading Jailbreak... Please Wait</h1>
 </div>
 <div id="menu" style="display: none">
 <h1 style="font-size: 18px;color: yellow;">Main Payloads</h1>
@@ -233,7 +234,7 @@ function load_binloader(){
         chain.fcall(libKernelBase.add32(OFFSET_lk_pthread_create), pthread, 0x0, payload_loader, payload_buffer);
     }
     chain.run();
-	LoadedMSG = "Bin Loader Launched ...";
+	LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLaunched', {name: "Bin Loader"}) : "Bin Loader launched";
 	alert("Waiting for Payload... Send it using the PS4 IP and port 9020");
 	allset();
 	}
@@ -352,145 +353,145 @@ setTimeout(loadScript("netcat.js")
 }
 
 function load_goldhenbeta(){
-LoadedMSG = "GoldHEN v2.4b18.10 Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "GoldHEN v2.4b18.10"}) : "GoldHEN v2.4b18.10 loaded";
 PLfile = "goldhen_2.4b18.10.bin";
 load_poc();
 }
 
 function load_goldhen23(){
-LoadedMSG = "GoldHEN v2.3 Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "GoldHEN v2.3"}) : "GoldHEN v2.3 loaded";
 PLfile = "goldhen_2.3.bin";
 load_poc();
 }
 
 function load_Gdumper(){
-LoadedMSG = "Game-Dumper Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Game-Dumper"}) : "Game-Dumper loaded";
 PLfile = "dumperG.bin";
 load_poc();
 }
 
 function load_Udumper(){
-LoadedMSG = "Update-Dumper Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Update-Dumper"}) : "Update-Dumper loaded";
 PLfile = "dumperU.bin";
 load_poc();
 }
 
 function load_SGUdumper(){
-LoadedMSG = "Separate Game and Update Dumper Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Separate Game and Update Dumper"}) : "Separate Game and Update Dumper loaded";
 PLfile = "dumperSGU.bin";
 load_poc();
 }
 
 function load_MGUdumper(){
-LoadedMSG = "Merged Game and Update Dumper Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Merged Game and Update Dumper"}) : "Merged Game and Update Dumper loaded";
 PLfile = "dumperMGU.bin";
 load_poc();
 }
 
 function load_todex(){
-LoadedMSG = "ToDex Loaded ...";
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "ToDex"}) : "ToDex loaded";
 PLfile = "todex.bin";
 load_poc();
 }
 
 function load_ftp(){
-LoadedMSG = "FTP Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "FTP"}) : "FTP loaded"
 PLfile = "ftp.bin";
 load_poc();
 }
 
 function load_app2usb(){
-LoadedMSG = "App2USB Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "App2USB"}) : "App2USB loaded"
 PLfile = "app2usb.bin";
 load_poc();
 }
 
 function load_dbackup(){
-LoadedMSG = "DB Backup Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "DB Backup"}) : "DB Backup loaded"
 PLfile = "backup.bin";
 load_poc();
 }
 
 function load_dbrestore(){
-LoadedMSG = "DB Restore Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "DB Restore"}) : "DB Restore loaded"
 PLfile = "restore.bin";
 load_poc();
 }
 
 function load_enablebUpdates(){
-LoadedMSG = "Enable Updates Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Enable Updates"}) : "Enable Updates loaded"
 PLfile = "enable-updates.bin";
 load_poc();
 }
 
 function load_disableUpdates(){
-LoadedMSG = "Disable Updates Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Disable Updates"}) : "Disable Updates loaded"
 PLfile = "disable-updates.bin";
 load_poc();
 }
 
 function load_historyBlocker(){
-LoadedMSG = "History Blocker Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "History Blocker"}) : "History Blocker loaded"
 PLfile = "history-blocker.bin";
 load_poc();
 }
 
 function load_kernelDump(){
-LoadedMSG = "Kernel Dumper Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Kernel Dumper"}) : "Kernel Dumper loaded"
 PLfile = "kernel-dumper.bin";
 load_poc();
 }
 
 function load_moduleDump(){
-LoadedMSG = "Module Dumper Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Module Dumper"}) : "Module Dumper loaded"
 PLfile = "module-dumper.bin";
 load_poc();
 }
 
 function load_ps4debug(){
-LoadedMSG = "PS4 Debug Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "PS4 Debug"}) : "PS4 Debug loaded"
 PLfile = "ps4debug.bin";
 load_poc();
 }
 
 function load_disbAslr(){
-LoadedMSG = "Disable ASLR Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Disable ASLR"}) : "Disable ASLR loaded"
 PLfile = "disable-aslr.bin";
 load_poc();
 }
 
 function load_exitidu(){
-LoadedMSG = "Exit IDU Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Exit IDU"}) : "Exit IDU loaded"
 PLfile = "exit-idu.bin";
 load_poc();
 }
 
 function load_rifRen(){
-LoadedMSG = "RIF Renamer Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "RIF Renamer"}) : "RIF Renamer loaded"
 PLfile = "rif-renamer.bin";
 load_poc();
 }
 
 function load_permUart(){
-LoadedMSG = "Permanent UART Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Permanent UART"}) : "Permanent UART loaded"
 PLfile = "permanent-uart.bin";
 load_poc();
 }
 
 function load_webrte(){
-LoadedMSG = "WebRTE Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WebRTE"}) : "WebRTE loaded"
 PLfile = "webrte.bin";
 load_poc();
 }
 
 function load_toolbox(){
-LoadedMSG = "Orbis-Toolbox Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Orbis-Toolbox"}) : "Orbis-Toolbox loaded"
 PLfile = "Orbis-Toolbox-900.bin";
 load_poc();
 }
 
 function load_fanthreshold(){
-LoadedMSG="Fan Threshold Loaded ..."
+LoadedMSG=(window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Fan Threshold"}) : "Fan Threshold loaded"
 PLfile = "fan-threshold"+tempC.value+".bin";
 load_poc();
 }
@@ -502,121 +503,121 @@ load_poc();
 }
 
 function load_arabicGuy100(){
-LoadedMSG = "Arabic Guy v1.00 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.00"}) : "Arabic Guy v1.00 loaded"
 PLfile = "arabic-guy100.bin";
 load_poc();
 }
 
 function load_arabicGuy127(){
-LoadedMSG = "Arabic Guy v1.27 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.27"}) : "Arabic Guy v1.27 loaded"
 PLfile = "arabic-guy127.bin";
 load_poc();
 }
 
 function load_arabicGuy132(){
-LoadedMSG = "Arabic Guy v1.32 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.32"}) : "Arabic Guy v1.32 loaded"
 PLfile = "arabic-guy132.bin";
 load_poc();
 }
 
 function load_arabicGuy133(){
-LoadedMSG = "Arabic Guy v1.33 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Arabic Guy v1.33"}) : "Arabic Guy v1.33 loaded"
 PLfile = "arabic-guy133.bin";
 load_poc();
 }
 
 function load_Expulsion(){
-LoadedMSG = "Expulsion v4.0 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Expulsion v4.0"}) : "Expulsion v4.0 loaded"
 PLfile = "Expulsion-V4.0-1.38.bin";
 load_poc();
 }
 
 function load_Lamance(){
-LoadedMSG = "Lamance v0.9 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Lamance v0.9"}) : "Lamance v0.9 loaded"
 PLfile = "Lamance-v0.9-1.38.bin";
 load_poc();
 }
 
 function load_WildeModz132(){
-LoadedMSG = "WildeModz-1.32 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.32"}) : "WildeModz-1.32 loaded"
 PLfile = "WildeModz-1.32.bin";
 load_poc();
 }
 
 function load_WildeModz133(){
-LoadedMSG = "WildeModz-1.33 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.33"}) : "WildeModz-1.33 loaded"
 PLfile = "WildeModz-1.33.bin";
 load_poc();
 }
 
 function load_WildeModz138(){
-LoadedMSG = "WildeModz-1.38 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.38"}) : "WildeModz-1.38 loaded"
 PLfile = "WildeModz-1.38.bin";
 load_poc();
 }
 
 function load_WildeModz146(){
-LoadedMSG = "WildeModz-1.46 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.46"}) : "WildeModz-1.46 loaded"
 PLfile = "WildeModz-1.46.bin";
 load_poc();
 }
 
 function load_WildeModz147(){
-LoadedMSG = "WildeModz-1.47 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "WildeModz-1.47"}) : "WildeModz-1.47 loaded"
 PLfile = "WildeModz-1.47.bin";
 load_poc();
 }
 
 function load_beefQueef133(){
-LoadedMSG = "Beef Queef Mod v1.33 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Beef Queef Mod v1.33"}) : "Beef Queef Mod v1.33 loaded"
 PLfile = "BeefQueefMod-133.bin";
 load_poc();
 }
 
 function load_beefQueef134(){
-LoadedMSG = "Beef Queef Mod v1.34 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Beef Queef Mod v1.34"}) : "Beef Queef Mod v1.34 loaded"
 PLfile = "BeefQueefMod-134.bin";
 load_poc();
 }
 
 function load_beefQueef138(){
-LoadedMSG = "Beef Queef Mod v1.38d Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Beef Queef Mod v1.38d"}) : "Beef Queef Mod v1.38d loaded"
 PLfile = "BeefQueefMod-138d.bin";
 load_poc();
 }
 
 function load_beefQueef147(){
-LoadedMSG = "Beef Queef Mod v1.47 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Beef Queef Mod v1.47"}) : "Beef Queef Mod v1.47 loaded"
 PLfile = "BeefQueefMod-Unified-147e.bin";
 load_poc();
 }
 
 function load_Oysters100(){
-LoadedMSG = "Oysters Menu v1.00 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.00"}) : "Oysters Menu v1.00 loaded"
 PLfile = "OystersMenu-v1.00.bin";
 load_poc();
 }
 
 function load_Oysters113(){
-LoadedMSG = "Oysters Menu v1.13 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.13"}) : "Oysters Menu v1.13 loaded"
 PLfile = "OystersMenu-v1.13.bin";
 load_poc();
 }
 
 function load_Oysters119(){
-LoadedMSG = "Oysters Menu v1.19 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.19"}) : "Oysters Menu v1.19 loaded"
 PLfile = "OystersMenu-v1.19.bin";
 load_poc();
 }
 
 function load_Oysters124(){
-LoadedMSG = "Oysters Menu v1.24 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.24"}) : "Oysters Menu v1.24 loaded"
 PLfile = "OystersMenu-v1.24.bin";
 load_poc();
 }
 
 function load_Oysters129(){
-LoadedMSG = "Oysters Menu v1.29 Loaded ..."
+LoadedMSG = (window.LudoraI18n && window.LudoraI18n.t) ? window.LudoraI18n.t('payload.namedLoaded', {name: "Oysters Menu v1.29"}) : "Oysters Menu v1.29 loaded"
 PLfile = "OystersMenu-v1.29.bin";
 load_poc();
 }
