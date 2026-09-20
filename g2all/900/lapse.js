@@ -1693,9 +1693,8 @@ export async function kexploit() {
     } catch (e) {
         localStorage.ExploitLoaded = "no";
     }
-    
     if (localStorage.ExploitLoaded === "yes" && sessionStorage.ExploitLoaded != "yes") {
-        msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.alreadyLoaded") : "GoldHEN is already loaded.";
+        msgs.innerHTML = "GoldHEN is Already Loaded ...";
         return new Promise(() => {});
     }
  

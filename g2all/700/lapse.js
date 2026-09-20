@@ -1862,36 +1862,7 @@ function runPayload(path, onLoaded, onError) {
           chain.call_void(payload_buffer);
           settled = true;
           if (onLoaded) setTimeout(onLoaded, 1200);
-
-          // Unmap the memory used for the payload
-          sysi("munmap", payload_buffer, padded_buffer.length);
-        } catch (e) {
-          // Caught error while trying to execute payload
-          log(`error in runPayload: ${e.message}`);
-          fail(e && e.message ? e.message : String(e));
-        }
-      } else {
-        // Some other HTTP response code (eg. 404)
-        fail(`HTTP ${xhr.status}`);
-      }
-    }
-  };
-  xhr.onerror = function () {
-    fail("network error");
-  };
-  xhr.send();
-}
-window.LudoraRunPayload = runPayload;
-
-kexploit().then(() => {
-	setTimeout(() => {
-		runPayload("./goldhen_2.4b18.10.bin", function () {
-			if (window.LudoraPkgStage) window.LudoraPkgStage.start();
-			else msgs.innerHTML = LudoraI18n.t("pkgStage.unavailable");
-		});
-		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
-	}, 500);
 }).catch(() => {
-    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.failed") : "Load failed. Restart your console and try again.";
+    msgs.innerHTML = "Failed to Load! Restart Your Console ...";
     msgs.style.color = "yellow";
 });

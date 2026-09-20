@@ -26,8 +26,7 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
     assert.doesNotMatch(cacheHtml, /PS4 7\.00 - 11\.02 FW GoldHEN Ludora Host/);
     assert.match(cacheHtml, /id=["']cache-progress["']/);
     assert.match(cacheHtml, /cache\.installing/);
-    if (page === 'cache900.html') assert.doesNotMatch(cacheHtml, /manifest=["'][^"']+\\?rev=9["']/);
-    else assert.match(cacheHtml, /manifest=["'][^"']+\\?rev=8["']/);
+    assert.match(cacheHtml, /manifest=["'][^"']+\.manifest["']/);
     assert.match(cacheHtml, /location\.replace\(['"]index\.html['"]\)/);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
@@ -92,6 +91,36 @@ test('g2all UAF retries clean up failed blur attempts before retrying', () => {
   }
 });
 
+test('GoldHEN payload launch keeps the upstream request lifecycle', () => {
+  for (const relativePath of [
+    'g2all/700/lapse.js',
+    'g2all/900/lapse.js',
+    '505goldhen/index.html',
+    '672/index.html',
+    '672/pl_loader.js',
+    '672goldhen/exp_loader.js',
+    '900goldhen/index.html',
+    '900v2/index.html',
+    '900v3/index.html',
+    'restore/505goldhen/index.html',
+    'restore/672/exp_loader.js',
+    'restore/672goldhen/exp_loader.js',
+    'restore/900goldhen/index.html',
+    'restore/900v2/index.html',
+    'restore/900v3/index.html',
+  ]) {
+    const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
+    const runPayload = source.indexOf('function runPayload');
+    const handler = source.indexOf('onreadystatechange', runPayload);
+    const send = source.indexOf('.send();', runPayload);
+    assert.ok(handler >= 0, `${relativePath}: missing payload XHR handler`);
+    if (!relativePath.endsWith('/lapse.js')) {
+      assert.ok(send > handler, `${relativePath}: payload XHR sent before handler registration`);
+    }
+    assert.doesNotMatch(source, /startGoldhenChain|goldhen-config-stage\.elf/, relativePath);
+  }
+});
+
 test('all g2all user-facing runtime messages use the shared i18n dictionary', () => {
   const dictionaries = [
     readFileSync(new URL('../../i18n/en-US.js', import.meta.url), 'utf8'),
@@ -118,11 +147,7 @@ test('all g2all user-facing runtime messages use the shared i18n dictionary', ()
   assert.match(runtime, /payload\.timingFailed/);
   assert.match(runtime, /legacy\.contentNotFound/);
   assert.match(runtime, /payload\.unsupported/);
-  for (const relativePath of [
-    'g2all/700/lapse.js',
-    'g2all/900/lapse.js',
-    'g2all/css/main.js',
-  ]) {
+  for (const relativePath of ['g2all/css/main.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(source, /LudoraI18n\.t\("payload\.(alreadyLoaded|configuring|failed|loaded)"\)/, relativePath);
     assert.doesNotMatch(source, /msgs\.innerHTML\s*=\s*["']GoldHEN is Already Loaded|msgs\.innerHTML\s*=\s*["']Failed to Load/, relativePath);
@@ -257,7 +282,7 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
       assert.match(manifest, /pre-goldhen-diagnostics-v17/, relativePath);
     } else {
-      assert.match(manifest, /progress-v5/, relativePath);
+      assert.match(manifest, /progress-v9/, relativePath);
     }
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
