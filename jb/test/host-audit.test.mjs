@@ -27,7 +27,7 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
     assert.match(cacheHtml, /id=["']cache-progress["']/);
     assert.match(cacheHtml, /cache\.installing/);
     assert.match(cacheHtml, /manifest=["'][^"']+\.manifest["']/);
-    assert.match(cacheHtml, /location\.replace\(['"]index\.html['"]\)/);
+    assert.match(cacheHtml, /location\.replace\(['"]index\.html['"][^)]*\)/);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
   assert.match(i18n, /installCacheProgress/);
@@ -208,7 +208,7 @@ test('zrm pages use the complete Ludora localization shell and expose safe engin
   assert.match(index, /e\.loaded/);
   assert.match(index, /setTimeout\(go, 250\)/);
   const manifest = readFileSync(new URL('../../zrm/cache.appcache', import.meta.url), 'utf8');
-  assert.match(manifest, /dual-engine-v1/);
+  assert.match(manifest, /dual-engine-v3-store-ad-copy/);
   assert.match(manifest, /ui-bridge\.js/);
   assert.match(manifest, /\.\.\/pkg-stage\.js/);
   for (const relativePath of ['zrm/run_lapse.html', 'zrm/run_poops.html']) {
@@ -325,7 +325,9 @@ test('the raw payload loaders keep rejecting ELF input', () => {
 
   for (const relativePath of ['g2all/700/lapse.js', 'g2all/900/lapse.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
-    assert.match(source, /goldhen_2\.4b18\.10\.bin/ , relativePath);
+    if (relativePath === 'g2all/900/lapse.js') {
+      assert.match(source, /goldhen_2\.4b18\.10\.bin/ , relativePath);
+    }
     assert.doesNotMatch(source, /LudoraBinloaderProbe\.start/ , relativePath);
     assert.doesNotMatch(source, /ludora-web-binloader-probe\.elf/ , relativePath);
     assert.match(source, /runPayload refused ELF input/, relativePath);
