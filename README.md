@@ -20,7 +20,11 @@ npm run verify:host-runtime
 ```
 PS4 Firmwares: `5.05` `6.72` `7.XX` `8.XX` `9.XX` `10.XX` `11.00` `11.02`
 
-PS5 Firmwares: `1.XX` `5.XX`
+PS5 Firmwares: `1.XX`–`5.XX` (GamerHack shortcut, `ps5/`); `7.00`–`13.60` on a
+fixed list of 33 exact versions (Relapse, `ps5-relapse/` — see
+`docs/superpowers/specs/2026-09-30-ps5-relapse-13.60-host-design.md` and
+`ps5-relapse/src/firmware.js` for the exact list; `6.XX` and everything
+between the two ranges remain unsupported)
 
 ## Steps:
 
