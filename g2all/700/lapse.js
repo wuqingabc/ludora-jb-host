@@ -1809,6 +1809,20 @@ function array_from_address(addr, size) {
   return og_array;
 }
 
+var ludoraStageAttempts = 0;
+function startLudoraStage() {
+  if (window.LudoraPkgStage && typeof window.LudoraPkgStage.start === "function") {
+    window.LudoraPkgStage.start();
+    return;
+  }
+  if (++ludoraStageAttempts > 12) {
+    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("pkgStage.unavailable") : "Ludora installation stage is unavailable.";
+    return;
+  }
+  log("Ludora package stage is not ready; retrying...");
+  setTimeout(startLudoraStage, 500);
+}
+
 function runPayload(path, onLoaded, onError) {
   var settled = false;
   function fail(reason) {
@@ -1862,7 +1876,34 @@ function runPayload(path, onLoaded, onError) {
           chain.call_void(payload_buffer);
           settled = true;
           if (onLoaded) setTimeout(onLoaded, 1200);
+
+          // Unmap the memory used for the payload
+          sysi("munmap", payload_buffer, padded_buffer.length);
+        } catch (e) {
+          // Caught error while trying to execute payload
+          log(`error in runPayload: ${e.message}`);
+        }
+      } else {
+        // Some other HTTP response code (eg. 404)
+        log(`error retrieving payload, ${xhr.status}`);
+      }
+    }
+  };
+  xhr.onerror = function () {
+    log("network error");
+  };
+  xhr.send();
+}
+
+kexploit().then(() => {
+	setTimeout(() => {
+		runPayload("./goldhen_2.4b18.10.bin", function () {
+			startLudoraStage();
+		});
+		setTimeout(startLudoraStage, 6000);
+		msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.configuring") : "Preparing GoldHEN configuration…";
+	},500);
 }).catch(() => {
-    msgs.innerHTML = "Failed to Load! Restart Your Console ...";
+    msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.failed") : "Load failed. Restart your console and try again.";
     msgs.style.color = "yellow";
 });
