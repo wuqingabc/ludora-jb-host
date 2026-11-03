@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { existsSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
-import { auditHostTree, collectHostPages } from '../../scripts/audit-host-pages.mjs';
+import { auditHostTree, collectHostPages, isSelfContainedPage } from '../../scripts/audit-host-pages.mjs';
 
 test('discovers every user-facing HTML page in the Host tree', () => {
   const pages = collectHostPages();
@@ -265,6 +265,7 @@ test('every offline-cache page uses the shared localized progress runtime', () =
   for (const file of collectHostPages()) {
     const html = readFileSync(file, 'utf8');
     if (!/manifest=["']/i.test(html)) continue;
+    if (isSelfContainedPage(file)) continue;
     assert.match(html, /i18n\.js/i, file);
     assert.doesNotMatch(html, /Starting Cache Installation|Installing Offline Cache/i, file);
   }

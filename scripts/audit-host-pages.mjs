@@ -6,6 +6,18 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const EXCLUDED = new Set(['jb/test']);
 const LEGACY_BRAND = /GamerHack|GamerHack93|PS4\s*-\s*PS5\s+Exploit\s+Host/i;
 
+// Self-contained exploit runtime pages are exempt from the i18n + shared
+// stylesheet requirement: every extra subresource is one more allocation and
+// one more timing shift in the process the exploit is about to groom. The
+// runtime page (14x/jb.html) therefore may not load ../i18n.js or ../style.css;
+// its landing page (14x/index.html) still must. See the 14x/jb.html header note.
+const SELF_CONTAINED_PAGES = new Set(['14x/jb.html']);
+
+export function isSelfContainedPage(file) {
+  const source = relative(ROOT, file).replaceAll('\\', '/');
+  return SELF_CONTAINED_PAGES.has(source);
+}
+
 function isExcluded(file) {
   const rel = relative(ROOT, file).replaceAll('\\', '/');
   return [...EXCLUDED].some((prefix) => rel === prefix || rel.startsWith(`${prefix}/`));
@@ -43,8 +55,10 @@ export function auditHostPage(file) {
   const html = readFileSync(file, 'utf8');
   const source = relative(ROOT, file).replaceAll('\\', '/');
   const errors = localReferenceErrors(file, html);
-  if (!/i18n\.js/i.test(html)) errors.push(`${source}: missing local i18n.js`);
-  if (!/styles?\.css/i.test(html)) errors.push(`${source}: missing local local styles.css`);
+  if (!isSelfContainedPage(file)) {
+    if (!/i18n\.js/i.test(html)) errors.push(`${source}: missing local i18n.js`);
+    if (!/styles?\.css/i.test(html)) errors.push(`${source}: missing local local styles.css`);
+  }
   if (LEGACY_BRAND.test(html)) errors.push(`${source}: visible legacy GamerHack brand`);
   return errors;
 }

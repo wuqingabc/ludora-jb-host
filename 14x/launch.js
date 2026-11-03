@@ -63,16 +63,23 @@ function stopClock() {
   countEl.textContent = "";
 }
 
+function countdownText(left) {
+  if (window.LudoraI18n && typeof window.LudoraI18n.t === "function") {
+    return window.LudoraI18n.t("afterglow.countdown", { seconds: left });
+  }
+  return left + " 秒后自动开始";
+}
+
 function startClock() {
   var left = AUTOSTART_SECONDS;
-  countEl.textContent = left + " 秒后自动开始";
+  countEl.textContent = countdownText(left);
   ticker = setInterval(function () {
     left -= 1;
     if (left <= 0) {
       start();
       return;
     }
-    countEl.textContent = left + " 秒后自动开始";
+    countEl.textContent = countdownText(left);
   }, 1000);
 }
 

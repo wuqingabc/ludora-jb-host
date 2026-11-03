@@ -4,7 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>鲁哆啦 Ludora · 14.00 越狱</title>
-    <link rel="stylesheet" href="data:text/css," />
+    <script src="../i18n/zh-CN.js"></script>
+    <script src="../i18n/zh-TW.js"></script>
+    <script src="../i18n/en-US.js"></script>
+    <script src="../i18n.js"></script>
+    <link rel="stylesheet" href="../style.css" />
     <style>
       :root {
         --bg: #0b0d10; --panel: #0e1116; --line: #1e2732;
@@ -46,33 +50,33 @@
   <body>
     <!-- 每次越狱都从本页进入：jb.js 的 referrer 守卫只在「从本页导航过来」时
          才武装内核链，避免浏览器恢复上次会话时无人值守地重跑。 -->
-    <div id="brand"><b>鲁哆啦 Ludora</b><span class="kicker">主机工具</span></div>
+    <div id="brand"><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="kicker" data-i18n="host.title">主机工具</span></div>
 
     <div class="shell">
       <main class="panel">
-        <p class="lede">PS4 内核越狱 · 固件 13.52 / 14.00</p>
-        <h1>选择载荷</h1>
+        <p class="lede" data-i18n="afterglow.lede">PS4 内核越狱 · 固件 13.52 / 14.00</p>
+        <h1 data-i18n="afterglow.choosePayload">选择载荷</h1>
         <form class="pick" id="pick">
           <label class="opt">
             <input type="radio" name="payload" value="goldhen" checked />
-            <span>GoldHEN 2.4b18.13（默认）</span>
+            <span data-i18n="afterglow.optionGoldhen">GoldHEN 2.4b18.13（默认）</span>
           </label>
           <label class="opt">
             <input type="radio" name="payload" value="hen" />
-            <span>ps4-hen（实验）</span>
+            <span data-i18n="afterglow.optionHen">ps4-hen（实验）</span>
           </label>
 
           <label class="opt opt-auto">
             <input type="checkbox" id="auto" checked />
-            <span>自动开始</span>
+            <span data-i18n="afterglow.autoStart">自动开始</span>
           </label>
 
-          <button class="btn" type="submit">开始越狱</button>
+          <button class="btn" type="submit" data-i18n="afterglow.start">开始越狱</button>
           <p class="count" id="count"></p>
         </form>
       </main>
 
-      <p class="byline">内核 afterglow · well0nez/m0zz</p>
+      <p class="byline" data-i18n="afterglow.byline">内核 afterglow · well0nez/m0zz</p>
     </div>
 
     <script src="launch.js"></script>
