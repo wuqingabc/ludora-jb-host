@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "note": "页面内 ELF sender 只发上游 URL 给 elfldr(9021)自行下载,不自托管任何 ELF。sha256 为下载该 ELF 时核对的真值(见设计 §6)。kstuff 因来自百度网盘、无 elfldr 可直载的稳定直链,暂不纳入此列表(见 borrow-map.md)。",
+  "plugins": [
+    {
+      "name": "OnionHEN",
+      "desc": "一体化 HEN 环境(注入 payload、金手指、系统控制)",
+      "url": "https://github.com/aydencharles/onionHEN/releases/download/v0.9.0/OnionHEN.elf",
+      "sha256": "02b13aa43c1b25bc7fb2e751c6650cc34a2282bf6f5802fcc646fde56fdb345f",
+      "license": "GPL-3.0",
+      "source": "aydencharles/onionHEN v0.9.0"
+    },
+    {
+      "name": "fps60",
+      "desc": "解锁 60FPS 帧率",
+      "url": "https://github.com/eladharels/ps5-60FPS/releases/download/v1.0.0/fps60.elf",
+      "sha256": "5331ebf1b69cd272a0491f899b14ca5d59240adee2e69078631473070ddeca9b",
+      "license": "",
+      "source": "eladharels/ps5-60FPS v1.0.0(无 license)"
+    },
+    {
+      "name": "nanoDNS",
+      "desc": "DNS 重定向(屏蔽系统更新与遥测)",
+      "url": "https://github.com/drakmor/nanoDNS/releases/download/0.4/nanodns.elf",
+      "sha256": "fcfb7d47c3b295560ea1603dc015f7c4950353ef0faca16428bd425680ef1fc5",
+      "license": "GPL-3.0",
+      "source": "drakmor/nanoDNS v0.4"
+    },
+    {
+      "name": "pldmgr",
+      "desc": "payload 管理器(浏览、安装、管理各类插件)",
+      "url": "https://github.com/itsPLK/ps5-payload-manager/releases/download/v0.6.1/pldmgr_v0.6.1.elf",
+      "sha256": "e10f0c80f8b4a4bf1adcd21670296e71788995aa3744687aa7663d40d922d128",
+      "license": "GPL-3.0",
+      "source": "itsPLK/ps5-payload-manager v0.6.1"
+    },
+    {
+      "name": "ps4mount",
+      "desc": "挂载/访问 PS4 内容",
+      "url": "https://github.com/gasb07/ps4mount/releases/download/v0.7.2/ps4mount.elf",
+      "sha256": "30627513e950f6b7b6b0e5ca43c30e954cdd873a646b8beefe0a4a925ac28479",
+      "license": "GPL-3.0",
+      "source": "gasb07/ps4mount v0.7.2"
+    },
+    {
+      "name": "ShadowMountPlus",
+      "desc": "阴影挂载(存档与系统文件访问)",
+      "url": "https://github.com/drakmor/ShadowMountPlus/releases/download/1.7beta11/shadowmountplus.elf",
+      "sha256": "c1cecf577c2e6a544e04b79c193c63eda37f62fe7a1a0aa44e64a39f2f264a6f",
+      "license": "GPL-3.0",
+      "source": "drakmor/ShadowMountPlus 1.7beta11"
+    },
+    {
+      "name": "syslang 简体中文",
+      "desc": "切换系统语言为简体中文",
+      "url": "https://github.com/owendswang/ps5-syslang/releases/download/v0.3/syslang-zh-Hans-v0.3.elf",
+      "sha256": "9a5c270219aae9e3df64f03f487da2c3f1c5613026fb04ee6077cf75881874ba",
+      "license": "GPL-3.0",
+      "source": "owendswang/ps5-syslang v0.3"
+    },
+    {
+      "name": "Web 文件管理器",
+      "desc": "网页文件管理器(浏览器内管理文件)",
+      "url": "https://github.com/owendswang/ps5-web-file-manager/releases/download/v1.13-rc2/web-file-mgr-v1.13-rc2.elf",
+      "sha256": "91f8e7f52183ce624651b779016bb48cbe7adaad278833a1191ad2e8fc6fbfe3",
+      "license": "GPL-3.0",
+      "source": "owendswang/ps5-web-file-manager v1.13-rc2"
+    },
+    {
+      "name": "Autoloader 安装器",
+      "desc": "安装 WebKit autoloader 主屏快捷方式",
+      "url": "https://github.com/itsPLK/ps5-webkit-autoloader/releases/download/v0.6.1/webkit-autoloader-installer_v0.6.1.elf",
+      "sha256": "df4380dd31098b788879191d72477a5062802cb8f41c288429ee22960f74b984",
+      "license": "GPL-3.0",
+      "source": "itsPLK/ps5-webkit-autoloader v0.6.1"
+    }
+  ]
+}

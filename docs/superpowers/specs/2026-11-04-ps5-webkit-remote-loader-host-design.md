@@ -99,8 +99,14 @@ remote-loader 关键事实（读 `README.md` / `docs/API.md` / `src/firmware.js`
 ## 5. 决策记录（站长已拍板，2026-11-04）
 
 1. **ELF 插件加载 = 页面内自写 ELF sender**（走「最终完美版本」，不走 PC sender）。页面内
-   新增一个 JS payload：从上游 URL fetch ELF 字节，经扩展的 socket 能力直发 `elfldr`（9021）
-   加载——用户在网页上点选插件即发，全程无需 PC 端工具。
+   新增一个 JS payload：把上游 ELF **直链 URL 字符串**经扩展的 socket 能力直发 `elfldr`（9021），
+   **由 elfldr 进程自行下载加载**——用户在网页上点选插件即发，全程无需 PC 端工具。
+   > 实现期更正（2026-11-04）：最初设计是「页面 fetch ELF 字节 → 直发字节」，但实测
+   > 核对 elfldr v0.26 协议与 remote-loader 时序后改为「发 URL 字符串」。原因：kernel exploit
+   > 之后 WebProcess 网络栈已死，页面内 `fetch()` 不会再完成；而 elfldr 是独立进程
+   > （ptrace 引导进 `SceRedisServer` 后常驻），网络仍活，其 9021 端口原生支持
+   > `http(s)://` 直链（见 elfldr README `echo "$URL" | nc host 9021`）。发 URL 比发字节
+   > 更简单也更可靠。
 2. **remote-loader vendor 方式 = 原样 vendor 源文件 + ludora-bridge 观察 DOM**，与现有
    `ps5-relapse` 一致、可 diff、可走 `npm run verify:*`；remote 模式（PC host + 9027）改造成
    static 托管可用。
@@ -144,8 +150,9 @@ ELF 的具体 URL 并附 sha256 校验**，任一不符即停。镜像站收录�
    进入「可加载 payload」态。
 4. **JS payload 路径**（remote-loader 原生）：L2 内嵌 JS payload，`api.chain` 做 ROP，
    `api.krw` 用 kernel R/W——自写「安装鲁哆啦客户端」插件与「页面内 ELF sender」都走这条。
-5. **ELF payload 路径**：页面内自写 ELF sender fetch 上游 ELF 字节，经 socket 直发 `elfldr`
-   （9021）加载（见 §5 决策 1）。
+5. **ELF payload 路径**：页面内自写 ELF sender 把上游 ELF 直链 URL 经 socket 直发 `elfldr`
+   （9021），由 elfldr 进程自行下载加载（见 §5 决策 1 的实现期更正——WebProcess 网络栈在
+   kernel exploit 后已死，不能页面内 fetch 字节）。
 
 **状态呈现（L2）**：沿用 `ludora-bridge.js` 的 `MutationObserver` 手法，观察 L3 引擎写进
 `#console`/状态节点的文本，镜像成 Ludora 品牌摘要（`relapse.success` / `.failed` /

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>鲁哆啦 Ludora · PS5 主机入口</title>
+<script src="../i18n/zh-CN.js"></script>
+<script src="../i18n/zh-TW.js"></script>
+<script src="../i18n/en-US.js"></script>
+<script src="../i18n.js"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="loader.css">
+</head>
+<body class="ludora-custom-brand">
+<div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker" data-i18n="host.title">主机工具</span></div>
+<div id="wrap">
+  <div class="eyebrow" data-i18n="host.title">主机工具</div>
+  <div id="state" data-i18n="relapse.running">正在执行漏洞利用，请勿离开此页面</div>
+  <div id="det"></div>
+  <div class="ad-slot" aria-label="鲁哆啦在线下载"><img src="../store-qr.png" alt="扫码前往鲁哆啦商店"><span>免光盘·免U盘</span><strong>鲁哆啦在线下载</strong><small>联网直接下载安装，即下即玩</small></div>
+  <div id="plugins-hint"></div>
+  <div id="plugins"></div>
+  <!--
+    `#console` is required verbatim by the vendored, unmodified
+    `src/site.js` (`document.getElementById("console")` at module load
+    time). Do not rename it — see `loader.css` and `ludora-bridge.js`
+    header notes.
+  -->
+  <div id="console"></div>
+</div>
+<script src="ludora-bridge.js"></script>
+<script src="payloads.js"></script>
+<script>
+  // Standalone queue: the vendored src/site.js runs its inline payload queue
+  // (no 9027 listener) when window.STANDALONE is set. payloads.js is generated
+  // by tools/build-page.mjs from payloads/relapse.js (vendored) and
+  // ludora-payloads/elf-send.js (Ludora's own ELF sender).
+  window.STANDALONE = {
+    title: "鲁哆啦 Ludora · PS5 插件加载器",
+    payloadCount: 2,
+    payloadNames: ["relapse", "elf-send"],
+    payloads: window.STANDALONE_PAYLOADS || [],
+  };
+</script>
+<script src="./src/firmware.js"></script>
+<script src="./src/main.js"></script>
+<script src="./src/rop.js"></script>
+<script src="./src/utils/syscalls.js"></script>
+<script type="module" src="./src/site.js"></script>
+</body>
+</html>
