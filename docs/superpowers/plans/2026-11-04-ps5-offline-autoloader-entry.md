@@ -472,7 +472,7 @@ git push gitee main
 cd /Users/qingwu/Development/Game/ludora-ps5-autoloader
 # 53/443 需 root；用之前验证过的 sudo 姿势，且不把密码写进任何文件
 sudo env -u ALL_PROXY -u all_proxy -u HTTP_PROXY -u http_proxy \
-  python3 ludora-ps5-autoloader-host.py --port 53 --https-port 443
+  python3 ludora-ps5-autoloader-host.py --dns-port 53 --https-port 443
 ```
 
 记录监听 IP（`ipconfig getifaddr en0` 之类，取局域网地址）。
