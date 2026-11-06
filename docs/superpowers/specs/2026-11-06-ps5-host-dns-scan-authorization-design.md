@@ -1,11 +1,12 @@
 # PS5 Host DNS 越狱入口「扫码授权门」设计
 
 **Date:** 2026-11-06
-**Status:** Design（站长已拍板关键决策，待 review）
+**Status:** Design（已按「与授权流程一致、不重造轮子」重写，待 review）
 **Scope:** 本文是 [2026-11-04-ps5-offline-autoloader-entry-design.md](./2026-11-04-ps5-offline-autoloader-entry-design.md)
 （下称「offline spec」）的补充。落地范围限定：给 host.py 的 DNS 越狱入口加一道**手机扫码授权门**，
-并补齐 ludora.cc/jb 授权门**缺失的后端**（`/api/v2/jb/sessions`）。不碰 PS4 引擎、不碰 remote-loader
-vendored 源、不碰本地鲁哆啦折腾器（pldmgr / 主屏快捷方式）的离线启动路径。
+**复用 ludora.cc/jb 已有的 device/pair 授权 + device_token 在线验证**，不新增任何后端端点。
+不碰 PS4 引擎、不碰 remote-loader vendored 源、不碰本地鲁哆啦折腾器（pldmgr / 主屏快捷方式）的
+离线启动路径。
 
 ---
 
@@ -15,15 +16,16 @@ offline spec 已把「无 PC 用户第一次越狱」走通：PS5 把 DNS 指向
 DNS 劫持到 host.py → 返回 exploit chain page → 装主屏。但这条入口目前**任何人点 User's Guide
 就能直接进 exploit**，没有门槛。
 
-ludora.cc/jb 的**网页路由**入口已有授权门（`jb/index.html` 扫码授权前端），但它调用的后端
-`/api/jb/sessions` **尚未实现** —— 也就是说两条入口目前都「看得到门、关不上门」。
+ludora.cc/jb 的**网页路由**入口已有完整授权闭环（已上线）：`/jb`（`src/pages/jb/index.astro`）走
+**device/pair**（登录态 + 手机输 6 位配对码），授权产物 `device_token` 落到 cookie
+`ludora_jb_device`，`/jb/host/*` 用 `validJbDeviceToken` 调 `/api/v2/policy` 在线验证放行。
 
 **目标**：
 
-1. 给 host.py 的 DNS 越狱入口加**手机扫码授权门**：点 User's Guide → 先扫码授权 → 授权通过才进 exploit。
-2. 扫码授权**复用 ludora.cc/jb 的机制**（手机扫码 + **登录态** + 输 6 位码），不另起一套门槛语义。
-3. 补齐 `/api/v2/jb/sessions` 后端，让网页路由与 DNS 路由**共用同一份授权**。
-4. **本地鲁哆啦折腾器（主屏快捷方式 / pldmgr 127.0.0.1:8084）不扫码** —— 已装机的老用户直接进。
+1. 给 host.py 的 DNS 越狱入口加**手机扫码授权门**：点 User's Guide → 先走 device/pair 授权 →
+   授权通过（拿到有效 device_token）才进 exploit。
+2. **复用 ludora.cc/jb 的 device/pair + device_token 在线验证**，不新造后端端点、不新造凭证。
+3. **本地鲁哆啦折腾器（主屏快捷方式 / pldmgr 127.0.0.1:8084）不扫码** —— 已装机的老用户直接进。
 
 ---
 
@@ -31,171 +33,147 @@ ludora.cc/jb 的**网页路由**入口已有授权门（`jb/index.html` 扫码�
 
 | 事实 | 结论 |
 |---|---|
-| ludora.cc/jb 授权前端 | `jb/index.html`（主机扫码页）+ `jb/authorize.html`（手机输码页）+ `jb/src/jb-client.mjs`/`authorize.mjs` 已存在，契约见 §4 |
-| 授权后端 `/api/jb/sessions` | **ludora-server 里不存在**，本次补齐 |
-| ludora-server 路由 | `_mount_api` 把每个 router 挂 `/api` 与 `/api/v2`；**`/api/*` 被 api_gateway 中间件整段 410 墓碑，只有 `/api/v2/*` 活着**（spec 2026-09-15-api-v2-cutover） |
-| 登录态 | ludora.cc(Astro) 会员登录态 = **cookie + `POST /api/auth/refresh` 换 Bearer accessToken**（`src/lib/jb-pairing.ts` 的 `refreshBrowserAccessToken()` 是现成先例）；后端 `current_member`（membership.py:589）认 `Authorization: Bearer` |
-| 签票密钥 | `jb_issue_api.py` 的 `_secret()` 复用进程 `token_secret`，`sign_ticket`/`verify_ticket` 用 HMAC + 过期 + `compare_digest` |
+| ludora.cc/jb 授权 | `src/pages/jb/index.astro` + `jb-console-client.ts` → `startPairing`/`pollPairing`（`/api/device/pair/start`、`/poll`）+ `jb/authorize.astro` + `jb-authorize-client.ts` → `confirmPairing`（`/api/device/pair/confirm`，Bearer 登录态） |
+| 授权产物 | `device_token = secrets.token_urlsafe(24)`（**随机 token**，服务端只存 `_hash_token(token)` 哈希，`device.py:174`） |
+| 放行验证 | `validJbDeviceToken`（`src/lib/jb-device-auth.ts`）：拿 cookie `ludora_jb_device` 或 `x-device-token` 头，调 `/api/v2/policy`（X-Device-Token），`response.ok` = 有效 |
+| `/api/v2/policy` 鉴权 | `resolve_pin_principal`（auth.py:95）：带 `X-Device-Token` → `current_device`，**无效 token 抛 401**，有效 → 200（device 作用域）。故 host.py 用「200/401」即可判有效/无效 |
 | host.py DNS | `DNSHandler.handle` 只对 `manuals.playstation.net` 回 A 记录，其余**一律 NXDOMAIN**（host.py:198） |
-| host.py HTTPS | `_resolve()` 按 UA 固件路由到 `relapse.html`/`poops.html`，`send_head()` 直接 200 吐文件，无任何门 |
-| 二维码 | ludora-server 依赖无 qrcode 库；前端 preview 模式已用 `data:image/svg+xml`（`segno` 纯 Python 可直接产出 SVG data URI） |
+| host.py HTTPS | `GuideHandler.send_head()` 直接 200 吐文件，无任何门 |
+| 死前端 | ludora-jb-host 的 `jb/index.html` + `jb-client.mjs` 调 `/api/jb/sessions`（**后端从未实现、未部署**，ludora-site 的 `/jb` 是 `index.astro` 覆盖的）。**本方案不动它** |
 | 本地折腾器 | autoloader 装的主屏快捷方式 = standalone chain page，本地启动不走 host.py；pldmgr 8084 是 payload 自己的 server。**天然不经过扫码门** |
 
 ---
 
 ## 3. 决策记录（站长已拍板，2026-11-06）
 
-1. **接入方式 = 方案 B（host.py 302 到 ludora.cc/jb + 凭证跳回）**：不内嵌第二份扫码页，
-   授权页单一份（ludora.cc/jb），host.py 只做「门」。
-2. **门槛 = 真手机授权握手**：手机扫码 + **登录态**（会员 cookie→Bearer）+ 输 6 位授权码。
-   与 ludora.cc/jb 一致，不是纯扫码、不是会员档位付费。
-3. **频率 = 每次越狱都扫码**：授权凭证短时效、host.py 无状态，不持久化「免扫」绑定。
-4. **凭证验签 = 共享密钥本地验签，且复用登录态密钥 `token_secret`**：不为越狱授权另起一把密钥，
-   host.py 打包时注入与 ludora-server 相同的 `token_secret`，本地 HMAC 验签、无网络回调。
-5. **本地折腾器不扫码**：天然成立（不走 host.py），只作边界确认，不写代码。
+1. **接入方式 = 方案 B（host.py 302 到 ludora.cc/jb + 凭证跳回）**：授权页单一份（ludora.cc/jb），
+   host.py 只做「门」。
+2. **门槛 = 真手机授权握手**：手机扫码 + **登录态**（会员 cookie→Bearer）+ 输配对码。与
+   ludora.cc/jb 一致，不是纯扫码、不是会员档位付费。
+3. **频率 = 每次越狱都扫码**：每次 DNS 越狱都是一次新的 device/pair 会话（`pair_start` 生成新
+   `device_code`/`user_code`，手机每次都要确认）。host.py 的「源 IP 授权记忆」进程内存 + 短 TTL
+   （5 分钟，仅覆盖一次越狱会话内的子资源与重试），不落盘、不持久化免扫。
+4. **凭证验证 = 复用 device_token + `/api/v2/policy` 在线验证**（`validJbDeviceToken` 同款）。
+   🔴 device_token 是随机 token、服务端只存哈希，**无法本地验签** —— 不另造 entry_token 密钥，
+   直接沿用现成的「调 /api/v2/policy 判 200/401」。
+5. **后端零改动**：device/pair、`/api/v2/policy` 均已上线，ludora-server 一行不改。
+6. **本地折腾器不扫码**：天然成立（不走 host.py），只作边界确认，不写代码。
 
 ---
 
-## 4. 授权前端契约（已存在，后端要对齐）
+## 4. 组件设计
 
-`jb/src/jb-client.mjs` / `authorize.mjs` 现调：
+### 4.1 host.py 门 —— ludora-ps5-autoloader 的 `host.py`
 
-| 端点 | 方法 | 请求 | 响应 |
-|---|---|---|---|
-| `/api/jb/sessions` | POST | `{platform}` | `{id, authorizationCode(6位), mobileUrl, qrDataUrl}` |
-| `/api/jb/sessions/:id` | GET | —（轮询，`cache: no-store`） | `{authorized}` |
-| `/api/jb/sessions/:id/authorize` | POST | `{authorizationCode}` | 成功/失败 |
+- **DNS 放行 `www.ludora.cc`**：`DNSHandler.handle` 的 `name == server.target` 判定改为
+  「`manuals.playstation.net` 或 `www.ludora.cc` 都回 A 记录，其余 NXDOMAIN」。否则 PS5 被自己的
+  DNS 锁死，够不到授权页与 API。
+- **HTTPS 门**：`send_head()` 里，对 `manuals.playstation.net` 的请求按以下顺序判定：
+  1. **源 IP 在授权记忆内（未过期）** → 直接吐 exploit（覆盖 exploit 页加载子资源 js/offsets 的
+     场景——子资源请求不带 `dt`，靠 IP 记忆放行）。
+  2. **query 带 `dt=<device_token>` 且在线验证有效** → 把源 IP 记入授权记忆（TTL 5 分钟）→ 吐 exploit。
+  3. **其余（无 / 无效）** → 302 `Location: https://www.ludora.cc/jb?next=<本次请求的完整 URL>`。
+- **在线验证**：host.py 用标准库 `urllib.request` 调 `http://<ludora-server>/api/v2/policy`
+  （头 `X-Device-Token: <dt>`，超时 8s，**显式绕开系统代理**——host.py 跑在 ludora.cc 生产机，
+  回环/内网调用不得走代理），**200 = 有效，401/异常 = 无效**。ludora-server 地址部署时配置
+  （默认 `http://127.0.0.1:8600`，与 nginx 反代同机）。
+- **授权记忆**：`dict[源IP] = 过期时间`，进程内存即可，TTL **~5 分钟**。不依赖 PS5 的
+  cookie/header 行为——那些在真机上不可靠。
+- **日志脱敏**：host.py 的 `log_request` 会打印 `self.path`（含 `?dt=`），须把 query 里的 `dt`
+  值脱敏（`?dt=***`），避免 device_token 落进日志/终端。
 
-`jb-client.mjs` 授权后 `redirectToEntry()`：PS5 → `/jb/ps5/`，PS4 → `/jb/ps4/`（本次要支持 `next` 跳回）。
+### 4.2 前端改动 —— ludora-site `src/lib/jb-console-client.ts`
 
----
+授权成功（`pollPairing` 返回 `bound`）后，现在写死跳 `route.target`（`/jb/host/*`）。改为：**若 URL
+带 `next`（host.py 传的），跳回 `next` 并附 `?dt=<device_token>`**；否则维持原逻辑。
 
-## 5. 组件设计
+- `next` 从 `window.location.search` 读取。
+- **跳回前校验 `next` 的 host 必须是 `manuals.playstation.net`**（防 open-redirect）；不合法则忽略
+  `next`，走原 `/jb/host/*` 逻辑。
+- 跳回 URL：`new URL(next)` → `searchParams.set("dt", result.deviceToken)` → `location.assign`。
 
-### 5.1 后端授权 API —— ludora-server 新增 `nasflow_server/jb_session_api.py`
+### 4.3 ludora-server —— 零改动
 
-路由挂 `/api/v2/jb/sessions`（v2 唯一活命名空间）。三个端点：
+device/pair（`device.py`）与 `/api/v2/policy`（`policy.py` + `auth.py`）均已上线，host.py 直接复用。
 
-- **`POST /sessions`**（公开，不挂会员闸——会话创建阶段 PS5 端无登录态）
-  - 生成 `session_id`（32 hex 随机）+ `authorization_code`（6 位数字）
-  - `mobileUrl = https://www.ludora.cc/jb/authorize.html?session=<id>`
-  - `qrDataUrl`：`segno.make(mobileUrl).svg_data_uri()`
-  - 会话落库/缓存，TTL ~5 分钟；`Set-Cookie: ludora_jb_session=<id>` 绑定主机（PS5 浏览器兼容性列入真机验收项）
-- **`GET /sessions/{id}`**（公开）：返回 `{authorized}`；若已授权，附带签发短期凭证
-  `entry_token`（见 §5.3）与 `expires_in`。
-- **`POST /sessions/{id}/authorize`**（挂 `current_member` 登录态）：
-  - 校验 `Authorization: Bearer`（手机端 `/api/auth/refresh` 换来的 accessToken）→ 未登录 401
-  - 校验 `authorizationCode` 与 session 匹配，错计数（≥5 次作废 session）
-  - 通过后标记 `authorized = true`，记录授权会员 id（供审计）
+### 4.4 ludora-jb-host —— 零改动
 
-参照 `jb_issue_api.py` 风格：短时效、限次、`audit` 记账、`compare_digest` 比对授权码。
-
-### 5.2 host.py 门 —— ludora-ps5-autoloader 的 `host.py`
-
-- **DNS 放行 `www.ludora.cc`**：`DNSHandler.handle` 的 `name == server.target` 判定改为「`manuals.playstation.net`
-  或 `www.ludora.cc` 都回 A 记录，其余 NXDOMAIN」。否则 PS5 被自己的 DNS 锁死，够不到授权页与 API。
-- **HTTPS 门**：`send_head()` 里，对 `manuals.playstation.net` 的请求先看是否带有效 `entry_token`
-  （query `?jt=` 或 cookie）：
-  - **无 / 无效** → 302 `Location: https://www.ludora.cc/jb?next=<本次请求的完整 URL>`
-  - **有效** → 正常吐 `relapse.html`/`poops.html`
-- **验签**：`verify_entry_token(secret, token)` 纯函数，HMAC(`token_secret`, `session_id|exp`)，
-  `compare_digest` 定时比对 + 过期检查。密钥经部署配置注入（与 ludora-server 同一 `token_secret`），
-  **不写进任何 commit**。
-
-### 5.3 授权凭证 entry_token（复用登录态密钥）
-
-- 授权成功（`authorize` 端点）时，后端把 `session_id` 标记 authorized 并记录 `authorized_member_id`。
-- `GET /sessions/{id}` 检测到 authorized 后，用 `token_secret` 现签短期凭证，**token 本身携带明文
-  供 host.py 重算比对**（对齐 `jb_issue_api.py` 的 `sign_ticket`/`verify_ticket`：主体明文单独传、签名只作校验）：
-
-  ```
-  entry_token = "<session_id>.<exp>.<sig>"
-  sig = HMAC-SHA256(token_secret, f"{session_id}|{exp}")[:32]   # 十六进制
-  ```
-
-  TTL ~60s（足够 PS5 跳回一次）。
-- host.py 验签：拆出 `session_id`/`exp`/`sig` → 重算 HMAC → `compare_digest` 定时比对 + 过期检查，
-  **无需回调后端**。
-
-### 5.4 前端改动 —— ludora-jb-host `jb/`
-
-- `jb/src/jb-client.mjs`：
-  - `sessionEndpoint` 改 `/api/v2/jb/sessions`；
-  - `redirectToEntry()`：若 URL 带 `next`（host.py 传的），授权后跳 `next` 并附 `?jt=<entry_token>`；
-    否则维持默认 `/jb/ps5/`。
-- `jb/src/authorize.mjs` + `jb/authorize.html`：
-  - 进入时调 `/api/auth/refresh`（`credentials: include`）判断登录态：失败 → 展示「请先登录」+ 跳
-    ludora.cc 登录页（登录后回 `authorize.html?session=...`）；成功 → 显示输码框。
-  - `POST /authorize` 带 `Authorization: Bearer <accessToken>`。
+`jb/index.html` + `jb-client.mjs`（`/api/jb/sessions`）是未部署的死前端，本方案不碰。
 
 ---
 
-## 6. 数据流（DNS 越狱入口，完整时序）
+## 5. 数据流（DNS 越狱入口，完整时序）
 
 ```
-PS5           host.py(ludora.cc)        ludora.cc/jb(静态+API)        手机
+PS5           host.py(ludora.cc)        ludora.cc/jb(astro+API)        手机
  │  User's Guide                                   │                    │
  │─────manuals.playstation.net──────────▶│         │                    │
- │        (无 entry_token)                 │         │                    │
- │◀──────── 302 → www.ludora.cc/jb?next=…─│         │                    │
- │───────────────────────────────GET /jb─────────▶│                    │
- │◀────────────── jb/index.html(扫码页)─────────────│                    │
- │──── POST /api/v2/jb/sessions {platform}──────────▶│                    │
- │◀──── {id, code, mobileUrl, qrDataUrl}────────────│                    │
- │◀══════════════ 二维码 + 6位码 ═══════════════════│                    │
- │                                                    │◀──手机扫码──        │
- │                                                    │◀──GET authorize.html──│
- │                                                    │   (检查登录态→未登录引导登录) │
- │                                                    │◀──POST /authorize (Bearer+code)──│
- │                                                    │◀──{ok} 标记 authorized──│
- │──── GET /sessions/{id} (轮询)─────────────────────▶│                    │
- │◀──── {authorized:true, entry_token, exp}──────────│                    │
- │─────manuals.playstation.net?jt=<entry_token>─────▶│                    │
- │        (验签通过)                                 │                    │
+ │        (无 dt, IP 未授权)              │         │                    │
+ │◀── 302 → www.ludora.cc/jb?next=<原URL>─│         │                    │
+ │───────────────────────GET /jb?next=…───────────▶│                    │
+ │◀────────── index.astro(扫码页)──────────────────│                    │
+ │──── POST /api/v2/device/pair/start──────────────▶│                    │
+ │◀──── {device_code, user_code}───────────────────│                    │
+ │◀══════════════ 二维码 + 配对码 ═════════════════│                    │
+ │                                                    │◀──手机扫码 /jb/authorize──│
+ │                                                    │   (authorize.astro:登录态→未登录重定向登录) │
+ │                                                    │◀──POST /api/v2/device/pair/confirm (Bearer+code)──│
+ │                                                    │◀──{ok}──│
+ │──── POST /api/v2/device/pair/poll (轮询)──────────▶│                    │
+ │◀──── {status:"bound", device_token}───────────────│                    │
+ │  (jb-console-client:带 next → 跳 next?dt=<token>)  │                    │
+ │─────manuals.playstation.net?dt=<token>───────────▶│                    │
+ │        (host.py 调 /api/v2/policy 验 200)          │                    │
  │◀──────────── relapse.html/poops.html(exploit)─────│                    │
 ```
 
 ---
 
-## 7. 安全
+## 6. 安全
 
-- **会话**：5 分钟 TTL；`session_id` 32 hex 随机（防猜）；`Set-Cookie` 绑主机（防抢 session）。
-- **授权码**：6 位数字，错 5 次作废；`compare_digest` 比对。
-- **登录态**：`authorize` 端点挂 `current_member`，未登录 401；授权会员 id 记审计。
-- **entry_token**：60s TTL、HMAC 绑 session、`compare_digest` 验签；密钥不进 commit。
-- **防绕过**：host.py 的 302 门覆盖 `manuals.playstation.net` 下所有路径（含直接敲 `relapse.html`），
-  无有效 token 一律 302，不因「猜 URL」绕开。
-- **不泄露**：二维码/授权码/entry_token 均不含 exploit 资产；exploit 只在验签后吐。
+- **授权门槛**：device/pair 的 `confirm` 挂 `current_member`（Bearer 登录态），未登录 401；配对码
+  短时效、一次性消费（`device_pair` 表 `status pending→confirmed→consumed`）。
+- **凭证验证**：host.py 调 `/api/v2/policy` 判 200/401，与 `validJbDeviceToken` 同款；device_token
+  不在 host.py 落盘，仅当次请求内存用一下。
+- **防绕过**：302 门覆盖 `manuals.playstation.net` 下所有路径（含直接敲 `relapse.html`），无有效
+  device_token、且源 IP 不在授权记忆内的一律 302，不因「猜 URL」绕开。
+- **授权记忆取舍**：绑定源 IP、TTL 5 分钟，同局域网内另一台设备在 TTL 内可蹭授权——局域网场景
+  （用户自己的网络）下可接受的取舍，换取「不依赖 PS5 cookie/header 行为」的可靠性。
+- **device_token 进 URL**：跳回时 `?dt=<device_token>` 会进 host.py 日志与浏览器历史。host.py 日志
+  已脱敏 `dt`；device_token 本身是「设备身份凭证」，泄漏面 = 冒充这台设备调 API（设备场景风险
+  可控），且只在一次越狱跳回的瞬间出现。
+- **open-redirect**：`next` 只允许 `manuals.playstation.net`，其余 host 一律忽略走默认入口。
 
 ---
 
-## 8. 生产部署（ludora.cc 单机）
+## 7. 生产部署（ludora.cc 单机）
 
 - **53 DNS**：`manuals.playstation.net` → 本机 IP；`www.ludora.cc` → 本机 IP；其余 NXDOMAIN。
-- **443 nginx SNI 分流**：`manuals.playstation.net` → host.py；`www.ludora.cc` → ludora-jb-host 静态站
+- **443 nginx SNI 分流**：`manuals.playstation.net` → host.py；`www.ludora.cc` → ludora-site（Astro）
   + ludora-server API（`/api/v2/*` 反代）。
-- **密钥注入**：host.py 的 `token_secret` 与 ludora-server 的 `token_secret` 同一值，部署配置注入，
-  不写 commit；轮换时两端同步（沿用 jb_issue_api 的「少一处密钥」原则）。
+- **host.py 调 ludora-server**：内网/回环直连 `http://127.0.0.1:8600/api/v2/policy`（部署配置注入），
+  显式绕开系统代理。
 
 ---
 
-## 9. 验收标准（真实运行验收，铁律）
+## 8. 验收标准（真实运行验收，铁律）
 
-- 组件测试：后端 `jb_session_api.py` 的三端点单测（会话创建/轮询/授权/限次/过期/登录态 401）全绿；
-  host.py 的 `verify_entry_token` 纯函数单测（合法/过期/篡改/密钥错）全绿。
-- **真实运行（ludora.cc 真机或等价环境）**：走一遍 §6 完整时序——PS5 点 User's Guide → 302 到扫码页 →
-  手机扫码（未登录被拦 → 登录）→ 输码 → PS5 轮询到 authorized → 带 token 跳回 → host.py 吐 exploit。
-  不授权时直接访问 `manuals.playstation.net/relapse.html` 必须 302。
+- 组件测试：host.py 的「device_token 在线验证」做成纯函数（注入验证回调即可测），单测覆盖
+  有效（200）/无效（401）/网络异常（超时→判无效）三态；`next` 白名单校验单测（合法/跨域/无 next）。
+- **真实运行（ludora.cc 真机或等价环境）**：走一遍 §5 完整时序——PS5 点 User's Guide → 302 到
+  `/jb` → 手机扫码（未登录被拦 → 登录）→ 输配对码 → PS5 轮询 bound → 跳回 host.py 带 dt →
+  host.py 验 `/api/v2/policy` 200 → 吐 exploit。不授权时直接访问
+  `manuals.playstation.net/relapse.html` 必须 302。
 - **本地折腾器不扫码**：装主屏后，主屏快捷方式启动 standalone chain page 全程无授权页；pldmgr 8084 同。
-- 未真机验证前不得标「完成」；PS5 浏览器对 `Set-Cookie` / 302 / `data:image/svg+xml` 二维码的实际支持
-  列入 open item，真机逐个确认。
+- 未真机验证前不得标「完成」；PS5 浏览器对 302 / `?dt=` 回跳的实际支持列入 open item，真机确认。
 
 ---
 
-## 10. 明确不做 / open items
+## 9. 明确不做 / open items
 
-- 不做会员档位/付费门槛（门槛 = 登录态 + 输码，与 ludora.cc/jb 一致）。
-- 不持久化「授权一次长期免扫」（每次越狱都扫码，host.py 无状态）。
-- 不内嵌第二份扫码页到 host.py（单一份授权前端）。
-- open items：PS5 浏览器 cookie/302/SVG 二维码兼容性、`segno` 依赖引入与体积、`next` 回跳 URL 的
-  编码与域名白名单校验（防 open-redirect）。
+- 不做会员档位/付费门槛（门槛 = 登录态 + 输配对码，与 ludora.cc/jb 一致）。
+- 不新造后端端点（`/api/jb/sessions`）、不新造凭证（entry_token）、不另起密钥。
+- 不持久化「授权一次长期免扫」（每次越狱 = 一次新的 device/pair 会话，手机每次确认）。
+- 不动 ludora-jb-host 的死前端 `jb/index.html`。
+- open items：PS5 浏览器对 302 / `?dt=` 回跳、`urllib` 回环调用绕代理的实际支持；host.py 打包
+  （`build_host.py`）是否需注入 ludora-server 地址配置。
