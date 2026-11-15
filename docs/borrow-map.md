@@ -9,6 +9,7 @@
 |---|---|---|---|
 | `ps5-relapse/` | [ntfargo/Relapse-Exploit](https://github.com/ntfargo/Relapse-Exploit)（pin `22c56be`） | MIT | 纯 Relapse 链：WebKit ARW + kernel R/W + 内置 elfldr(9021)，无 JS payload 运行时 |
 | `ps5-loader/` | [itsPLK/ps5-webkit-remote-loader](https://github.com/itsPLK/ps5-webkit-remote-loader) | **MIT**（loader/PC host/client tools）；**GPL-3.0**（`installer/` 及 `installer/common`） | remote-loader：WebKit exploit（Relapse/Poops）+ JS payload 运行时（9027）+ kernel 管道（kexp → elfldr 9021）。**本仓库只 vendor loader 部分（MIT）**，未引入 `installer/` |
+| `14x/` | [well0nez/afterglow-web](https://github.com/well0nez/afterglow-web)（2026-11-14 同步 `587c00a`） | **AGPL-3.0**（`LICENSE`）；`LICENSE-raw13g` MIT（内核补丁派生自 raw13g） | afterglow：PS4 **12.00–14.02** 内核漏洞（Bonk 内核 + GoldHEN 2.4b18.14）。引擎 JS（`afterglow.js`/`core.js`/`jb.js`/`ps4_offsets.js`/`int64.js`/`mem.js`）与二进制（`goldhen.bin`/`hen.bin`/`patchset-*.bin`）unmodified vendored、与上游逐字节一致；`index.html`/`jb.html`/`launch.js` 为本地 i18n 壳 |
 
 - `ps5-loader/src/*.js`、`ps5-loader/offsets/*.js`、`ps5-loader/payloads/relapse.js`/`poops.js`、
   `ps5-loader/shared/kexp-v0.8-24cf6e5.bin`、`ps5-loader/shared/elfldr-ps5-v0.26.elf` 均为
