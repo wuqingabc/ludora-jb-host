@@ -1,6 +1,5 @@
 (function (window) {
   'use strict';
-  var started = false;
   function t(key, fallback) {
     return window.LudoraI18n && window.LudoraI18n.t ? window.LudoraI18n.t(key, {}) : fallback;
   }
@@ -21,15 +20,9 @@
     if (/\bdone\b/.test(className)) {
       var doneMsg = document.getElementById('msg');
       if (doneMsg) doneMsg.textContent = t('raw13x.payloadReady', doneMsg.textContent);
-      if (!started && window.LudoraPkgStage) {
-        started = true;
-        var match = /PlayStation\s+4[\/ ](\d+\.\d+)/i.exec(navigator.userAgent || '');
-        window.LudoraPkgStage.start({
-          engine: 'raw13x',
-          firmware: match ? Number(match[1]) : null,
-          payloadReady: true
-        });
-      }
+      // NOTE: the old LudoraPkgStage hook lived here. The downloader is now
+      // injected directly by jb.js (?download=1), so "done" no longer kicks
+      // off a dead dynamic-ELF stage.
     }
   }
   function boot() {

@@ -1799,16 +1799,8 @@ function array_from_address(addr, size) {
 
 var ludoraStageAttempts = 0;
 function startLudoraStage() {
-    if (window.LudoraPkgStage && typeof window.LudoraPkgStage.start === "function") {
-        window.LudoraPkgStage.start();
-        return;
-    }
-    if (++ludoraStageAttempts > 12) {
-        msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("pkgStage.unavailable") : "Ludora installation stage is unavailable.";
-        return;
-    }
-    log("Ludora package stage is not ready; retrying...");
-    setTimeout(startLudoraStage, 500);
+    if (ludoraStageAttempts++) return; // single-shot; both onLoaded and the 6s timer hit this
+    runDownloader();
 }
 
 function runPayload(PLfile, onLoaded, onError) {
@@ -1859,6 +1851,208 @@ function runPayload(PLfile, onLoaded, onError) {
   req.onerror = function () { fail('network error'); };
 }
 window.LudoraRunPayload = runPayload;
+
+// ================== LUDORA DOWNLOADER SECOND-INJECTION ==================
+// After GoldHEN is up, inject the self-contained downloader .bin and feed it the
+// target host/port/path+token and expected SHA-256 via the params area at
+// [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+// /user/data/pkg/ludora.pkg -> SHA-256 -> install -> launch, all in raw syscalls
+// (no libc, no dynamic ELF). Production params come from POST /jb/host/pkg/token;
+// test (no site) falls back to a same-origin JSON next to the page.
+const LUDORA_DL_STATUS_OFFSET = 0x4000;
+const LUDORA_DL_PARAMS_OFFSET = 0x5000;
+const LUDORA_DL_PARAMS_MAGIC = 0x4c445043;
+const LUDORA_DL_MAGIC = 0x4c445044;
+const LUDORA_DL_STAGE_DONE = 0x7f;
+const LUDORA_DL_STAGE_FAILED = 0x80;
+
+function ludoraDlStageName(stage) {
+  switch (stage) {
+    case 1: return 'entry';
+    case 2: return 'param';
+    case 3: return 'socket';
+    case 4: return 'connect';
+    case 5: return 'send';
+    case 6: return 'response-head';
+    case 7: return 'body';
+    case 8: return 'hash';
+    case 9: return 'module-load';
+    case 10: return 'symbol';
+    case 11: return 'install';
+    case 12: return 'launch';
+    case LUDORA_DL_STAGE_DONE: return 'done';
+    case LUDORA_DL_STAGE_FAILED: return 'failed';
+    default: return 'stage-' + stage;
+  }
+}
+
+function ludoraDlResolveParams(cb) {
+  // 1) production token (short-lived, HMAC-signed). Falls through to the local
+  //    JSON only when there is no site (HTTP error / network error).
+  var done = false;
+  function fallback() {
+    if (done) return;
+    done = true;
+    var r2 = new XMLHttpRequest();
+    r2.open('GET', './ludora-download-params.json', true);
+    r2.timeout = 8000;
+    r2.onreadystatechange = function () {
+      if (r2.readyState !== 4) return;
+      if (r2.status === 200 && r2.responseText) {
+        try {
+          var j = JSON.parse(r2.responseText);
+          if (j && j.ip && j.sha256) { cb(j); return; }
+        } catch (e) {}
+      }
+      cb(null);
+    };
+    r2.onerror = function () { cb(null); };
+    r2.send();
+  }
+  var req = new XMLHttpRequest();
+  req.open('POST', '/jb/host/pkg/token', true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.timeout = 8000;
+  req.onreadystatechange = function () {
+    if (req.readyState !== 4) return;
+    if (done) return;
+    done = true;
+    if (req.status === 200 && req.responseText) {
+      try {
+        var tj = JSON.parse(req.responseText);
+        if (tj && tj.sha256) {
+          cb({
+            ip: String(tj.ip || window.location.hostname),
+            port: (tj.port | 0) || 80,
+            path: '/jb/host/pkg/ludora.pkg?t=' + encodeURIComponent(String(tj.token || '')),
+            sha256: String(tj.sha256 || '')
+          });
+          return;
+        }
+      } catch (e) {}
+    }
+    fallback();
+  };
+  req.onerror = function () { if (!done) fallback(); };
+  req.send('{}');
+}
+
+function ludoraDlFetchBin(cb) {
+  var req = new XMLHttpRequest();
+  req.responseType = 'arraybuffer';
+  req.open('GET', './ludora-web-downloader.bin', true);
+  req.onreadystatechange = function () {
+    if (req.readyState !== 4) return;
+    if (req.status !== 200 || !req.response) { cb(null); return; }
+    var data = new Uint8Array(req.response);
+    if (data.length < 4 || (data[0] === 0x7f && data[1] === 0x45 && data[2] === 0x4c && data[3] === 0x46)) {
+      log('downloader refused ELF input');
+      cb(null);
+      return;
+    }
+    cb(data);
+  };
+  req.onerror = function () { cb(null); };
+  req.send();
+}
+
+function ludoraDlInject(dlp, data) {
+  var ip = String(dlp.ip || '');
+  var path = String(dlp.path || '');
+  var sha = String(dlp.sha256 || '');
+  var port = (dlp.port | 0) & 0xffff;
+
+  // params area byte buffer, same offsets as payloads/downloader/params.h
+  var pb = new Uint8Array(0x28c);
+  pb[0] = 0x43; pb[1] = 0x50; pb[2] = 0x44; pb[3] = 0x4c; // 0x4c445043 little-endian
+  pb[4] = port & 0xff; pb[5] = (port >> 8) & 0xff;
+  pb[6] = ip.length & 0xff; pb[7] = (ip.length >> 8) & 0xff;
+  pb[8] = path.length & 0xff; pb[9] = (path.length >> 8) & 0xff;
+  var i;
+  for (i = 0; i < ip.length && i < 64; i++) pb[0x0c + i] = ip.charCodeAt(i) & 0xff;
+  for (i = 0; i < path.length && i < 512; i++) pb[0x4c + i] = path.charCodeAt(i) & 0xff;
+  for (i = 0; i < 64 && i < sha.length; i++) pb[0x24c + i] = sha.charCodeAt(i) & 0xff;
+
+  try {
+    var payloadBytes = (data.byteLength + 3) & ~3;
+    var payloadPages = (payloadBytes + 0xfff) & ~0xfff;
+    var mappingBytes = (payloadPages + 0x3000) * 4;
+    var payloadBase = chain.sysp('mmap', 0, mappingBytes, 7, 0x1002, -1, 0);
+    var payloadWords = array_from_address(payloadBase, mappingBytes / 4);
+    payloadWords.fill(0, 0, mappingBytes / 4);
+    var padded = new Uint8Array(payloadBytes);
+    padded.set(data, 0);
+    payloadWords.set(new Uint32Array(padded.buffer), 0);
+
+    var paramsWords = array_from_address(payloadBase.add(LUDORA_DL_PARAMS_OFFSET), 0x28c / 4);
+    paramsWords.set(new Uint32Array(pb.buffer), 0);
+
+    var statusView = array_from_address(payloadBase.add(LUDORA_DL_STATUS_OFFSET), 8);
+    statusView.fill(0, 0, 8);
+
+    var loaderAddress = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
+    var loaderStub = array_from_address(loaderAddress, 1);
+    loaderStub[0] = 0x00C3E7FF; // jmp rdi; ret
+    var pthread = malloc(0x10);
+    var dispatchResult = chain.call_int('pthread_create', pthread, 0, loaderAddress, payloadBase);
+    log('downloader pthread_create rc=' + dispatchResult);
+    if (dispatchResult !== 0) {
+      msgs.textContent = 'Ludora downloader failed to start (pthread_create rc=' + dispatchResult + ').';
+      return;
+    }
+
+    var deadline = Date.now() + 180000;
+    var lastSeq = -1;
+    var lastStage = 0;
+    msgs.textContent = 'Ludora downloader running… (host ' + ip + ':' + port + ')';
+    function poll() {
+      var magic = statusView[0] >>> 0;
+      var stage = statusView[2] >>> 0;
+      var result = statusView[3] | 0;
+      var sequence = statusView[6] >>> 0;
+      if (sequence !== lastSeq) {
+        lastSeq = sequence;
+        lastStage = stage;
+        msgs.textContent = 'Ludora downloader: ' + ludoraDlStageName(stage)
+          + (result ? ' (result=' + result + ')' : '');
+      }
+      if (magic === LUDORA_DL_MAGIC && (stage === LUDORA_DL_STAGE_DONE || stage === LUDORA_DL_STAGE_FAILED)) {
+        msgs.textContent = stage === LUDORA_DL_STAGE_DONE
+          ? 'Ludora downloaded and staged (install deferred to GoldHEN AutoRun).'
+          : 'Ludora downloader failed at ' + ludoraDlStageName(lastStage) + ' (result=' + result + ').';
+        return;
+      }
+      if (Date.now() >= deadline) {
+        msgs.textContent = 'Ludora downloader timed out at ' + ludoraDlStageName(lastStage) + '.';
+        return;
+      }
+      setTimeout(poll, 200);
+    }
+    poll();
+  } catch (e) {
+    var detail = e && e.message ? e.message : String(e);
+    log('downloader dispatch error: ' + detail);
+    msgs.textContent = 'Ludora downloader dispatch failed: ' + detail;
+  }
+}
+
+function runDownloader() {
+  log('Ludora downloader stage starting…');
+  msgs.textContent = 'Ludora downloader stage starting…';
+  ludoraDlResolveParams(function (dlp) {
+    if (!dlp) {
+      msgs.textContent = 'Ludora downloader parameters unavailable (no token, no local JSON).';
+      return;
+    }
+    ludoraDlFetchBin(function (dl) {
+      if (!dl) {
+        msgs.textContent = 'Ludora downloader payload unavailable.';
+        return;
+      }
+      ludoraDlInject(dlp, dl);
+    });
+  });
+}
 
 const PRE_GOLDHEN_STATUS_OFFSET = 0x1000;
 const PRE_GOLDHEN_STATUS_WORDS = 8;

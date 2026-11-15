@@ -19,4 +19,7 @@ body { width: min(1180px, calc(100% - 48px)); padding-bottom: 56px; }
 #msgs { grid-column: 1; color: #f3b942; font-size: 16px; min-height: 24px; }
 .cache-progress { grid-column: 1; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(210,220,255,.14); }
 .cache-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: #f3b942; transition: width .12s linear; }
+.dl-progress { grid-column: 1; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(210,220,255,.14); margin-top: 8px; }
+.dl-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: #f3b942; transition: width .12s linear; }
+.dl-meta { grid-column: 1; color: #f3b942; font-size: 13px; min-height: 18px; margin-top: 4px; font-variant-numeric: tabular-nums; }
 @media (max-width: 760px) { body { width: calc(100% - 24px); } #wrap { grid-template-columns: 1fr; gap: 18px; padding-top: 28px; } .ad-slot, .ad-slot-runtime { grid-column: 1; grid-row: auto; min-height: 140px; } #state, #det, #cache, .route-note, #out { grid-column: 1; } }

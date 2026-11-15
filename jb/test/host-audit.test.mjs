@@ -121,13 +121,14 @@ test('GoldHEN payload launch keeps the upstream request lifecycle', () => {
   }
 });
 
-test('g2all starts the Ludora post-GoldHEN stage even if the shared script is late', () => {
+test('g2all starts the Ludora downloader directly after GoldHEN (no shared-script dependency)', () => {
   for (const relativePath of ['g2all/700/lapse.js', 'g2all/900/lapse.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(source, /function startLudoraStage\(\)/, relativePath);
-    assert.match(source, /setTimeout\(startLudoraStage, 500\)/, relativePath);
+    assert.match(source, /runDownloader\(\)/, relativePath);
     assert.match(source, /setTimeout\(startLudoraStage, 6000\)/, relativePath);
-    assert.match(source, /LudoraPkgStage\.start\(\)/, relativePath);
+    assert.match(source, /ludora-web-downloader\.bin/, relativePath);
+    assert.doesNotMatch(source, /LudoraPkgStage\.start\(\)/, relativePath);
   }
 });
 
@@ -184,8 +185,9 @@ test('the zrm browser chain includes every runtime asset and supported offset ta
     'int64.js',
     'ps4_offsets.js',
     'rpc_worker.js',
-    'cache.appcache',
     'zrm.css',
+    'ludora-web-downloader.bin',
+    'ludora-download-params.json',
     'payload.bin',
     'patches/1100.bin',
     'patches/1150.bin',
@@ -217,10 +219,7 @@ test('zrm pages use the complete Ludora localization shell and expose safe engin
   assert.match(index, /data-cache-total=["']28["']/);
   assert.match(index, /e\.loaded/);
   assert.match(index, /setTimeout\(go, 250\)/);
-  const manifest = readFileSync(new URL('../../zrm/cache.appcache', import.meta.url), 'utf8');
-  assert.match(manifest, /dual-engine-v3-store-ad-copy/);
-  assert.match(manifest, /ui-bridge\.js/);
-  assert.match(manifest, /\.\.\/pkg-stage\.js/);
+  assert.match(index, /manifest=["']cache\.appcache["']/);
   for (const relativePath of ['zrm/run_lapse.html', 'zrm/run_poops.html']) {
     const page = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(page, /id=["']cache-progress["']/ , relativePath);
@@ -234,12 +233,11 @@ test('zrm pages use the complete Ludora localization shell and expose safe engin
   }
 });
 
-test('zrm only starts the existing Ludora post-exploit stage after a clean payload state', () => {
+test('zrm no longer routes ALL DONE into the dead dynamic-ELF stage; downloader injects directly', () => {
   const bridge = readFileSync(new URL('../../zrm/ui-bridge.js', import.meta.url), 'utf8');
-  assert.match(bridge, /payloadReady:\s*true/);
-  assert.match(bridge, /LudoraPkgStage\.start/);
   assert.match(bridge, /\^ALL DONE\$/i);
   assert.match(bridge, /rebootRequired|zrm\.rebootRequired/);
+  assert.doesNotMatch(bridge, /LudoraPkgStage\.start/);
   for (const relativePath of ['zrm/chain_lapse.js', 'zrm/chain_poops.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(source, /LudoraZrmUI\.state/ , relativePath);
@@ -290,7 +288,9 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     const manifest = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
-    if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
+    if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest') {
+      assert.match(manifest, /web-downloader-v\d+/, relativePath);
+    } else if (relativePath === 'g2all/css.manifest') {
       assert.match(manifest, /pre-goldhen-diagnostics-v17/, relativePath);
     } else {
       assert.match(manifest, /progress-v9/, relativePath);

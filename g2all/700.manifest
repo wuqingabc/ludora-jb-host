@@ -1,10 +1,11 @@
 CACHE MANIFEST
-# Ludora UI cache revision 2026-09-02-pre-goldhen-diagnostics-v17
+# Ludora UI cache revision 2026-11-16-web-downloader-v5
 
-CACHE: 
+CACHE:
 ../img.jpg
 ../style.css
 ../pkg-stage.js
+ludora-web-downloader.bin
 goldhen_2.4b18.10.bin
 index.html
 700/alert.js

