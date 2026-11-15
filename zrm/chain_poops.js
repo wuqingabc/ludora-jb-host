@@ -26,12 +26,16 @@ function post(tag, detail) {
 // GET beacon: tag+detail go into the query string so a bare static server
 // (python3 -m http.server) logs them per-request. Only POSTPROBE-* lines fire
 // this, so the server log stays readable and the normal jailbreak path is
-// untouched. Image src = plain GET, older than fetch, works on PS4 WebKit.
+// untouched. XHR (not new Image): a detached Image gets GC'd before its load
+// fires on PS4's old WebKit, so its request never leaves the box. post() below
+// already proves XHR survives past GoldHEN taking over the kernel.
 function beacon(tag, detail) {
     try {
-        new Image().src = "/__beacon?t=" + encodeURIComponent(tag)
+        var x = new XMLHttpRequest();
+        x.open("GET", "/__beacon?t=" + encodeURIComponent(tag)
             + "&d=" + encodeURIComponent(String(detail == null ? "" : detail))
-            + "&n=" + Date.now();
+            + "&n=" + Date.now(), true);
+        x.send();
     } catch (e) { }
 }
 
