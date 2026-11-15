@@ -2324,7 +2324,9 @@ let allDone = false;
                         && off.wk___imp_pthread_create !== undefined) {
                         state("post-probe...", "warn");
                         try {
-                            const probeUrl = params.get("probeurl") || "ludora-post-goldhen-probe.bin";
+                            // Hardcoded same-origin probe only -- never let a query param
+                            // choose what gets mmap'd and executed.
+                            const probeUrl = "ludora-post-goldhen-probe.bin";
                             const pr = await fetch(probeUrl);
                             if (!pr.ok) {
                                 mark("POSTPROBE-FETCH", "http=" + pr.status);
