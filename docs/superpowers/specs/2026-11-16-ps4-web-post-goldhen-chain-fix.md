@@ -1,7 +1,7 @@
 # PS4 Web Host:GoldHEN 之后「下载 + 安装 ludora.pkg」链路修复方案
 
 **Date:** 2026-11-16
-**Status:** 方向已定(控制台出站 + 自包含裸 payload 注入),唯一未决项待真机探针回答
+**Status:** 唯一未决项已由真机探针回答(原语存活、二次注入成立);下一步半 2 下载器
 **Scope:** `ludora-jb-host`(浏览器侧)+ `ludora-jb-pkg-stage`(ELF/裸 payload 侧)+ `ludora-site`(服务端)
 
 ## 1. 现象
@@ -78,14 +78,22 @@ interpreter  /libexec/ld-elf.so.1
 - 配 80 端口明文路由(仅此 pkg 路由),供裸 payload 出站下载。
 - `src/lib/jb-pkg-stage.ts` / `jb-autorun-stage.ts` / `jb-host-adapter.ts` 清死常量与死资产引用。
 
-## 6. 唯一未决问题 + 探针
+## 6. 唯一未决问题 + 探针(✅ 已由真机回答,2026-11-16)
 
 **GoldHEN 起来之后,浏览器的 ROP/mmap/pthread + 内存读原语是否还活着,能否二次注入?** 现有设计刻意用 XHR 绕开内存操作,正是因为这个不确定。
 
-探针(本轮已加):`?diagnose=post` 复用在 `startGoldhen()` 之后注入现有 `./ludora-pre-goldhen-probe.bin`,轮询它写回的状态页:
+真机(zrm 引擎,固件 12.52)`?postprobe=1` 探针结果 —— 状态页完整推进,原语存活:
 
-- 状态页出现 magic+stage → 二次注入 + 内存读都通 → 半 1 方案成立。
-- 状态页停在 stage 0 / 无 magic / 浏览器崩溃 → 原语已死 → 下载器必须改走 GoldHEN AutoRun(把 payload 落 `/data/GoldHEN/payloads/` + `payloads.ini [AutoRun]`,但该通道在无盘/无 PC 的 Web 模型下同样面临「谁写 /data」的难题,需另议)。
+| 探针日志 | 值 | 含义 |
+|---|---|---|
+| POSTPROBE-MAP | size=0x4000 rwx=0x201500000 | 二次 mmap RWX 成功 |
+| POSTPROBE-PTHREAD-TABLE | agree=1 | pthread_create 符号地址一致 |
+| POSTPROBE-CREATE | rc=0 handle=0x8803bbbe0 | pthread_create 成功,线程创建 |
+| POSTPROBE-POLL | magic=0x4c445047 stage=0x7f(DONE) result=0 seq=8 | 状态页出现 magic,stage 推进到 DONE,无错误 |
+
+**结论:二次注入 + 内存读都通 → 半 1 方案(同帧二次注入下载器)成立,不需要 GoldHEN AutoRun。**
+
+> 观察方式:探针日志通过 XHR GET beacon(`/__beacon?t=...`)回传本地静态服务器,因为 PS4 老 WebKit 上 `new Image().src` 会被 GC 吞掉请求、XHR 才可靠。
 
 ## 7. 验收清单(真机)
 
