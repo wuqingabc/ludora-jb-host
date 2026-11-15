@@ -23,6 +23,18 @@ function post(tag, detail) {
     } catch (e) { }
 }
 
+// GET beacon: tag+detail go into the query string so a bare static server
+// (python3 -m http.server) logs them per-request. Only POSTPROBE-* lines fire
+// this, so the server log stays readable and the normal jailbreak path is
+// untouched. Image src = plain GET, older than fetch, works on PS4 WebKit.
+function beacon(tag, detail) {
+    try {
+        new Image().src = "/__beacon?t=" + encodeURIComponent(tag)
+            + "&d=" + encodeURIComponent(String(detail == null ? "" : detail))
+            + "&n=" + Date.now();
+    } catch (e) { }
+}
+
 const VERBOSE = params.get("verbose") === "1";
 const PROSE = [
     / -- /, /\.\s/, /;\s/,
@@ -57,6 +69,7 @@ function mark(tag, detail) {
     }).join("\n");
     outEl.scrollTop = outEl.scrollHeight;
     post(tag, raw);
+    if (/^POSTPROBE/.test(tag)) beacon(tag, raw);
 }
 
 function trace(tag, detail) { if (VERBOSE) mark(tag, detail); else post(tag, detail); }
