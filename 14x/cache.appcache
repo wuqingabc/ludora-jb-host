@@ -1,6 +1,6 @@
 CACHE MANIFEST
 # Ludora 14x runtime mirror
-# Ludora 14x cache revision: unified-ui-v3-downloader-r2https-20261116
+# Ludora 14x cache revision: unified-ui-v3-downloader-conndiag-20261116
 
 index.html #267ebd568e08136c4fd63cdad6cb0eeccff0ab1ba882a0bb88af6d1bdf3ffdf1
 jb.html #370ddec268aac51f409c67e9cdb2177ff44b4066e31f3248e05835bc72de545a
@@ -13,7 +13,7 @@ ps4_offsets.js #ed375f3bcd2a1807aecbbf6d2c0d7f8a83a43164e6e32895ddd12e739a8cebe2
 afterglow.js #32b2057b233bbbe5b6c874f85d28532c015cec0397798cafb24c28e76340fb75
 goldhen.bin #c5480587d99efc2e3cc132352d9b7cf052dd3068280f1686e7fbb37d57e9ba8b
 hen.bin #420f5cfd72ec401f02beaaf3ddbe63b21c2ba1696904810044220e8d5f7cb5a2
-ludora-web-downloader.bin #4daa5e6b473cf076768784603ed3c5311175f02aecc5b220fb1e50d5bb8661cd
+ludora-web-downloader.bin #794b46375d961219464f7607fb9c5f4a5b84f91f12d9a971c52cd25aea60cf75
 patchset-1200.bin #06f287712759bfb24f44ba54a0b13326bfd02e69f90f3d45f8d57c6e897e46cd
 patchset-1202.bin #06f287712759bfb24f44ba54a0b13326bfd02e69f90f3d45f8d57c6e897e46cd
 patchset-1250.bin #2807a61641eec265e74a50ca053f35a128704c2195850c53b549b3057348c125

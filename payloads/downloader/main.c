@@ -13,6 +13,8 @@
 #define SYS_unlink 10
 #define SYS_socket 97
 #define SYS_connect 98
+#define SYS_fcntl 92
+#define SYS_getsockopt 118
 #define SYS_rename 128
 #define SYS_mkdir 136
 #define SYS_nanosleep 240
@@ -26,6 +28,11 @@
 #define AF_INET 2
 #define SOCK_STREAM 1
 #define IPPROTO_TCP 6
+#define SOL_SOCKET 0xffff
+#define SO_ERROR 0x1007
+#define F_SETFL 4
+#define O_NONBLOCK 4
+#define EINPROGRESS 36
 
 /* 只下载、不装机:落盘到 ludora_autorun 期望的暂存路径 + 写一次性强制标记,
  * 装机/拉起交给 GoldHEN AutoRun 的 ludora_autorun.elf(系统级进程,不在浏览器进程里装,
@@ -77,6 +84,20 @@ static long syscall3(long number, long arg1, long arg2, long arg3) {
                    "negq %%rax\n\t"
                    "1:"
                    : "=a"(result) : "a"(number), "D"(arg1), "S"(arg2), "d"(arg3) : "rcx", "r11", "memory");
+  return result;
+}
+static long syscall5(long number, long arg1, long arg2, long arg3, long arg4, long arg5) {
+  long result;
+  /* FreeBSD amd64 syscall 第 4/5 参数固定走 r10/r8(syscall 指令本身 clobber rcx/r11)。 */
+  register long r10 __asm__("r10") = arg4;
+  register long r8 __asm__("r8") = arg5;
+  __asm__ volatile("syscall\n\t"
+                   "jnc 1f\n\t"
+                   "negq %%rax\n\t"
+                   "1:"
+                   : "=a"(result)
+                   : "a"(number), "D"(arg1), "S"(arg2), "d"(arg3), "r"(r10), "r"(r8)
+                   : "rcx", "r11", "memory");
   return result;
 }
 /* ---- small helpers ---- */
@@ -400,13 +421,34 @@ static int tls_download(struct ludora_dl_status *status, struct ludora_dl_params
   addr.sin_port = (uint16_t)((params->port >> 8) | (params->port << 8)); /* htons */
   addr.sin_addr = ip_net;
 
+  /* 非阻塞 connect + SO_ERROR 诊断:12.52 上裸阻塞 connect 实测卡死(既不返回成功
+   * 也不返回失败,永远停在 stage=4)。非阻塞能立即拿到 EINPROGRESS 或 errno,再读
+   * SO_ERROR 拿最终结果,浏览器侧 poll 能看到确切 errno 而非永远停在 CONNECT。 */
+  syscall3(SYS_fcntl, fd, F_SETFL, O_NONBLOCK);
   update(status, LUDORA_DL_STAGE_CONNECT, 0, (uint32_t)fd, (uint32_t)params->port);
   cr = syscall3(SYS_connect, fd, (long)&addr, sizeof(addr));
-  if (cr < 0) {
+  if (cr < 0 && cr != -EINPROGRESS) {
     fail(status, LUDORA_DL_STAGE_CONNECT, (int32_t)cr, (uint32_t)fd);
     syscall1(SYS_close, fd);
     return (int)cr;
   }
+  if (cr < 0) { /* EINPROGRESS:等建立完成,读 SO_ERROR 拿最终结果(成功=0/失败=errno) */
+    int soerr = 0;
+    int solen = 4;
+    int i;
+    for (i = 0; i < 8; ++i) { /* 最多等 8 秒;局域网 SYN-ACK 立即回,1 秒内即有结果 */
+      sleep_1s();
+      soerr = 0;
+      syscall5(SYS_getsockopt, fd, SOL_SOCKET, SO_ERROR, (long)&soerr, (long)&solen);
+      if (soerr != 0) break;
+    }
+    if (soerr != 0) {
+      fail(status, LUDORA_DL_STAGE_CONNECT, -soerr, (uint32_t)fd);
+      syscall1(SYS_close, fd);
+      return -soerr;
+    }
+  }
+  syscall3(SYS_fcntl, fd, F_SETFL, 0); /* 恢复阻塞,后续 read/write 正常 */
 
   /* TLS: skip-verify ECDSA engine + AES-GCM。完整性靠固定 SHA-256,不靠证书。
    * SNI 需要 NUL 结尾的 host(engine 内部 strlen),params->host 按长度写、结尾
