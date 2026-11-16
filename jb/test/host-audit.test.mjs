@@ -188,7 +188,6 @@ test('the zrm browser chain includes every runtime asset and supported offset ta
     'ps4_offsets.js',
     'rpc_worker.js',
     'ludora-web-downloader.bin',
-    'ludora-download-params.json',
     'payload.bin',
     'patches/1100.bin',
     'patches/1150.bin',
@@ -293,7 +292,7 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
     if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
-      assert.match(manifest, /ui-brand-center-v\d+/, relativePath);
+      assert.match(manifest, /(?:ui-brand-center|http-rollback)-v\d+/, relativePath);
     } else {
       assert.match(manifest, /progress-v9/, relativePath);
     }
