@@ -92,7 +92,16 @@ function trace(tag, detail) {
   if (VERBOSE) mark(tag, detail);
   else post(tag, detail);
 }
+var STATE_KEYS = {
+  'no offsets for this firmware': 'exploit.noOffsets',
+  'running the primitive...': 'exploit.runningPrimitive',
+  'threw': 'exploit.threw'
+};
 function state(t, c) {
+  if (window.LudoraI18n && window.LudoraI18n.t) {
+    var k = STATE_KEYS[String(t)];
+    if (k) t = window.LudoraI18n.t(k);
+  }
   if (window.LudoraUI && window.LudoraUI.state) { window.LudoraUI.state(t, c); return; }
   if (!SHOW_LOG || !stateEl) return;
   stateEl.textContent = t;

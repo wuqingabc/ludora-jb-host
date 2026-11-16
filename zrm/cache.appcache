@@ -1,12 +1,12 @@
 CACHE MANIFEST
 # Ludora zrm runtime mirror
-# Ludora zrm cache revision: unified-ui-v1-http-rollback-20261116
+# Ludora zrm cache revision: unified-ui-v1-i18n-exploit-20261117
 
 index.html #c7662e96fc0a1e1ba5e6c010ea730f409846ee0e610cf9ce06fa69a768f5e491
 run_lapse.html #c9a8b164ee37ddfe0d27cccb89ef06967e647cecb39b4218cb27603fbf3d80be
 run_poops.html #9dd63ade61ad4f23495c02e8a84d8d55b4908731bb2afa4bc1c4a7c59f979303
 chain_lapse.js #c2d684485d5d472e7815dd4b17e7f1429e3e19b2517077b6e5b39d482c786f32
-chain_poops.js #31e6aca685cf72c1a820d1a1144d316f0f208ad47ecb701bfe15e815929d38b6
+chain_poops.js #751c54f19967ead2451315c4978daef91483a3b2fe42328b47d9072929733c66
 core.js #3acf7e09988f10f800ca22bac1d4965b89ebb5ce2da4850089918fd1a457df4e
 mem.js #4a1b688e8061372bc8400e911c8e191b7e19e4b6286dcdeb3eef4971c5168a22
 int64.js #a79a3334a3f2c75b9a238ab1093796e326251c97ac5d02663eae5b14bf80f652

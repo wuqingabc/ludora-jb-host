@@ -283,7 +283,19 @@ function mark(tag, detail) {
 function trace(tag, detail) {
   if (VERBOSE) mark(tag, detail);
 }
+var STATE_ZH = {
+  'not a PS4 browser - debug mode': '非 PS4 浏览器 — 调试模式',
+  'testing WebKit primitive...': '正在测试 WebKit 原语…',
+  'running the primitive...': '正在运行利用原语…'
+};
 function state(t, c) {
+  var v = String(t);
+  var zh = STATE_ZH[v];
+  if (!zh) {
+    var m = /^firmware (.+) is not supported$/.exec(v);
+    if (m) zh = '固件 ' + m[1] + ' 不受支持';
+  }
+  if (zh) t = zh;
   if (window.LudoraUI && window.LudoraUI.state) { window.LudoraUI.state(t, c); return; }
   if (!SHOW_LOG || !stateEl) return;
   stateEl.textContent = t;
