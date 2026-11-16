@@ -3,4 +3,5 @@ payloads/downloader/build/
 payloads/downloader/bin/
 payloads/downloader/core
 ludora.pkg
+ludora-download-params.json
 .codegraph/
