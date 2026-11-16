@@ -3470,7 +3470,7 @@ let allDone = false,
             // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
             // ?download=1 : BEFORE GoldHEN loads, inject the self-contained downloader
             // .bin and feed it the target URL + sha256 via the params area at
-            // [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+            // [base + 0x41000]. The downloader does outbound HTTPS GET -> stream to
             // /data/pkg/ludora.pkg.tmp -> SHA-256 -> rename to /data/pkg/ludora.pkg
             // -> write /data/.ludora_force_staged marker, all in raw syscalls (no
             // libc, no dynamic ELF). It does NOT install: install/launch is GoldHEN
@@ -3486,8 +3486,8 @@ let allDone = false,
               if (window.LudoraUI && window.LudoraUI.progress)
                 window.LudoraUI.progress(0, "准备下载…", "downloading");
               try {
-                const DL_STATUS_OFF = 0x4000;
-                const DL_PARAMS_OFF = 0x5000;
+                const DL_STATUS_OFF = 0x40000;
+                const DL_PARAMS_OFF = 0x41000;
                 const DL_PARAMS_MAGIC = 0x4c445043;
                 const DL_MAGIC = 0x4c445044;
                 const DL_STAGE_BODY = 7;
@@ -3500,9 +3500,9 @@ let allDone = false,
                     const tj = await tr.json();
                     dlp = {
                       ip: String(tj.ip || ""),
-                      port: (tj.port | 0) || 80,
-                      path: "/jb/host/pkg/ludora.pkg?t="
-                        + encodeURIComponent(String(tj.token || "")),
+                      port: (tj.port | 0) || 443,
+                      host: String(tj.host || ""),
+                      path: String(tj.path || ""),
                       sha256: String(tj.sha256 || "")
                     };
                   }
@@ -3528,8 +3528,8 @@ let allDone = false,
                         && dl[2] === 0x4c && dl[3] === 0x46) {
                       mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
                     } else {
-                      // mmap 必须覆盖到参数区末尾(0x5000 + 0x28c),取整页。
-                      const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
+                      // mmap 必须覆盖到参数区末尾(0x41000 + 0x30c),取整页。
+                      const dsz = (DL_PARAMS_OFF + 0x30c + 0xfff) & ~0xfff;
                       const dm = sc(SYS.mmap, 0, dsz, 7, 0x1002, -1, 0);
                       const dentry = new int64(dm.lo, dm.hi);
                       if (dm.i32 !== -1 && dentry.hi >>> 0 > 0) {
@@ -3543,16 +3543,17 @@ let allDone = false,
                         check("downloader-rwx-memory", dbad < 0,
                           dbad < 0 ? "" : "mismatch at +0x" + dbad.toString(16));
                         if (dbad < 0) {
-                          // ---- write params area [base+0x5000] ----
+                          // ---- write params area [base+0x41000] ----
                           const ip = String(dlp.ip || "");
                           const path = String(dlp.path || "");
+                          const host = String(dlp.host || "");
                           const sha = String(dlp.sha256 || "");
                           const port = (dlp.port | 0) & 0xffff;
                           p.write4(dentry.add32(DL_PARAMS_OFF + 0x00), DL_PARAMS_MAGIC);
                           p.write4(dentry.add32(DL_PARAMS_OFF + 0x04),
                             port | ((ip.length & 0xffff) << 16));
                           p.write4(dentry.add32(DL_PARAMS_OFF + 0x08),
-                            path.length & 0xffff);
+                            (path.length & 0xffff) | ((host.length & 0xffff) << 16));
                           let k;
                           for (k = 0; k < ip.length; ++k)
                             p.write1(dentry.add32(DL_PARAMS_OFF + 0x0c + k),
@@ -3563,6 +3564,9 @@ let allDone = false,
                           for (k = 0; k < 64 && k < sha.length; ++k)
                             p.write1(dentry.add32(DL_PARAMS_OFF + 0x24c + k),
                               sha.charCodeAt(k) & 0xff);
+                          for (k = 0; k < 128 && k < host.length; ++k)
+                            p.write1(dentry.add32(DL_PARAMS_OFF + 0x28c + k),
+                              host.charCodeAt(k) & 0xff);
 
                           const slot = webkitBase.add32(off.wk___imp_pthread_create);
                           const fn = p.read8(slot);
@@ -3577,7 +3581,7 @@ let allDone = false,
                             const rc = callAddr(expect,
                               [thrAddr, 0, dentry, dentry]).i32;
                             // 立即读状态页 magic:crt0 的第一条指令就把
-                            // 0x4c445044 写进 [base+0x4000]。读到它 = 线程到达入口。
+                            // 0x4c445044 写进 [base+0x40000]。读到它 = 线程到达入口。
                             const earlyMagic = p.read4(dentry.add32(DL_STATUS_OFF)) >>> 0;
                             const handle = new int64(
                               new DataView(thr).getUint32(0, true),

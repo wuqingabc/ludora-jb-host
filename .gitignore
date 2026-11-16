@@ -1,0 +1,6 @@
+# 本地构建产物与临时文件(不提交)
+payloads/downloader/build/
+payloads/downloader/bin/
+payloads/downloader/core
+ludora.pkg
+.codegraph/
