@@ -856,7 +856,7 @@ let allDone = false;
                     + " reason=" + uncontained);
                 break;
             }
-            state("attempt " + attempt + "...", "warn");
+            state(window.LudoraI18n ? window.LudoraI18n.t("retry.attempt", { attempt: attempt }) : "attempt " + attempt + "...", "warn");
             mark("ATTEMPT", attempt + "/" + NUM_ATTEMPT);
 
             const dummy = sc(SYS.socket, AF_UNIX, SOCK_STREAM, 0).i32;
@@ -2305,7 +2305,7 @@ let allDone = false;
                     // way GoldHEN still loads. Production params come from POST /jb/host/pkg/token;
                     // test (no site) falls back to a same-origin JSON.
                     if (off.wk___imp_pthread_create !== undefined) {
-                        state("downloader...", "warn");
+                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "warn");
                         try {
                             const DL_STATUS_OFF = 0x4000;
                             const DL_PARAMS_OFF = 0x5000;
@@ -2431,22 +2431,24 @@ let allDone = false;
                                                                         if (lastBytes >= 0 && now > lastAt && detail0 >= lastBytes)
                                                                             rate = (detail0 - lastBytes) * 1000 / (now - lastAt);
                                                                         lastBytes = detail0; lastAt = now;
-                                                                        state("下载中 " + pct + "% · " + dlRate(rate), "warn");
+                                                                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.downloading", { progress: pct, detail: dlRate(rate) }) : "下载中 " + pct + "% · " + dlRate(rate), "warn");
                                                                         if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
                                                                             window.LudoraZrmUI.dlProgress(pct,
-                                                                                "下载中 " + pct + "% · " + dlRate(rate)
-                                                                                + " · " + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB");
+                                                                                window.LudoraI18n
+                                                                                  ? window.LudoraI18n.t("downloader.downloading", { progress: pct, detail: dlRate(rate) + " · " + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB" })
+                                                                                  : "下载中 " + pct + "% · " + dlRate(rate)
+                                                                                    + " · " + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB");
                                                                     }
                                                                 }
                                                                 if (magic === DL_MAGIC
                                                                     && (stage === 0x7f || stage === 0x80)) {
                                                                     if (stage === 0x7f) {
-                                                                        if (detail0 === 1) state("已存在,跳过下载", "ok");
-                                                                        else state("下载完成", "ok");
+                                                                        if (detail0 === 1) state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "已存在,跳过下载", "ok");
+                                                                        else state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成", "ok");
                                                                         if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
-                                                                            window.LudoraZrmUI.dlProgress(100, "下载完成");
+                                                                            window.LudoraZrmUI.dlProgress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成");
                                                                     } else {
-                                                                        state("下载失败", "bad");
+                                                                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "下载失败", "bad");
                                                                         if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgressHide)
                                                                             window.LudoraZrmUI.dlProgressHide();
                                                                     }

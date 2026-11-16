@@ -1867,24 +1867,23 @@ const LUDORA_DL_STAGE_DONE = 0x7f;
 const LUDORA_DL_STAGE_FAILED = 0x80;
 const LUDORA_DL_STAGE_BODY = 7;
 
+function ludoraDlStageSlug(stage) {
+  return ({
+    1: 'entry', 2: 'param', 3: 'socket', 4: 'connect', 5: 'send',
+    6: 'response-head', 7: 'body', 8: 'hash', 9: 'module-load', 10: 'symbol',
+    11: 'install', 12: 'launch', [LUDORA_DL_STAGE_DONE]: 'done', [LUDORA_DL_STAGE_FAILED]: 'failed'
+  })[stage] || ('stage-' + stage);
+}
+
 function ludoraDlStageName(stage) {
-  switch (stage) {
-    case 1: return 'entry';
-    case 2: return 'param';
-    case 3: return 'socket';
-    case 4: return 'connect';
-    case 5: return 'send';
-    case 6: return 'response-head';
-    case 7: return 'body';
-    case 8: return 'hash';
-    case 9: return 'module-load';
-    case 10: return 'symbol';
-    case 11: return 'install';
-    case 12: return 'launch';
-    case LUDORA_DL_STAGE_DONE: return 'done';
-    case LUDORA_DL_STAGE_FAILED: return 'failed';
-    default: return 'stage-' + stage;
-  }
+  var slug = ludoraDlStageSlug(stage);
+  var key = 'downloader.stage.' + slug;
+  var text = window.LudoraI18n ? LudoraI18n.t(key) : slug;
+  return text !== key ? text : slug;
+}
+
+function dlText(key, values, fallback) {
+  return window.LudoraI18n ? LudoraI18n.t(key, values || {}) : fallback;
 }
 
 function ludoraDlResolveParams(cb) {
@@ -1998,16 +1997,16 @@ function ludoraDlInject(dlp, data) {
     var dispatchResult = chain.call_int('pthread_create', pthread, 0, loaderAddress, payloadBase);
     log('downloader pthread_create rc=' + dispatchResult);
     if (dispatchResult !== 0) {
-      msgs.textContent = 'Ludora downloader failed to start (pthread_create rc=' + dispatchResult + ').';
+      msgs.textContent = dlText('downloader.failedToStart', null, 'Ludora downloader failed to start (pthread_create rc=' + dispatchResult + ').');
       return;
     }
 
     var deadline = Date.now() + 180000;
     var lastSeq = -1;
     var lastStage = 0;
-    msgs.textContent = 'Ludora downloader running… (host ' + ip + ':' + port + ')';
+    msgs.textContent = dlText('downloader.running', null, 'Ludora downloader running… (host ' + ip + ':' + port + ')');
     if (window.LudoraUI && window.LudoraUI.progress)
-      window.LudoraUI.progress(0, '准备下载…', 'downloading');
+      window.LudoraUI.progress(0, dlText('downloader.preparing', null, '准备下载…'), 'downloading');
     function poll() {
       var magic = statusView[0] >>> 0;
       var stage = statusView[2] >>> 0;
@@ -2018,29 +2017,30 @@ function ludoraDlInject(dlp, data) {
       if (sequence !== lastSeq) {
         lastSeq = sequence;
         lastStage = stage;
-        msgs.textContent = 'Ludora downloader: ' + ludoraDlStageName(stage)
-          + (result ? ' (result=' + result + ')' : '');
+        msgs.textContent = dlText('downloader.stage', { stage: ludoraDlStageName(stage) },
+          'Ludora downloader: ' + ludoraDlStageName(stage)
+          + (result ? ' (result=' + result + ')' : ''));
         if (stage === LUDORA_DL_STAGE_BODY && detail1 > 0) {
           var pct = Math.floor(detail0 * 100 / detail1);
-          var msg = '下载中 ' + pct + '% · ' + (detail0 >> 20) + '/' + (detail1 >> 20) + ' MB';
+          var msg = dlText('downloader.downloading', { progress: pct, detail: (detail0 >> 20) + '/' + (detail1 >> 20) + ' MB' }, '下载中 ' + pct + '% · ' + (detail0 >> 20) + '/' + (detail1 >> 20) + ' MB');
           if (window.LudoraUI && window.LudoraUI.progress)
             window.LudoraUI.progress(pct, msg, 'downloading');
         }
       }
       if (magic === LUDORA_DL_MAGIC && (stage === LUDORA_DL_STAGE_DONE || stage === LUDORA_DL_STAGE_FAILED)) {
         if (stage === LUDORA_DL_STAGE_DONE) {
-          msgs.textContent = 'Ludora downloaded and staged (install deferred to GoldHEN AutoRun).';
+          msgs.textContent = dlText('downloader.staged', null, 'Ludora downloaded and staged (install deferred to GoldHEN AutoRun).');
           if (window.LudoraUI && window.LudoraUI.progress)
-            window.LudoraUI.progress(100, detail0 === 1 ? '已存在,跳过下载' : '下载完成', 'done');
+            window.LudoraUI.progress(100, detail0 === 1 ? dlText('downloader.exists', null, '已存在,跳过下载') : dlText('downloader.complete', null, '下载完成'), 'done');
         } else {
-          msgs.textContent = 'Ludora downloader failed at ' + ludoraDlStageName(lastStage) + ' (result=' + result + ').';
+          msgs.textContent = dlText('downloader.failedAt', { stage: ludoraDlStageName(lastStage) }, 'Ludora downloader failed at ' + ludoraDlStageName(lastStage) + ' (result=' + result + ').');
           if (window.LudoraUI && window.LudoraUI.progress)
-            window.LudoraUI.progress(100, '下载失败', 'error');
+            window.LudoraUI.progress(100, dlText('downloader.failed', null, '下载失败'), 'error');
         }
         return;
       }
       if (Date.now() >= deadline) {
-        msgs.textContent = 'Ludora downloader timed out at ' + ludoraDlStageName(lastStage) + '.';
+        msgs.textContent = dlText('downloader.timedOut', { stage: ludoraDlStageName(lastStage) }, 'Ludora downloader timed out at ' + ludoraDlStageName(lastStage) + '.');
         return;
       }
       setTimeout(poll, 200);
@@ -2049,21 +2049,21 @@ function ludoraDlInject(dlp, data) {
   } catch (e) {
     var detail = e && e.message ? e.message : String(e);
     log('downloader dispatch error: ' + detail);
-    msgs.textContent = 'Ludora downloader dispatch failed: ' + detail;
+    msgs.textContent = dlText('downloader.dispatchFailed', { detail: detail }, 'Ludora downloader dispatch failed: ' + detail);
   }
 }
 
 function runDownloader() {
   log('Ludora downloader stage starting…');
-  msgs.textContent = 'Ludora downloader stage starting…';
+  msgs.textContent = dlText('downloader.starting', null, 'Ludora downloader stage starting…');
   ludoraDlResolveParams(function (dlp) {
     if (!dlp) {
-      msgs.textContent = 'Ludora downloader parameters unavailable (no token, no local JSON).';
+      msgs.textContent = dlText('downloader.parametersUnavailable', null, 'Ludora downloader parameters unavailable (no token, no local JSON).');
       return;
     }
     ludoraDlFetchBin(function (dl) {
       if (!dl) {
-        msgs.textContent = 'Ludora downloader payload unavailable.';
+        msgs.textContent = dlText('downloader.payloadUnavailable', null, 'Ludora downloader payload unavailable.');
         return;
       }
       ludoraDlInject(dlp, dl);

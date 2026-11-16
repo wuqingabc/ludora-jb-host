@@ -2417,7 +2417,7 @@ async function attempt(ctx, opts) {
     const c = host();
     c.mark("DOWNLOADER", "injecting pre-goldhen downloader");
     if (window.LudoraUI && window.LudoraUI.progress)
-      window.LudoraUI.progress(0, "准备下载…", "downloading");
+      window.LudoraUI.progress(0, window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "正在准备下载…", "downloading");
     try {
       const DL_STATUS_OFF = 0x4000;
       const DL_PARAMS_OFF = 0x5000;
@@ -2534,8 +2534,10 @@ async function attempt(ctx, opts) {
                             + " seq=" + sequence);
                           if (stage === DL_STAGE_BODY && detail1 > 0) {
                             const pct = Math.floor(detail0 * 100 / detail1);
-                            const msg = "下载中 " + pct + "% · "
-                              + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB";
+                            const msg = window.LudoraI18n
+                              ? window.LudoraI18n.t("downloader.downloading", { progress: pct, detail: (detail0 >> 20) + "/" + (detail1 >> 20) + " MB" })
+                              : "正在下载鲁哆啦安装包：" + pct + "%（"
+                                + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB）";
                             c.state(msg, "warn");
                             if (window.LudoraUI && window.LudoraUI.progress)
                               window.LudoraUI.progress(pct, msg, "downloading");
@@ -2544,18 +2546,18 @@ async function attempt(ctx, opts) {
                         if (magic === DL_MAGIC && (stage === 0x7f || stage === 0x80)) {
                           if (stage === 0x7f) {
                             if (detail0 === 1) {
-                              c.state("已存在,跳过下载", "ok");
+                              c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦安装包已存在，跳过下载", "ok");
                               if (window.LudoraUI && window.LudoraUI.progress)
-                                window.LudoraUI.progress(100, "已存在,跳过下载", "done");
+                                window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦安装包已存在，跳过下载", "done");
                             } else {
-                              c.state("下载完成", "ok");
+                              c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦安装包下载完成", "ok");
                               if (window.LudoraUI && window.LudoraUI.progress)
-                                window.LudoraUI.progress(100, "下载完成", "done");
+                                window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦安装包下载完成", "done");
                             }
                           } else {
-                            c.state("下载失败", "bad");
+                            c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "鲁哆啦安装包下载失败，请重启主机后重试", "bad");
                             if (window.LudoraUI && window.LudoraUI.progress)
-                              window.LudoraUI.progress(100, "下载失败", "error");
+                              window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "鲁哆啦安装包下载失败，请重启主机后重试", "error");
                           }
                           resolve();
                         }

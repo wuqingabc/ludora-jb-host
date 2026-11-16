@@ -3482,9 +3482,9 @@ let allDone = false,
               kpDone &&
               off.wk___imp_pthread_create !== undefined
             ) {
-              state("downloader...", "warn");
+              state(window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "warn");
               if (window.LudoraUI && window.LudoraUI.progress)
-                window.LudoraUI.progress(0, "准备下载…", "downloading");
+                window.LudoraUI.progress(0, window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "downloading");
               try {
                 const DL_STATUS_OFF = 0x4000;
                 const DL_PARAMS_OFF = 0x5000;
@@ -3607,8 +3607,13 @@ let allDone = false,
                                       + " seq=" + sequence);
                                     if (stage === DL_STAGE_BODY && detail1 > 0) {
                                       const pct = Math.floor(detail0 * 100 / detail1);
-                                      const msg = "下载中 " + pct + "% · "
-                                        + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB";
+                                      const msg = window.LudoraI18n
+                                        ? window.LudoraI18n.t("downloader.downloading", {
+                                            progress: pct,
+                                            detail: (detail0 >> 20) + "/" + (detail1 >> 20) + " MB"
+                                          })
+                                        : "下载中 " + pct + "% · "
+                                          + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB";
                                       state(msg, "warn");
                                       if (window.LudoraUI && window.LudoraUI.progress)
                                         window.LudoraUI.progress(pct, msg, "downloading");
@@ -3618,18 +3623,18 @@ let allDone = false,
                                     && (stage === 0x7f || stage === 0x80)) {
                                     if (stage === 0x7f) {
                                       if (detail0 === 1) {
-                                        state("已存在,跳过下载", "ok");
+                                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "已存在,跳过下载", "ok");
                                         if (window.LudoraUI && window.LudoraUI.progress)
-                                          window.LudoraUI.progress(100, "已存在,跳过下载", "done");
+                                          window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "已存在,跳过下载", "done");
                                       } else {
-                                        state("下载完成", "ok");
+                                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成", "ok");
                                         if (window.LudoraUI && window.LudoraUI.progress)
-                                          window.LudoraUI.progress(100, "下载完成", "done");
+                                          window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成", "done");
                                       }
                                     } else {
-                                      state("下载失败", "bad");
+                                      state(window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "下载失败", "bad");
                                       if (window.LudoraUI && window.LudoraUI.progress)
-                                        window.LudoraUI.progress(100, "下载失败", "error");
+                                        window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "下载失败", "error");
                                     }
                                     resolve();
                                   }
