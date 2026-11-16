@@ -11,12 +11,30 @@
 </head>
 <body>
 <script>
-var histlength=history.length;history.go(-histlength-2);
+// 固件自动检测 + 路由:解析 PS4 User-Agent 得到固件号,直接跳转对应引擎入口。
+// 非 PS4(桌面/PS5)或未覆盖固件则保留下方菜单作为兜底,不做任何跳转。
+(function () {
+  var m = /PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
+  if (!m) return;
+  var fw = parseInt(m[1], 10) * 100 + parseInt(m[2], 10);
+  var target = null;
+  if (fw === 505) target = "505goldhen/index.html";              // 5.05 GoldHEN
+  else if (fw === 672) target = "672goldhen/index.html";         // 6.72 GoldHEN
+  else if (fw >= 700 && fw <= 852) target = "g2all/index.html";  // 7.00–8.52(700 引擎)
+  else if (fw >= 900 && fw <= 960) target = "g2all/index.html";  // 9.00–9.60(900 引擎)
+  else if (fw >= 1000 && fw <= 1102) target = "g2all/index.html";// 10.00–11.02(css 引擎)
+  else if (fw >= 1150 && fw <= 1202) target = "zrm/index.html";  // 11.50–12.02(lapse)
+  else if (fw >= 1250 && fw <= 1300) target = "zrm/index.html";  // 12.50–13.00(poops)
+  else if (fw >= 1302 && fw <= 1350) target = "13x/index.html";  // 13.02–13.50(内核表)
+  else if (fw >= 1352 && fw <= 1402) target = "14x/index.html";  // 13.52–14.02(afterglow)
+  if (target) window.location.replace(target);
+})();
 </script>
-<h1 id=msgs data-i18n="legacy.rootTitle">鲁哆啦 Ludora · 主机入口</h1>
-<hr>
-<br>
-<div id=menu>
+<div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker" data-i18n="host.title">主机工具</span></div>
+<div id="wrap">
+<div class="eyebrow" data-i18n="host.title">主机工具</div>
+<h1 id="msgs" data-i18n="brand.host">鲁哆啦 · 主机工具</h1>
+<div id="menu">
 <h1 style="font-size: 18px;color: yellow;" data-i18n="legacy.selectFirmware">选择主机固件</h1>
 <a href="14x/index.html"><button class="btn" onmouseover="msgs.innerHTML='PS4 13.52 / 14.00 固件 GoldHEN 入口'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')"> 13.52 / 14.00 FW GoldHEN </button></a>
 <br>
@@ -36,30 +54,7 @@ var histlength=history.length;history.go(-histlength-2);
 <button class="btn" onmouseover="msgs.innerHTML='恢复主机入口(无需修改 DNS)'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="location.replace('restore/index.html')"> Restore Host </button>
 <br>
 <a href="https://ps5jb-umtx2.netlify.app/"><button class="btn btn-ps5" onmouseover="msgs.innerHTML='PS5 UMTX2 1.xx-5.xx 固件入口 v1.0'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')"> PS5 UMTX2 v1.0 </button></a>
-<br>
-<button class="btn btn-onln" onmouseover="msgs.innerHTML='如果你喜欢鲁哆啦，欢迎打赏支持。'" onmouseout="msgs.innerHTML=LudoraI18n.t('brand.host')" onclick="donations()" style="margin-top: 75px;margin-bottom: 15px;width: 468px;"> For Donations (Only in Cryptocurrencies) </button>
 </div>
-<div id=crypto>
-<h1 style="font-size: 18px;color: yellow;">Donate with Bitcoin (BTC):</h1>
-<img src="btc.jpg" width="150" height="150">
-<br>
-<h1 style="font-size: 18px;">bc1q6cnsykmvem6zgw8wag3ygee0jkhtxj6rkp2nrm</h1>
-<br>
-<h1 style="font-size: 18px;color: yellow;">Donate with Ethereum (ETH):</h1>
-<img src="eth.jpg" width="150" height="150">
-<h1 style="font-size: 18px;">0x7Ae1825ddE196925dB8B7832F436cA0eAeaF932c</h1>
-<button class="btn" onclick="load_menu()"> Return </button>
 </div>
-<script>
-function donations(){
-document.getElementById("crypto").style.display = "block";
-document.getElementById("menu").style.display = "none";
-}
-
-function load_menu(){
-document.getElementById("menu").style.display = "block";
-document.getElementById("crypto").style.display = "none";
-}
-</script>
 </body>
 </html>

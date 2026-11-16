@@ -1,80 +1,142 @@
-/* Ludora host presentation layer. Runtime scripts and DOM IDs remain upstream-compatible. */
+/* Ludora host 统一 UI 内核 —— 视觉 + 布局全站唯一源。
+ * 内核引入自 ludora-ps5-autoloader 的 frontend/autoloader/loader.css(brand/wrap 单列
+ * grid/state/det/progressContainer/console),色板与布局全站一致。
+ * 保留:旧引擎 payload 按钮菜单(.btn/#menu/#msgs)、legacy 兼容门类、PSFree 9.00 敏感
+ * DOM 隔离。旧引擎(505/672/702/75x/900 系列)共享本文件,改此处即全局生效。
+ */
+
+/* ===== tokens(autoloader 基准)===== */
 :root {
   color-scheme: dark;
-  /* Palette matched to ludora-site's /jb page (src/pages/jb/index.astro) so the
-     two products read as one brand. Values here are the source of truth for
-     this repo; keep them in sync if ludora-site's tokens change. */
-  --ld-bg: #080a1c;
-  --ld-bg-2: #111530;
-  --ld-panel: rgba(21, 26, 61, .92);
-  --ld-panel-strong: #151a3d;
-  --ld-line: rgba(165, 174, 232, .18);
-  --ld-text: #f4f5ff;
-  --ld-muted: #a2a8c5;
-  --ld-soft: #727a9f;
-  --ld-gold: #f8c44f;
-  --ld-gold-strong: #ffd97a;
-  --ld-gold-ink: #241a04;
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--ld-bg);
-  color: var(--ld-text);
+  --bg: #0a0d1c;
+  --fg: #edf0fc;
+  --muted: #a4abcd;
+  --soft: #8b93b8;
+  --line: rgba(210, 220, 255, .12);
+  --gold: #f3b942;
+  --gold-strong: #f7c95c;
+  --gold-ink: #0a0d1c;
+  --ok: #7fd0a0;
+  --bad: #d08a7f;
+  --warn: #d8c07f;
+  --panel: rgba(16, 21, 45, .72);
+  --sunk: rgba(12, 16, 35, .86);
+  --bar-a: #2563eb;
+  --bar-b: #38bdf8;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
 }
 * { box-sizing: border-box; }
-html { min-width: 320px; min-height: 100%; background: var(--ld-bg); color: var(--ld-text); text-align: center; overflow-x: hidden; overflow-y: auto; }
-body { width: min(1200px, calc(100% - 40px)); min-height: 100vh; margin: 0 auto; padding: 0 0 48px; background: radial-gradient(ellipse at 78% 22%, rgba(83, 102, 214, .16), transparent 38%), var(--ld-bg); color: var(--ld-text); }
-body::before { content: "LUDORA  /  DEVICE ACCESS"; display: block; padding: 26px 2px 18px; margin-bottom: 4px; border-bottom: 1px solid var(--ld-line); background: linear-gradient(180deg, rgba(248, 196, 79, .06), transparent); color: var(--ld-gold); font-size: 12px; font-weight: bold; letter-spacing: .22em; text-align: left; }
-h1 { margin: 0; padding: 22px 28px; color: var(--ld-text); font-size: 24px; line-height: 1.3; font-weight: bold; letter-spacing: -.02em; text-shadow: none; }
-hr { height: 1px; margin: 0 0 24px; border: 0; background: var(--ld-line); }
-a { color: var(--ld-gold-strong); text-decoration: none; }
-a:hover, a:focus { color: #fff3d6; }
-body > h1:first-of-type, body > #msgs:first-child, body > #msgs {
-  border: 1px solid var(--ld-line); border-bottom: 0; border-radius: 20px 20px 0 0;
-  background: linear-gradient(180deg, rgba(30, 38, 84, .82), rgba(21, 26, 61, .82));
+html { min-height: 100%; background: var(--bg); color: var(--fg); }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+/* max-width + calc 兜底:5.05/6.72/9.00 老 WebKit 不支持 min(),兜底保证仍居中;
+   支持 min() 的浏览器走最后一行(等价结果)。 */
+body { width: calc(100% - 48px); max-width: 1180px; width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding-bottom: 56px; }
+
+/* ===== 品牌栏(全站统一)===== */
+#brand { display: flex; align-items: center; gap: 12px; padding: 22px 4px 18px; border-bottom: 1px solid var(--line); text-align: left; }
+#brand b { color: var(--fg); font-size: 18px; letter-spacing: .02em; }
+.brand-mark { display: inline-grid; place-items: center; width: 34px; height: 34px; background: linear-gradient(145deg, var(--gold-strong), #d99a1f); border-radius: 10px; color: var(--gold-ink); font-size: 20px; font-weight: 800; box-shadow: 0 0 0 1px rgba(243, 185, 66, .35), 0 2px 10px rgba(243, 185, 66, .22); }
+.brand-kicker { margin-left: auto; color: var(--muted); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+
+/* ===== 布局(单列 grid,全站统一)===== */
+#wrap { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; padding: 36px 0 0; }
+.eyebrow { color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+#state { margin: 8px 0 0; font-size: 34px; font-size: clamp(28px, 4vw, 48px); line-height: 1.08; letter-spacing: -.03em; }
+#state.ok { color: var(--ok); }
+#state.bad { color: var(--bad); }
+#state.warn { color: var(--warn); }
+#det { margin: 6px 0 0; color: var(--muted); font-size: 14px; word-break: break-word; }
+
+/* ===== 进度条(全站唯一,文字在框内 = 「进展框放入进展」)===== */
+#progressContainer { position: relative; width: 100%; height: 3rem; margin: 22px 0 0; background: #1b2436; border: 1px solid #2c3e5a; border-radius: 12px; overflow: hidden; }
+#progressBar { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg, var(--bar-a) 0%, var(--bar-b) 100%); transition: width 0.5s ease-in-out; }
+#progressLabel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); z-index: 1; pointer-events: none; }
+#progressContainer[data-state="error"] #progressBar { background: #b91c1c; }
+#progressContainer[data-state="done"] #progressBar { background: #15803d; }
+#progressContainer[data-state="stopped"] #progressBar { background: #6b7280; }
+#progressContainer[data-state="installing"] #progressBar { background: linear-gradient(90deg, var(--bar-a) 0%, var(--bar-b) 100%); animation: installingPulse 1.3s ease-in-out infinite; }
+@keyframes installingPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
+/* ===== 日志框(全站统一;上游引擎的 #console id 不可改)===== */
+#console, #out { width: 100%; margin: 18px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--sunk); color: #c7cbea; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-y: auto; box-sizing: border-box; }
+#console { height: min(30vh, 260px); }
+/* exploit 运行页日志比 autoloader 的控制台更长,给稍大的可视高度 */
+#out { height: min(45vh, 420px); }
+
+/* ===== 选择卡片(载荷选择页,视觉对齐 autoloader landing.html 的 .choice-card)===== */
+.pick { width: 100%; margin: 26px 0 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.choice-card {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px;
+  border: 1px solid rgba(210, 220, 255, .14); border-radius: 14px;
+  background: var(--panel); color: var(--fg); font-size: 15px; text-align: left; cursor: pointer;
+  transition: border-color .12s ease, background .12s ease;
 }
+.choice-card:hover, .choice-card:focus-within { border-color: rgba(243, 185, 66, .65); background: rgba(24, 30, 60, .9); }
+.choice-card input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: var(--gold); }
+.choice-card.choice-auto { border-style: dashed; }
+.choice-name { flex: 1 1 auto; font-weight: 600; }
+.pick .btn { display: block; width: 100%; margin: 10px 0 0; }
+.count { width: 100%; min-height: 20px; margin: 14px 0 0; color: var(--gold); text-align: center; font-size: 14px; }
+.byline { width: 100%; margin: 20px 0 0; color: var(--soft); text-align: center; font-size: 12px; }
+
+/* ===== 插件选择器(ps5-loader 特有,渲染自 ludora-bridge.js)===== */
+#plugins-hint { width: 100%; margin: 26px 0 10px; color: var(--muted); font-size: 13px; }
+#plugins { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.plugin { display: flex; flex-direction: column; align-items: stretch; gap: 4px; text-align: left; width: 100%; padding: 14px 18px; border: 1px solid rgba(210, 220, 255, .14); border-radius: 12px; background: var(--panel); color: var(--fg); cursor: pointer; transition: border-color .12s ease, background .12s ease; }
+.plugin:not(:disabled):hover { border-color: rgba(243, 185, 66, .65); background: rgba(24, 30, 60, .9); }
+.plugin:disabled { cursor: not-allowed; opacity: .55; }
+.plugin strong { font-size: 15px; font-weight: 600; color: var(--fg); }
+.plugin .plugin-meta { font-size: 11px; color: var(--gold); letter-spacing: .06em; }
+.plugin .plugin-desc { font-size: 12px; color: var(--soft); line-height: 1.45; }
+.plugin-done { border-color: rgba(127, 208, 160, .6) !important; }
+.plugin-fail { border-color: rgba(208, 138, 127, .7) !important; }
+.plugin-sending { border-color: rgba(216, 192, 127, .7) !important; }
+.plugin-empty { padding: 18px; border: 1px dashed rgba(210, 220, 255, .2); border-radius: 12px; color: var(--muted); font-size: 13px; }
+
+/* ===== 旧引擎 payload 按钮菜单(保留,色板统一到 autoloader)===== */
 #menu, #mods, #crypto, #tools, #lnx, #progress {
-  width: 100%; margin: 0 auto; padding: 28px 24px; border: 1px solid var(--ld-line); border-radius: 0 0 20px 20px;
-  background: var(--ld-panel); box-shadow: 0 24px 60px rgba(2, 3, 12, .45);
+  width: 100%; margin: 0 auto; padding: 28px 24px; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--panel); box-shadow: 0 24px 60px rgba(2, 3, 12, .45);
 }
-#menu h1, #mods h1, #crypto h1, #progress h1 { padding: 10px 0 16px; border: 0; background: transparent; color: var(--ld-muted); font-size: 15px !important; letter-spacing: .04em; }
+#menu h1, #mods h1, #crypto h1, #progress h1 { padding: 10px 0 16px; border: 0; background: transparent; color: var(--muted); font-size: 15px !important; letter-spacing: .04em; }
+#msgs, #msgs2 { min-height: 40px; margin: 0 auto; color: var(--gold) !important; font-size: 24px !important; line-height: 1.35; }
 .btn, button {
   display: inline-block; min-width: 220px; min-height: 56px; margin: 8px 6px; padding: 13px 20px;
-  border: 1px solid var(--ld-line); border-radius: 14px;
+  border: 1px solid var(--line); border-radius: 14px;
   background: linear-gradient(180deg, #232c5c, #131736);
-  color: var(--ld-text); font: bold 16px/1.25 Arial, Helvetica, sans-serif; text-align: center; cursor: pointer;
+  color: var(--fg); font: bold 16px/1.25 Arial, Helvetica, sans-serif; text-align: center; cursor: pointer;
   box-shadow: 0 10px 24px rgba(2, 3, 14, .35), inset 0 1px 0 rgba(255, 255, 255, .12);
   transition: background .12s ease, transform .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
 .btn:hover, .btn:focus, button:hover, button:focus {
-  border-color: var(--ld-gold);
+  border-color: var(--gold);
   background: linear-gradient(180deg, #2c3670, #171c42);
   box-shadow: 0 0 0 3px rgba(248, 196, 79, .22), 0 12px 28px rgba(2, 3, 14, .4), inset 0 1px 0 rgba(255, 255, 255, .14);
   outline: none;
 }
 .btn:active, button:active { transform: translateY(1px); box-shadow: 0 4px 12px rgba(2, 3, 14, .35), inset 0 1px 0 rgba(255, 255, 255, .1); }
 .btn-primary {
-  border-color: transparent; background: linear-gradient(180deg, var(--ld-gold-strong), var(--ld-gold));
-  color: var(--ld-gold-ink); box-shadow: 0 10px 26px rgba(248, 196, 79, .28), inset 0 1px 0 rgba(255, 255, 255, .35);
+  border-color: transparent; background: linear-gradient(180deg, var(--gold-strong), var(--gold));
+  color: var(--gold-ink); box-shadow: 0 10px 26px rgba(248, 196, 79, .28), inset 0 1px 0 rgba(255, 255, 255, .35);
 }
 .btn-primary:hover, .btn-primary:focus {
-  background: linear-gradient(180deg, #ffe6a3, var(--ld-gold-strong));
+  background: linear-gradient(180deg, #ffe6a3, var(--gold-strong));
   box-shadow: 0 0 0 3px rgba(248, 196, 79, .3), 0 12px 30px rgba(248, 196, 79, .34), inset 0 1px 0 rgba(255, 255, 255, .4);
 }
 .btn-onln { border-color: rgba(120, 216, 231, .5); background: linear-gradient(180deg, #1b5b78, #123b4f); }
 .btn-toolbox { background: linear-gradient(180deg, #6b4650, #45262e); }
 .btn-ps5 { background: linear-gradient(180deg, #2f3a72, #1b2247); }
-#msgs, #msgs2 { min-height: 86px; margin: 0 auto; color: var(--ld-gold-strong) !important; font-size: 28px !important; line-height: 1.35; }
-#progress #msgs2, body > #msgs[style*="margin-bottom"], body > h1[style*="margin-bottom"] { min-height: 330px; padding-top: 120px; padding-bottom: 110px; }
-body > h1:last-of-type { margin-top: 24px !important; padding: 18px 0; color: var(--ld-soft); font-size: 13px !important; font-weight: normal; }
-#log_area { padding: 24px; color: var(--ld-muted); }
-#log_area h1 { border: 0; background: transparent; color: var(--ld-gold); font-size: 18px !important; }
-.cache-progress { width: min(720px, 88%); height: 14px; margin: 22px auto 0; overflow: hidden; border: 1px solid rgba(248, 196, 79, .3); border-radius: 999px; background: rgba(8, 10, 28, .72); }
-.cache-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--ld-gold), var(--ld-gold-strong)); transition: width .15s ease; }
-.cache-progress.indeterminate > span { width: 0; }
-select { min-height: 38px; margin: 8px; border: 1px solid var(--ld-line); border-radius: 10px; background: var(--ld-panel-strong); color: var(--ld-text); }
-@media (max-width: 720px) { body { width: calc(100% - 24px); } h1 { padding: 18px 14px; font-size: 20px; } #menu, #mods, #crypto, #tools, #lnx, #progress { padding: 16px 12px; } .btn, button { width: min(100%, 360px); margin: 6px auto; } }
+select { min-height: 38px; margin: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--fg); }
+@media (max-width: 720px) { body { width: calc(100% - 24px); } #menu, #mods, #crypto, #tools, #lnx, #progress { padding: 16px 12px; } .btn, button { width: min(100%, 360px); margin: 6px auto; } }
+
+/* ===== legacy 兼容门类(保留)===== */
 
 /* PSFree 9.00 relies on the original WebKit focus/History/frameset layout.
-   Keep the Ludora presentation layer out of that sensitive DOM path. */
+   Keep the Ludora presentation layer out of that sensitive DOM path.
+   居中只改 body 的 width/margin(纯视觉,不新增 DOM、不碰 box-sizing/transition),
+   所以 g2all 与其它页面同样居中,PSFree 的敏感隔离仍然保留在下面两行。 */
 html.ludora-legacy-document {
   min-width: 0;
   min-height: 0;
@@ -82,15 +144,38 @@ html.ludora-legacy-document {
 }
 body.ludora-legacy-host { overflow: hidden; }
 body.ludora-legacy-host {
-  width: auto;
+  width: calc(100% - 48px);
+  max-width: 1180px;
+  width: min(1180px, calc(100% - 48px));
   min-height: 0;
-  margin: 0;
-  padding: 0;
+  margin: 0 auto;
+  padding: 0 0 56px;
   background: transparent;
 }
-body.ludora-legacy-host::before { display: none; }
-/* Pages that render their own brand header (zrm/13x-style dark cards) opt out
-   of just the injected top strip, without losing the rest of the presentation
-   layer the way .ludora-legacy-host does. */
-body.ludora-custom-brand::before { display: none; }
 body.ludora-legacy-host * { box-sizing: content-box !important; transition: none !important; }
+
+/* g2all 统一模板:exploit 契约 #msgs 按 #state 样式呈现(仅 g2all 的 ludora-legacy-host,
+   不碰其它旧引擎页面的 #msgs)。#pkg-stage-status 对齐 #det 的细节行。 */
+body.ludora-legacy-host #msgs {
+  margin: 8px 0 0;
+  min-height: 0;
+  color: var(--fg) !important;
+  font-size: 34px !important;
+  font-size: clamp(28px, 4vw, 48px) !important;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-align: left;
+}
+body.ludora-legacy-host #pkg-stage-status {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ===== 版本降级(5.05/6.72 老 WebKit 不达 grid/clamp 时)===== */
+/* 单列 grid 的元素本身是块级、DOM 顺序即降级顺序(brand→eyebrow→state→det→progress→console),
+   @supports 不达时自然回退为 block 流式,无需第二套布局。 */
+@supports not (display: grid) {
+  #wrap { display: block; }
+  #state { font-size: 34px; }
+}

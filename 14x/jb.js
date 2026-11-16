@@ -284,6 +284,7 @@ function trace(tag, detail) {
   if (VERBOSE) mark(tag, detail);
 }
 function state(t, c) {
+  if (window.LudoraUI && window.LudoraUI.state) { window.LudoraUI.state(t, c); return; }
   if (!SHOW_LOG || !stateEl) return;
   stateEl.textContent = t;
   stateEl.className = c || "";

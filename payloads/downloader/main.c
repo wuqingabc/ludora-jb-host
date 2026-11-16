@@ -36,6 +36,16 @@
 #define PKG_TMP  "/data/pkg/ludora.pkg.tmp"
 #define FORCE_STAGED_MARK "/data/.ludora_force_staged"
 
+/* 已装机判据:装机成功后源 pkg 会被安装服务删掉(装完即删,见 itemzflow installpkg.cpp
+ * "装完即删,腾出空间"),所以不能再拿"pkg 文件是否存在"当跳过信号 —— 那会让已装机的
+ * 主机每次越狱都重新下载 49MB。改为检查 appmeta 目录(装机时即建立),与 ludora_autorun
+ * 的 sceAppInstUtilAppExists(LUDO00001) 语义等价。
+ * 注意:ludora 被用户移到扩展硬盘后,appmeta 会落在 /user/appmeta/external/<TID>
+ * (itemzflow 自身图标 fallback 就同时查内/外两条路径),所以两条都要判,否则装扩展盘
+ * 的主机仍会重复下载。 */
+#define APP_INSTALLED_DIR "/user/appmeta/LUDO00001"
+#define APP_INSTALLED_DIR_EXT "/user/appmeta/external/LUDO00001"
+
 /* ---- raw syscall wrappers (no libc) ---- */
 /* FreeBSD/Orbis 内核 syscall 失败 = carry 置位 + rax=正数 errno(非 -1)。
  * 裸 syscall 必须检查 carry:失败时 neg rax 转成负值,否则 `if (fd < 0)` 等
@@ -511,8 +521,17 @@ int _main(void *payload_base) {
     return -1;
   }
 
-  /* 下载前先查文件是否已存在:存在则跳过下载,直接写强制标记并判 DONE。
-   * detail0=1 表示"已存在,跳过下载",供浏览器侧区分展示。 */
+  /* 下载前先查是否真的需要下载:
+   *   - ludora 已装 → 什么都不用下(装后源 pkg 已被安装服务删掉,仅靠"pkg 是否存在"
+   *     判断会误判成"未装"而重复下载);直接判 DONE。内/外盘 appmeta 都要判,覆盖
+   *     ludora 被移到扩展硬盘的情况。
+   *   - pkg 已落盘(上次下载完还没重启装机)→ 写强制标记,autorun 会优先用 HDD 包。
+   * detail0=1 表示"已存在/已装,跳过下载",供浏览器侧区分展示。 */
+  if (file_exists(APP_INSTALLED_DIR) || file_exists(APP_INSTALLED_DIR_EXT)) {
+    write_marker("SKIP-INSTALLED\n");
+    update(status, LUDORA_DL_STAGE_DONE, 0, 1, 0);
+    return 0;
+  }
   if (file_exists(PKG_PATH)) {
     write_force_staged();
     write_marker("SKIP\n");

@@ -9,33 +9,18 @@
 <script src="../i18n/en-US.js"></script>
 <script src="../i18n.js"></script>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="zrm.css">
-<style>
-  html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8;
-               font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
-  #wrap { padding:16px 18px; }
-  #state { font-size:22px; font-weight:700; margin:0 0 10px; }
-  #out { white-space:pre-wrap; font:12px/1.45 Consolas, monospace;
-         background:#11151b; border:1px solid #1e2732; border-radius:5px;
-         padding:10px 12px; height:calc(100vh - 141px); overflow-y:auto; }
-  .ok { color:#7fd0a0; } .bad { color:#d08a7f; } .warn { color:#d8c07f; }
-  #brand { text-align:center; padding:8px 10px; background:#0e1116;
-           border-bottom:1px solid #1e2732; }
-  #brand img { width:28px; height:28px; margin-right:8px; border-radius:50%;
-               vertical-align:middle; }
-  #brand b { font-size:15px; font-weight:700; letter-spacing:.14em;
-             color:#e6ebf2; vertical-align:middle; }
-</style>
 </head>
-<body class="ludora-custom-brand">
+<body>
 <div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker">Lapse</span></div>
 <div id="wrap">
-  <div class="eyebrow" data-i18n="payload.title">主机入口</div>
-  <div id="state" data-i18n="payload.loading">正在加载主机入口，请稍候</div>
-  <div id="msgs" data-i18n="payload.loading">正在加载主机入口，请稍候</div>
-  <div class="cache-progress" aria-label="Cache progress"><span id="cache-progress"></span></div>
+  <div class="eyebrow" data-i18n="host.title">主机工具</div>
+  <div id="state" data-i18n="relapse.running">正在执行解锁，请勿离开此页面</div>
+  <div id="det"></div>
+  <div id="progressContainer" data-state="installing">
+    <div id="progressBar"></div>
+    <div id="progressLabel" data-i18n="cache.installingUnknown">正在安装离线缓存…</div>
+  </div>
   <div id="out"></div>
-  <div class="ad-slot ad-slot-runtime" aria-label="鲁哆啦在线下载"><img src="../store-qr.png" alt="扫码前往鲁哆啦商店"><span>免光盘·免U盘</span><strong>鲁哆啦在线下载</strong></div>
 </div>
 <script src="../pkg-stage.js"></script>
 <script src="./ui-bridge.js"></script>

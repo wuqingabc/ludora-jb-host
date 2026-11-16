@@ -145,4 +145,10 @@ window.LudoraI18nDictionaries['zh-TW'] = {
   ,'legacy.unsupportedFirmware': '不支援的韌體版本：{firmware}'
   ,'legacy.rootTitle': '魯哆啦 Ludora · 主機入口'
   ,'legacy.multiFirmwareTitle': '魯哆啦 Ludora · PS4 瀏覽器主機入口'
+  ,'legacy.loadingPayload': '正在載入 {name}…'
+  ,'legacy.launchingPayload': '正在啟動 {name}…'
+  ,'legacy.enablingUpdates': '正在啟用系統更新…'
+  ,'legacy.disablingUpdates': '正在停用系統更新…'
+  ,'legacy.parentalControls': '家長控制…請稍候'
+  ,'legacy.loadingPayloadPlain': '正在載入 Payload…'
 };

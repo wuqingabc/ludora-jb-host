@@ -1,11 +1,10 @@
 CACHE MANIFEST
 # Ludora zrm runtime mirror
-# Ludora zrm cache revision: dual-engine-v3-downloader-unconditional-20261116
+# Ludora zrm cache revision: unified-ui-v1-20261116
 
-index.html #34d3e598bc2c402bd377ac47a81836aab23a046f99e387f0bd40a57335700d67
-run_lapse.html #ae1d3a1dc535f1d2714a8b3b31000f83a8986bbe039c8d2bc74656581030a444
-run_poops.html #fe265b442e262cb98121cdc9cec5a4b96d931e54d3516b4b21ddc07c7880ac72
-../store-qr.png #7253643b3222951b93fb21731a5484c044a1492b6ffa291fdee0427bba0bcdfd
+index.html #c7662e96fc0a1e1ba5e6c010ea730f409846ee0e610cf9ce06fa69a768f5e491
+run_lapse.html #c9a8b164ee37ddfe0d27cccb89ef06967e647cecb39b4218cb27603fbf3d80be
+run_poops.html #9dd63ade61ad4f23495c02e8a84d8d55b4908731bb2afa4bc1c4a7c59f979303
 chain_lapse.js #c2d684485d5d472e7815dd4b17e7f1429e3e19b2517077b6e5b39d482c786f32
 chain_poops.js #31e6aca685cf72c1a820d1a1144d316f0f208ad47ecb701bfe15e815929d38b6
 core.js #3acf7e09988f10f800ca22bac1d4965b89ebb5ce2da4850089918fd1a457df4e
@@ -27,7 +26,6 @@ core.js?v=10 #3acf7e09988f10f800ca22bac1d4965b89ebb5ce2da4850089918fd1a457df4e
 ../i18n/zh-CN.js
 ../i18n/zh-TW.js
 ../i18n/en-US.js
-zrm.css
 ui-bridge.js
 ../pkg-stage.js
 

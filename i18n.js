@@ -102,6 +102,81 @@
     if (document.title) document.title = document.title.replace(/\s+by\s+Ludora/gi, ' · Ludora');
   }
 
+  // ===== 全站统一进度 UI(内核来自 ludora-ps5-autoloader)=====
+  // 三类进展来源(离线缓存 / 下载 / 日志)统一走 LudoraUI.progress,落到唯一的
+  // #progressContainer > #progressBar(宽度)+ #progressLabel(框内文字,「进展框放入进展」)。
+  // state 取值:running(默认)/ error / done / stopped / installing,由 style.css 换色。
+  function ensureProgressContainer() {
+    var container = document.getElementById('progressContainer');
+    if (container) return container;
+    var anchor = document.getElementById('wrap') || document.getElementById('msgs') || document.getElementById('progress') || document.body.firstElementChild;
+    if (!anchor || !anchor.parentNode) return null;
+    container = document.createElement('div');
+    container.id = 'progressContainer';
+    container.setAttribute('role', 'progressbar');
+    container.setAttribute('aria-valuemin', '0');
+    container.setAttribute('aria-valuemax', '100');
+    container.setAttribute('aria-valuenow', '0');
+    var bar = document.createElement('div');
+    bar.id = 'progressBar';
+    var label = document.createElement('div');
+    label.id = 'progressLabel';
+    container.appendChild(bar);
+    container.appendChild(label);
+    anchor.parentNode.insertBefore(container, anchor.nextSibling);
+    return container;
+  }
+  window.LudoraUI = {
+    progress: function (pct, message, state) {
+      var container = ensureProgressContainer();
+      if (!container) return null;
+      var value = Math.max(0, Math.min(100, Number(pct) || 0));
+      var bar = document.getElementById('progressBar');
+      var label = document.getElementById('progressLabel');
+      if (bar) bar.style.width = value + '%';
+      if (label) label.textContent = message == null ? (Math.round(value) + '%') : String(message);
+      container.setAttribute('aria-valuenow', String(Math.round(value)));
+      container.setAttribute('aria-valuetext', message == null ? '' : String(message));
+      if (state) container.setAttribute('data-state', state);
+      return container;
+    },
+    state: function (text, cls) {
+      var node = document.getElementById('state');
+      if (!node) return null;
+      if (text != null) node.textContent = String(text);
+      node.className = cls ? String(cls) : '';
+      return node;
+    },
+    det: function (text) {
+      var node = document.getElementById('det');
+      if (!node) return null;
+      if (text != null) node.textContent = String(text);
+      return node;
+    },
+    // 日志框消息传递:版本 JS 只调 log(text, cls) 追加一行,壳层统一落到
+    // #console / #out(style.css 的日志框样式),不再各自手写日志 DOM。
+    log: function (text, cls) {
+      var out = document.getElementById('console') || document.getElementById('out');
+      if (!out) {
+        var anchor = document.getElementById('wrap');
+        if (!anchor) return null;
+        out = document.createElement('div');
+        out.id = 'console';
+        anchor.appendChild(out);
+      }
+      var line = document.createElement('div');
+      if (cls) line.className = String(cls);
+      line.textContent = String(text == null ? '' : text);
+      out.appendChild(line);
+      return line;
+    },
+    clear: function () {
+      var out = document.getElementById('console') || document.getElementById('out');
+      if (out) while (out.firstChild) out.removeChild(out.firstChild);
+      return out;
+    }
+  };
+
   function installCacheProgress() {
     if (!window.applicationCache || !document.documentElement.hasAttribute('manifest')) return;
     var progress = 0;
@@ -136,40 +211,17 @@
         request.send(null);
       } catch (error) {}
     }
-    function bar() {
-      var node = document.getElementById('ludora-cache-progress');
-      if (node) return node;
-      node = document.getElementById('cacheBar');
-      if (node) return node;
-      var existing = document.querySelector('.cache-progress > span');
-      if (existing) return existing;
-      var anchor = document.getElementById('msgs') || document.body.firstElementChild;
-      if (!anchor || !anchor.parentNode) return null;
-      var wrapper = document.createElement('div');
-      wrapper.className = 'cache-progress';
-      wrapper.setAttribute('aria-label', translate('cache.installing', { progress: progress }));
-      node = document.createElement('span');
-      node.id = 'ludora-cache-progress';
-      wrapper.appendChild(node);
-      anchor.parentNode.insertBefore(wrapper, anchor.nextSibling);
-      return node;
-    }
     function update(value, totalKnown) {
       hasTotal = totalKnown;
       progress = Math.max(0, Math.min(100, Number(value) || 0));
-      var node = bar();
-      var wrapper = node && (node.id === 'cacheBar' ? node : node.parentNode);
-      if (wrapper && wrapper.classList) wrapper.classList.toggle('indeterminate', !hasTotal);
-      if (node && hasTotal) node.style.width = progress + '%';
-      var message = document.getElementById('msgs');
-      if (message && progress < 100) message.innerHTML = hasTotal
+      var message = hasTotal
         ? translate('cache.installing', { progress: Math.round(progress) })
         : translate('cache.installingUnknown');
+      window.LudoraUI.progress(hasTotal ? progress : 0, message, 'installing');
     }
     function complete() {
-      var node = bar();
-      if (node) { node.style.width = '100%'; if (node.parentNode.classList) node.parentNode.classList.remove('indeterminate'); }
       hasTotal = true;
+      window.LudoraUI.progress(100, translate('cache.complete'), 'done');
     }
     window.applicationCache.addEventListener('checking', function () { update(0, manifestTotal > 0); }, false);
     window.applicationCache.addEventListener('downloading', function () { update(0, manifestTotal > 0); }, false);

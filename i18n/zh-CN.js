@@ -145,4 +145,10 @@ window.LudoraI18nDictionaries['zh-CN'] = {
   ,'legacy.unsupportedFirmware': '不支持的固件版本：{firmware}'
   ,'legacy.rootTitle': '鲁哆啦 Ludora · 主机入口'
   ,'legacy.multiFirmwareTitle': '鲁哆啦 Ludora · PS4 浏览器主机入口'
+  ,'legacy.loadingPayload': '正在加载 {name}…'
+  ,'legacy.launchingPayload': '正在启动 {name}…'
+  ,'legacy.enablingUpdates': '正在启用系统更新…'
+  ,'legacy.disablingUpdates': '正在禁用系统更新…'
+  ,'legacy.parentalControls': '家长控制…请稍候'
+  ,'legacy.loadingPayloadPlain': '正在加载 Payload…'
 };

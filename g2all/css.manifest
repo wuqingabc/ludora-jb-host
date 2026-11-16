@@ -1,10 +1,10 @@
 CACHE MANIFEST
-# Ludora UI cache revision 2026-09-02-pre-goldhen-diagnostics-v17
+# Ludora UI cache revision 2026-11-16-ui-brand-center-v1
 
 CACHE:
 ../img.jpg
 ../style.css
-goldhen_2.4b18.10.bin
+goldhen_2.4b18.14.bin
 index.html
 css/lapse.js
 css/loader.js

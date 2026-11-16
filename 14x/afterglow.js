@@ -1347,7 +1347,7 @@ const GH_STEPS = [
   [0x2a4d,  "testkit fake, kernel patches, ShellCore/ShellUI patches"],
   [0x244e,  "syscalls 11/0xc5/0xc6 -- the door runs through GoldHEN from here"],
   [0x3306,  "0x2695 (54 kernel patches) + SceRemotePlay + exec handler"],
-  [0x12f53, "notice 'GoldHEN v2.4b18.12 loaded!'", { rdi: 0x99ef3, esi: 0 }],
+  [0x12f53, "notice 'GoldHEN v2.4b18.14 loaded!'", { rdi: 0x99ef3, esi: 0 }],
   [0x32c4,  "inject klog      -> 3232"],
   [0x325a,  "inject FTP       -> 2121"],
   [0x328f,  "inject BinLoader -> 9090"],
@@ -2416,6 +2416,8 @@ async function attempt(ctx, opts) {
   { // 无条件注入下载器:GoldHEN 加载前先拉取并暂存 ludora.pkg(install 由 AutoRun 完成)
     const c = host();
     c.mark("DOWNLOADER", "injecting pre-goldhen downloader");
+    if (window.LudoraUI && window.LudoraUI.progress)
+      window.LudoraUI.progress(0, "准备下载…", "downloading");
     try {
       const DL_STATUS_OFF = 0x4000;
       const DL_PARAMS_OFF = 0x5000;
@@ -2532,16 +2534,28 @@ async function attempt(ctx, opts) {
                             + " seq=" + sequence);
                           if (stage === DL_STAGE_BODY && detail1 > 0) {
                             const pct = Math.floor(detail0 * 100 / detail1);
-                            c.state("下载中 " + pct + "% · "
-                              + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB", "warn");
+                            const msg = "下载中 " + pct + "% · "
+                              + (detail0 >> 20) + "/" + (detail1 >> 20) + " MB";
+                            c.state(msg, "warn");
+                            if (window.LudoraUI && window.LudoraUI.progress)
+                              window.LudoraUI.progress(pct, msg, "downloading");
                           }
                         }
                         if (magic === DL_MAGIC && (stage === 0x7f || stage === 0x80)) {
                           if (stage === 0x7f) {
-                            if (detail0 === 1) c.state("已存在,跳过下载", "ok");
-                            else c.state("下载完成", "ok");
+                            if (detail0 === 1) {
+                              c.state("已存在,跳过下载", "ok");
+                              if (window.LudoraUI && window.LudoraUI.progress)
+                                window.LudoraUI.progress(100, "已存在,跳过下载", "done");
+                            } else {
+                              c.state("下载完成", "ok");
+                              if (window.LudoraUI && window.LudoraUI.progress)
+                                window.LudoraUI.progress(100, "下载完成", "done");
+                            }
                           } else {
                             c.state("下载失败", "bad");
+                            if (window.LudoraUI && window.LudoraUI.progress)
+                              window.LudoraUI.progress(100, "下载失败", "error");
                           }
                           resolve();
                         }

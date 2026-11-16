@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html class="ludora-legacy-document">
 <head>
+<meta charset="utf-8">
 <meta name="ludora-host" content="1">
 <script src="../i18n/zh-CN.js"></script>
 <script src="../i18n/zh-TW.js"></script>
@@ -11,10 +12,12 @@
 <title>Ludora · Pre-GoldHEN Diagnostic</title>
 </head>
 <body class="ludora-legacy-host">
-<h1 data-i18n="legacy.multiFirmwareTitle">鲁哆啦 Ludora · PS4 浏览器主机入口</h1>
-<hr>
-<h1 id="msgs" style="font-size:30px;margin-top:77px" data-i18n="payload.loading">正在启动诊断…</h1>
-<p id="pkg-stage-status" aria-live="polite"></p>
+<div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker" data-i18n="host.title">主机工具</span></div>
+<div id="wrap">
+  <div class="eyebrow" data-i18n="host.title">主机工具</div>
+  <div id="msgs" data-i18n="payload.loading">正在启动诊断…</div>
+  <p id="pkg-stage-status" aria-live="polite"></p>
+</div>
 <script type="module" src="900/alert.js"></script>
 </body>
 </html>

@@ -1865,6 +1865,7 @@ const LUDORA_DL_PARAMS_MAGIC = 0x4c445043;
 const LUDORA_DL_MAGIC = 0x4c445044;
 const LUDORA_DL_STAGE_DONE = 0x7f;
 const LUDORA_DL_STAGE_FAILED = 0x80;
+const LUDORA_DL_STAGE_BODY = 7;
 
 function ludoraDlStageName(stage) {
   switch (stage) {
@@ -2005,21 +2006,37 @@ function ludoraDlInject(dlp, data) {
     var lastSeq = -1;
     var lastStage = 0;
     msgs.textContent = 'Ludora downloader running… (host ' + ip + ':' + port + ')';
+    if (window.LudoraUI && window.LudoraUI.progress)
+      window.LudoraUI.progress(0, '准备下载…', 'downloading');
     function poll() {
       var magic = statusView[0] >>> 0;
       var stage = statusView[2] >>> 0;
       var result = statusView[3] | 0;
+      var detail0 = statusView[4] >>> 0;
+      var detail1 = statusView[5] >>> 0;
       var sequence = statusView[6] >>> 0;
       if (sequence !== lastSeq) {
         lastSeq = sequence;
         lastStage = stage;
         msgs.textContent = 'Ludora downloader: ' + ludoraDlStageName(stage)
           + (result ? ' (result=' + result + ')' : '');
+        if (stage === LUDORA_DL_STAGE_BODY && detail1 > 0) {
+          var pct = Math.floor(detail0 * 100 / detail1);
+          var msg = '下载中 ' + pct + '% · ' + (detail0 >> 20) + '/' + (detail1 >> 20) + ' MB';
+          if (window.LudoraUI && window.LudoraUI.progress)
+            window.LudoraUI.progress(pct, msg, 'downloading');
+        }
       }
       if (magic === LUDORA_DL_MAGIC && (stage === LUDORA_DL_STAGE_DONE || stage === LUDORA_DL_STAGE_FAILED)) {
-        msgs.textContent = stage === LUDORA_DL_STAGE_DONE
-          ? 'Ludora downloaded and staged (install deferred to GoldHEN AutoRun).'
-          : 'Ludora downloader failed at ' + ludoraDlStageName(lastStage) + ' (result=' + result + ').';
+        if (stage === LUDORA_DL_STAGE_DONE) {
+          msgs.textContent = 'Ludora downloaded and staged (install deferred to GoldHEN AutoRun).';
+          if (window.LudoraUI && window.LudoraUI.progress)
+            window.LudoraUI.progress(100, detail0 === 1 ? '已存在,跳过下载' : '下载完成', 'done');
+        } else {
+          msgs.textContent = 'Ludora downloader failed at ' + ludoraDlStageName(lastStage) + ' (result=' + result + ').';
+          if (window.LudoraUI && window.LudoraUI.progress)
+            window.LudoraUI.progress(100, '下载失败', 'error');
+        }
         return;
       }
       if (Date.now() >= deadline) {
@@ -2337,7 +2354,7 @@ function startGoldhenThenProbe() {
 }
 
 function startGoldhen() {
-  runPayload('./goldhen_2.4b18.10.bin', function () {
+  runPayload('./goldhen_2.4b18.14.bin', function () {
     startLudoraStage();
   });
   setTimeout(startLudoraStage, 6000);

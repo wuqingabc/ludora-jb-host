@@ -24,14 +24,16 @@ test('the browser 9.00 entry does not require the pOOBs4 USB flow', () => {
   for (const page of ['cache700.html', 'cache900.html', 'cachecss.html']) {
     const cacheHtml = readFileSync(new URL(`../../g2all/${page}`, import.meta.url), 'utf8');
     assert.doesNotMatch(cacheHtml, /PS4 7\.00 - 11\.02 FW GoldHEN Ludora Host/);
-    assert.match(cacheHtml, /id=["']cache-progress["']/);
+    assert.match(cacheHtml, /id=["']progressContainer["']/);
     assert.match(cacheHtml, /cache\.installing/);
     assert.match(cacheHtml, /manifest=["'][^"']+\.manifest["']/);
     assert.match(cacheHtml, /location\.replace\(['"]index\.html['"][^)]*\)/);
   }
   const i18n = readFileSync(new URL('../../i18n.js', import.meta.url), 'utf8');
   assert.match(i18n, /installCacheProgress/);
-  assert.match(i18n, /ludora-cache-progress/);
+  assert.match(i18n, /window\.LudoraUI/);
+  assert.match(i18n, /ensureProgressContainer/);
+  assert.match(i18n, /progressContainer/);
   assert.match(i18n, /cache\.installingUnknown/);
   assert.match(i18n, /manifestEntryCount/);
   assert.match(i18n, /event\.loaded/);
@@ -59,7 +61,7 @@ test('the 9.00 pre-GoldHEN diagnostic is observable and cannot gate the proven G
   assert.match(source, /\/jb\/diag/);
   assert.match(source, /new URLSearchParams\(window\.location\.search\)/);
   assert.match(source, /params\.get\('diagnose'\) === 'pre'/);
-  assert.match(source, /runPayload\(["']\.\/goldhen_2\.4b18\.10\.bin/);
+  assert.match(source, /runPayload\(["']\.\/goldhen_2\.4b18\.14\.bin/);
   assert.doesNotMatch(source, /verifyProbeThenLoadGoldhen/);
   assert.doesNotMatch(source, /runPayload\(["']\.\/ludora-notification\.bin/);
 
@@ -185,7 +187,6 @@ test('the zrm browser chain includes every runtime asset and supported offset ta
     'int64.js',
     'ps4_offsets.js',
     'rpc_worker.js',
-    'zrm.css',
     'ludora-web-downloader.bin',
     'ludora-download-params.json',
     'payload.bin',
@@ -222,7 +223,7 @@ test('zrm pages use the complete Ludora localization shell and expose safe engin
   assert.match(index, /manifest=["']cache\.appcache["']/);
   for (const relativePath of ['zrm/run_lapse.html', 'zrm/run_poops.html']) {
     const page = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
-    assert.match(page, /id=["']cache-progress["']/ , relativePath);
+    assert.match(page, /id=["']progressContainer["']/ , relativePath);
     assert.match(page, /ui-bridge\.js/ , relativePath);
     assert.match(page, /pkg-stage\.js/ , relativePath);
   }
@@ -254,9 +255,12 @@ test('legacy g2all entry keeps the exploit-sensitive browser layout isolated fro
   assert.match(page, /class=["']ludora-legacy-host["']/);
   assert.match(css, /html\.ludora-legacy-document[^}]*overflow:\s*hidden/s);
   assert.match(css, /ludora-legacy-host[^{]*\{[^}]*overflow:\s*hidden/s);
-  assert.match(css, /body\.ludora-legacy-host[^}]*width:\s*auto/s);
+  // 居中(纯视觉的 width/margin)已允许作用于 g2all,但 PSFree 敏感隔离仍靠下面两行:
+  // 不新增 DOM、不碰 box-sizing/transition/overflow/background。
+  assert.match(css, /body\.ludora-legacy-host[^}]*margin:\s*0\s+auto/s);
   assert.match(css, /ludora-legacy-host\s+\*[^}]*box-sizing:\s*content-box\s*!important/s);
-  assert.match(css, /ludora-legacy-host::before[^}]*display:\s*none/s);
+  assert.match(css, /ludora-legacy-host\s+\*[^}]*transition:\s*none\s*!important/s);
+  assert.match(css, /body\.ludora-legacy-host[^}]*background:\s*transparent/s);
 });
 
 test('every offline-cache page uses the shared localized progress runtime', () => {
@@ -288,10 +292,8 @@ test('every AppCache manifest is safe for real progress accounting', () => {
     const manifest = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     assert.match(manifest, /^CACHE MANIFEST\r?\n/, relativePath);
     assert.doesNotMatch(manifest, /\\/, relativePath);
-    if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest') {
-      assert.match(manifest, /web-downloader-v\d+/, relativePath);
-    } else if (relativePath === 'g2all/css.manifest') {
-      assert.match(manifest, /pre-goldhen-diagnostics-v17/, relativePath);
+    if (relativePath === 'g2all/700.manifest' || relativePath === 'g2all/900.manifest' || relativePath === 'g2all/css.manifest') {
+      assert.match(manifest, /ui-brand-center-v\d+/, relativePath);
     } else {
       assert.match(manifest, /progress-v9/, relativePath);
     }
@@ -337,7 +339,7 @@ test('the raw payload loaders keep rejecting ELF input', () => {
   for (const relativePath of ['g2all/700/lapse.js', 'g2all/900/lapse.js']) {
     const source = readFileSync(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
     if (relativePath === 'g2all/900/lapse.js') {
-      assert.match(source, /goldhen_2\.4b18\.10\.bin/ , relativePath);
+      assert.match(source, /goldhen_2\.4b18\.14\.bin/ , relativePath);
     }
     assert.doesNotMatch(source, /LudoraBinloaderProbe\.start/ , relativePath);
     assert.doesNotMatch(source, /ludora-web-binloader-probe\.elf/ , relativePath);

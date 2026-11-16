@@ -9,42 +9,8 @@
     <script src="../i18n/en-US.js"></script>
     <script src="../i18n.js"></script>
     <link rel="stylesheet" href="../style.css" />
-    <link rel="stylesheet" href="13x.css" />
     <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        min-height: 100%;
-        background: #0b0d10;
-        color: #c8ced8;
-        font:
-          15px/1.45 "Segoe UI",
-          system-ui,
-          sans-serif;
-      }
-      #brand {
-        text-align: center;
-        padding: 8px 10px;
-        background: #0e1116;
-        border-bottom: 1px solid #1e2732;
-      }
-      #brand img {
-        width: 28px;
-        height: 28px;
-        margin-right: 8px;
-        border-radius: 50%;
-        vertical-align: middle;
-      }
-      #brand b {
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        color: #e6ebf2;
-        vertical-align: middle;
-      }
-
-      /* running: a spinner under the brand. jb.js sets body.done / body.fail / body.log. */
+      /* exploit 运行页:品牌/布局走共享 style.css;这里只保留运行态 spinner + 消息。 */
       #spin {
         position: fixed;
         top: calc(50% + 20px);
@@ -52,7 +18,7 @@
         width: 46px;
         height: 46px;
         margin: -23px 0 0 -23px;
-        border: 4px solid #1e2732;
+        border: 4px solid #1b2436;
         border-top-color: #7fd0a0;
         border-radius: 50%;
         animation: spin 0.9s linear infinite;
@@ -72,9 +38,6 @@
         font-size: 16px;
         letter-spacing: 0.5px;
         display: none;
-      }
-      #wrap {
-        padding: 0;
       }
       #state,
       #out {
@@ -117,7 +80,7 @@
         font:
           12px/1.45 Consolas,
           monospace;
-        background: #11151b;
+        background: #0c1023;
         border: 1px solid #1e2732;
         border-radius: 5px;
         padding: 10px 12px;
@@ -150,6 +113,10 @@
     <div id="msg" data-i18n="raw13x.failed">越狱失败，请重启主机后重试</div>
     <div id="wrap">
       <div id="state"></div>
+      <div id="progressContainer" data-state="running">
+        <div id="progressBar"></div>
+        <div id="progressLabel"></div>
+      </div>
       <div id="out"></div>
     </div>
     <script src="../pkg-stage.js"></script>

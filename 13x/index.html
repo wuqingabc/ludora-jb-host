@@ -9,46 +9,29 @@
 <script src="../i18n/en-US.js"></script>
 <script src="../i18n.js"></script>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="13x.css">
-<style>
-  html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8;
-               font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
-  #wrap { padding:16px 18px; }
-  #state { font-size:22px; font-weight:700; margin:0 0 6px; }
-  #det { font-size:13px; color:#8b95a3; margin:0 0 4px; }
-  #det b { color:#c8ced8; font-weight:600; }
-  #cache { font-size:12px; color:#5c6672; margin:0 0 10px; min-height:14px; }
-  #cache.cacheok { color:#7fd0a0; }
-  .ok { color:#7fd0a0; } .bad { color:#d08a7f; } .warn { color:#d8c07f; }
-  #brand { text-align:center; padding:8px 10px; background:#0e1116;
-           border-bottom:1px solid #1e2732; }
-  #brand img { width:28px; height:28px; margin-right:8px; border-radius:50%;
-               vertical-align:middle; }
-  #brand b { font-size:15px; font-weight:700; letter-spacing:.14em;
-             color:#e6ebf2; vertical-align:middle; }
-</style>
 </head>
-<body class="ludora-custom-brand">
+<body>
 <div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker" data-i18n="host.title">主机工具</span></div>
 <div id="wrap">
   <div class="eyebrow" data-i18n="host.title">主机工具</div>
   <div id="state" data-i18n="host.loading">正在准备主机入口，请稍候</div>
   <div id="det"></div>
-  <div id="cache" data-i18n="cache.installing">正在安装离线缓存：0%</div>
-  <div class="cache-progress" aria-label="Cache progress"><span id="cache-progress"></span></div>
-  <div class="ad-slot" aria-label="鲁哆啦在线下载"><img src="../store-qr.png" alt="扫码前往鲁哆啦商店"><span>免光盘·免U盘</span><strong>鲁哆啦在线下载</strong><small>联网直接下载安装，即下即玩</small></div>
+  <div id="progressContainer" data-state="installing">
+    <div id="progressBar"></div>
+    <div id="progressLabel" data-i18n="cache.installingUnknown">正在安装离线缓存…</div>
+  </div>
 </div>
 
 <script>
 (function () {
-    var stateEl = document.getElementById("state");
     var detEl = document.getElementById("det");
-    var cacheEl = document.getElementById("cache");
-    function setState(t, c) { stateEl.textContent = t; stateEl.className = c || ""; }
-    var cacheBar = document.getElementById("cache-progress");
+    function setState(t, c) { window.LudoraUI.state(t, c || ""); }
     function setCache(t, ok, progress) {
-        cacheEl.textContent = t; cacheEl.className = ok ? "cacheok" : "";
-        if (typeof progress === "number") cacheBar.style.width = Math.max(0, Math.min(100, progress)) + "%";
+        window.LudoraUI.progress(
+            typeof progress === "number" ? progress : 0,
+            t,
+            ok ? "done" : "installing"
+        );
     }
     var params = new URLSearchParams(location.search);
     function tr(key, fallback, params) {

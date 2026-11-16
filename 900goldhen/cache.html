@@ -13,40 +13,17 @@
 <body>
 <script>
 history.replaceState(null,null,'index.html');var histlength=history.length;history.go(-histlength);
-function setCacheProgress(progress){
-  var value=Math.max(0,Math.min(100,Number(progress)||0));
-  var bar=document.getElementById('cacheBar');var message=document.getElementById('msgs');
-  if(bar) bar.style.width=value+'%';
-  if(message) message.innerHTML=LudoraI18n.t('cache.installing',{progress:Math.round(value)});
-}
-function DLProgress(e){
-  if(e && e.total>0) setCacheProgress((e.loaded/e.total)*100);
-  else { }
-}
-function DisplayCacheProgress(){
-  var bar=document.getElementById('cacheBar');var message=document.getElementById('msgs');
-  if(bar) bar.style.width='100%';
-  if(message) message.innerHTML=LudoraI18n.t('cache.complete');
-  setTimeout(function(){if(message) message.innerHTML=LudoraI18n.t('cache.reopen');},2500);
-}
-function CacheError(){var message=document.getElementById('msgs');var bar=document.getElementById('cacheBar');if(message) message.innerHTML=LudoraI18n.t('cache.error');if(bar) bar.className='cache-bar error';}
-if(window.applicationCache){
-  window.applicationCache.addEventListener('checking',function(){setCacheProgress(0);},false);
-  window.applicationCache.addEventListener('downloading',function(){setCacheProgress(0);},false);
-  window.applicationCache.addEventListener('progress',DLProgress,false);
-  window.applicationCache.addEventListener('error',CacheError,false);
-  window.applicationCache.oncached=DisplayCacheProgress;
-  window.applicationCache.onupdateready=DisplayCacheProgress;
-}
+window.applicationCache.onerror=function(e){window.LudoraUI.state(LudoraI18n.t('cache.error'), 'bad');};
 </script>
-<h1 data-i18n="payload.title">PS4 9.00 FW GoldHEN Ludora Host</h1>
-<hr>
-<br>
-<div style="max-width:760px;margin:77px auto 455px;text-align:center;">
-<h1 id="msgs" data-i18n="cache.installing" style="font-size:30px;">正在安装离线缓存：…</h1>
-<div style="height:18px;border:2px solid #fff;border-radius:10px;background:rgba(255,255,255,.12);overflow:hidden;">
-<div id="cacheBar" class="cache-bar" style="height:100%;width:0%;background:#35d0ff;transition:width .2s ease;"></div>
-</div>
+<div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker" data-i18n="host.title">主机工具</span></div>
+<div id="wrap">
+  <div class="eyebrow" data-i18n="host.title">主机工具</div>
+  <div id="state" data-i18n="cache.installingUnknown">正在安装离线缓存…</div>
+  <div id="det"></div>
+  <div id="progressContainer" data-state="installing">
+    <div id="progressBar"></div>
+    <div id="progressLabel" data-i18n="cache.installingUnknown">正在安装离线缓存…</div>
+  </div>
 </div>
 </body>
 </html>

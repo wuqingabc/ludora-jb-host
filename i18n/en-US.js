@@ -145,4 +145,10 @@ window.LudoraI18nDictionaries['en-US'] = {
   ,'legacy.unsupportedFirmware': 'Unsupported firmware: {firmware}'
   ,'legacy.rootTitle': 'Ludora · Console entry'
   ,'legacy.multiFirmwareTitle': 'Ludora · PS4 Browser Host'
+  ,'legacy.loadingPayload': 'Loading {name}…'
+  ,'legacy.launchingPayload': 'Launching {name}…'
+  ,'legacy.enablingUpdates': 'Enabling Updates…'
+  ,'legacy.disablingUpdates': 'Disabling Updates…'
+  ,'legacy.parentalControls': 'Parental Controls… Please Wait'
+  ,'legacy.loadingPayloadPlain': 'Loading Payload…'
 };

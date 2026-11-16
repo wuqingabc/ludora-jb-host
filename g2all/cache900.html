@@ -1,30 +1,36 @@
 <!DOCTYPE html>
 <html manifest="900.manifest" data-cache-total="33">
 <head>
+<meta charset="utf-8">
 <meta name="ludora-host" content="1">
 <script src="../i18n/zh-CN.js"></script>
 <script src="../i18n/zh-TW.js"></script>
 <script src="../i18n/en-US.js"></script>
 <script src="../i18n.js"></script>
-<script src="../pkg-stage.js"></script>
 <title>Ludora · PS4 Browser Cache</title>
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 <script>
 history.replaceState(null,null,'index.html');var histlength=history.length;history.go(-histlength);
-function DLProgress(e){if(e && e.total){Percent=Math.round(e.loaded / e.total * 100);window.msgs.innerHTML=LudoraI18n.t('cache.installing', {progress: Percent});document.getElementById('cache-progress').style.width=Percent+'%';document.getElementById('cache-progress').parentNode.classList.remove('indeterminate');}}
-var cacheFinished=false;function DisplayCacheProgress(){if(cacheFinished)return;cacheFinished=true;document.getElementById('cache-progress').style.width='100%';document.getElementById('cache-progress').parentNode.classList.remove('indeterminate');window.msgs.innerHTML=LudoraI18n.t('cache.complete');setTimeout(function(){location.replace('index.html'+(new URLSearchParams(location.search).get('diagnose')==='pre'?'?diagnose=pre':''));},1200);}function PollCache(){if(window.applicationCache&&(window.applicationCache.status===window.applicationCache.IDLE||window.applicationCache.status===window.applicationCache.UPDATEREADY))DisplayCacheProgress();}setInterval(PollCache,500);
+function DLProgress(e){if(e && e.total){var Percent=Math.round(e.loaded / e.total * 100);window.LudoraUI.progress(Percent, LudoraI18n.t('cache.installing', {progress: Percent}), 'installing');}}
+var cacheFinished=false;
+function DisplayCacheProgress(){if(cacheFinished)return;cacheFinished=true;window.LudoraUI.progress(100, LudoraI18n.t('cache.complete'), 'done');setTimeout(function(){location.replace('index.html'+(new URLSearchParams(location.search).get('diagnose')==='pre'?'?diagnose=pre':''));},1200);}
+function PollCache(){if(window.applicationCache&&(window.applicationCache.status===window.applicationCache.IDLE||window.applicationCache.status===window.applicationCache.UPDATEREADY))DisplayCacheProgress();}setInterval(PollCache,500);
 window.applicationCache.addEventListener("progress",DLProgress,false);
 window.applicationCache.oncached=function(e){DisplayCacheProgress();};
 window.applicationCache.onupdateready=function(e){DisplayCacheProgress();};
-window.applicationCache.onerror=function(e){window.msgs.innerHTML=LudoraI18n.t('cache.error');};
+window.applicationCache.onerror=function(e){window.LudoraUI.state(LudoraI18n.t('cache.error'), 'bad');};
 </script>
-<h1 data-i18n="legacy.multiFirmwareTitle">鲁哆啦 Ludora · PS4 浏览器主机入口</h1>
-<hr>
-<br>
-<h1 id=msgs data-i18n="cache.installingUnknown" style="font-size: 30px;margin-top: 77px;margin-bottom: 120px;">正在安装离线缓存…</h1>
-<p id="pkg-stage-status" aria-live="polite" data-i18n="pkgStage.idle">鲁哆啦安装阶段待命</p>
-<div class="cache-progress" aria-hidden="true"><span id="cache-progress"></span></div>
+<div id="brand"><span class="brand-mark">L</span><b data-i18n="brand.name">鲁哆啦 Ludora</b><span class="brand-kicker" data-i18n="host.title">主机工具</span></div>
+<div id="wrap">
+  <div class="eyebrow" data-i18n="host.title">主机工具</div>
+  <div id="state" data-i18n="cache.installingUnknown">正在安装离线缓存…</div>
+  <div id="det"></div>
+  <div id="progressContainer" data-state="installing">
+    <div id="progressBar"></div>
+    <div id="progressLabel" data-i18n="cache.installingUnknown">正在安装离线缓存…</div>
+  </div>
+</div>
 </body>
 </html>
