@@ -3,7 +3,6 @@
 
 #include "params.h"
 #include "status.h"
-#include "tls.h"
 
 /* ---- FreeBSD/PS4 syscall numbers (amd64) ---- */
 #define SYS_read 3
@@ -343,63 +342,30 @@ static int ensure_pkg_dir(void) {
  * 参见 nasflow-archive/ps4/plugin/ludora_autorun/main.c 与
  * docs/research/2026-07-21-first-install-architecture.md §四。 */
 
-/* ---- static TLS state (.bss, zeroed by the injector's mapping) ---- */
-static br_ssl_client_context ssl_ctx;
-static ludora_x509_noverify x509_ctx;
-static unsigned char ssl_iobuf[BR_SSL_BUFSIZE_BIDI];
-
-/* br_sslio socket callbacks (raw syscalls, no libc). */
-static int tls_sock_read(void *ctx, unsigned char *buf, size_t len) {
-  long fd = (long)ctx;
-  for (;;) {
-    long r = syscall3(SYS_read, fd, (long)buf, (long)len);
-    if (r <= 0) {
-      if (r == -4) continue; /* -EINTR */
-      return -1;
-    }
-    return (int)r;
-  }
-}
-static int tls_sock_write(void *ctx, const unsigned char *buf, size_t len) {
-  long fd = (long)ctx;
-  size_t off = 0;
-  while (off < len) {
-    long w = syscall3(SYS_write, fd, (long)(buf + off), (long)(len - off));
-    if (w <= 0) {
-      if (w == -4) continue; /* -EINTR */
-      return -1;
-    }
-    off += (size_t)w;
-  }
-  return (int)off;
-}
-
-/* ---- outbound HTTPS GET -> stream to disk + SHA-256 ---- */
-static int tls_download(struct ludora_dl_status *status, struct ludora_dl_params *params) {
+/* ---- outbound HTTP GET -> stream to disk + SHA-256 ---- */
+static int http_download(struct ludora_dl_status *status, struct ludora_dl_params *params) {
   uint32_t ip_net = 0;
   struct sockaddr_in addr;
   int fd = -1, out = -1;
   long cr;
   char req[1024];
-  int rl = 0;
+  int rl = 0, sent = 0;
   char hdr[4096];
   int hdr_len = 0, header_done = 0;
   long content_length = -1, body_received = 0;
-  unsigned char recv_buf[16384];
+  unsigned char recv_buf[4096];
   sha256_t hash;
   unsigned char actual[32];
   char actual_hex[65];
-  br_sslio_context ioc;
-  char sni_host[LUDORA_DL_HOST_MAX + 1];
 
   if (parse_ipv4_net(params->ip, &ip_net) != 0) {
     fail(status, LUDORA_DL_STAGE_PARAM, -2, 0);
     return -1;
   }
-  /* 防御性复查:请求行 = "GET "(4) + path + " HTTP/1.1\r\nHost: "(16) + host
-   * + "\r\nConnection: close\r\n\r\n"(24)。_main 已限 path_len<512、host_len<128,
-   * 理论上 ≤662 < sizeof(req)=1024;此处再守一次,防止将来放宽校验后溢出。 */
-  if (params->path_len + params->host_len > (int)sizeof(req) - 48) {
+  /* 防御性复查:请求行 = "GET "(4) + path + " HTTP/1.1\r\nHost: "(16) + ip
+   * + "\r\nConnection: close\r\n\r\n"(24)。_main 已限 path_len<512、ip_len<64,
+   * 理论上 ≤618 < sizeof(req)=1024;此处再守一次,防止将来放宽校验后溢出。 */
+  if (params->path_len + params->ip_len > (int)sizeof(req) - 48) {
     fail(status, LUDORA_DL_STAGE_PARAM, -4, 0);
     return -1;
   }
@@ -450,33 +416,21 @@ static int tls_download(struct ludora_dl_status *status, struct ludora_dl_params
   }
   syscall3(SYS_fcntl, fd, F_SETFL, 0); /* 恢复阻塞,后续 read/write 正常 */
 
-  /* TLS: skip-verify ECDSA engine + AES-GCM。完整性靠固定 SHA-256,不靠证书。
-   * SNI 需要 NUL 结尾的 host(engine 内部 strlen),params->host 按长度写、结尾
-   * 不一定有 NUL,故先拷到栈上补 0。 */
-  {
-    int hi;
-    for (hi = 0; hi < (int)params->host_len; hi++) sni_host[hi] = params->host[hi];
-    sni_host[params->host_len] = '\0';
-  }
-  ludora_x509_noverify_init(&x509_ctx);
-  ludora_tls_client_init(&ssl_ctx, &x509_ctx);
-  br_ssl_engine_set_buffer(&ssl_ctx.eng, ssl_iobuf, sizeof ssl_iobuf, 1);
-  br_ssl_client_reset(&ssl_ctx, sni_host, 0);
-  br_sslio_init(&ioc, &ssl_ctx.eng, tls_sock_read, (void *)(long)fd,
-                tls_sock_write, (void *)(long)fd);
-
   append_s(req, &rl, "GET ");
   append_n(req, &rl, params->path, params->path_len);
   append_s(req, &rl, " HTTP/1.1\r\nHost: ");
-  append_n(req, &rl, params->host, params->host_len);
+  append_n(req, &rl, params->ip, params->ip_len);
   append_s(req, &rl, "\r\nConnection: close\r\n\r\n");
 
   update(status, LUDORA_DL_STAGE_SEND, 0, 0, 0);
-  /* br_sslio_write_all 首次写时触发握手;失败用 engine 错误码上报。 */
-  if (br_sslio_write_all(&ioc, req, rl) < 0 || br_sslio_flush(&ioc) < 0) {
-    fail(status, LUDORA_DL_STAGE_SEND,
-         (int32_t)br_ssl_engine_last_error(&ssl_ctx.eng), 0);
-    goto done_fail;
+  while (sent < rl) {
+    long w = syscall3(SYS_write, fd, (long)(req + sent), rl - sent);
+    if (w <= 0) {
+      fail(status, LUDORA_DL_STAGE_SEND, (int32_t)w, 0);
+      syscall1(SYS_close, fd);
+      return -1;
+    }
+    sent += (int)w;
   }
 
   out = (int)syscall3(SYS_open, (long)PKG_TMP, O_WRONLY | O_CREAT | O_TRUNC, 0600);
@@ -489,13 +443,12 @@ static int tls_download(struct ludora_dl_status *status, struct ludora_dl_params
 
   update(status, LUDORA_DL_STAGE_BODY, 0, 0, 0);
   for (;;) {
-    int n = br_sslio_read(&ioc, recv_buf, sizeof recv_buf);
+    long n = syscall3(SYS_read, fd, (long)recv_buf, sizeof(recv_buf));
     char *p = (char *)recv_buf;
     long remaining;
-    if (n == 0) break; /* TLS close_notify / EOF */
+    if (n == 0) break; /* EOF */
     if (n < 0) {
-      fail(status, LUDORA_DL_STAGE_BODY,
-           (int32_t)br_ssl_engine_last_error(&ssl_ctx.eng), 0);
+      fail(status, LUDORA_DL_STAGE_BODY, (int32_t)n, 0);
       goto done_fail;
     }
     remaining = n;
@@ -560,7 +513,6 @@ static int tls_download(struct ludora_dl_status *status, struct ludora_dl_params
     if (header_done && body_received >= content_length) break;
   }
 
-  br_sslio_close(&ioc);
   syscall1(SYS_close, out);
   out = -1;
   syscall1(SYS_close, fd);
@@ -606,8 +558,7 @@ int _main(void *payload_base) {
     return -1;
   }
   if (params->ip_len == 0 || params->ip_len >= LUDORA_DL_IP_MAX ||
-      params->path_len == 0 || params->path_len >= LUDORA_DL_PATH_MAX ||
-      params->host_len == 0 || params->host_len >= LUDORA_DL_HOST_MAX) {
+      params->path_len == 0 || params->path_len >= LUDORA_DL_PATH_MAX) {
     fail(status, LUDORA_DL_STAGE_PARAM, -3, 0);
     return -1;
   }
@@ -639,7 +590,7 @@ int _main(void *payload_base) {
     }
   }
 
-  if (tls_download(status, params) != 0) {
+  if (http_download(status, params) != 0) {
     return -1;
   }
 

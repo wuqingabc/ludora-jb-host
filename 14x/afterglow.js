@@ -2405,7 +2405,7 @@ async function attempt(ctx, opts) {
   // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
   // ?download=1 : BEFORE GoldHEN loads, inject the self-contained downloader
   // .bin and feed it the target URL + sha256 via the params area at
-  // [base + 0x41000]. The downloader does outbound HTTPS GET -> stream to
+  // [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
   // /data/pkg/ludora.pkg.tmp -> SHA-256 -> rename to /data/pkg/ludora.pkg
   // -> write /data/.ludora_force_staged marker, all in raw syscalls. It does
   // NOT install: install/launch is GoldHEN AutoRun's job (ludora_autorun.elf),
@@ -2419,8 +2419,8 @@ async function attempt(ctx, opts) {
     if (window.LudoraUI && window.LudoraUI.progress)
       window.LudoraUI.progress(0, "准备下载…", "downloading");
     try {
-      const DL_STATUS_OFF = 0x40000;
-      const DL_PARAMS_OFF = 0x41000;
+      const DL_STATUS_OFF = 0x4000;
+      const DL_PARAMS_OFF = 0x5000;
       const DL_PARAMS_MAGIC = 0x4c445043;
       const DL_MAGIC = 0x4c445044;
       const DL_STAGE_BODY = 7;
@@ -2433,9 +2433,9 @@ async function attempt(ctx, opts) {
           const tj = await tr.json();
           dlp = {
             ip: String(tj.ip || ""),
-            port: (tj.port | 0) || 443,
-            host: String(tj.host || ""),
-            path: String(tj.path || ""),
+            port: (tj.port | 0) || 80,
+            path: "/jb/host/pkg/ludora.pkg?t="
+              + encodeURIComponent(String(tj.token || "")),
             sha256: String(tj.sha256 || "")
           };
         }
@@ -2461,8 +2461,8 @@ async function attempt(ctx, opts) {
               && dl[2] === 0x4c && dl[3] === 0x46) {
             c.mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
           } else {
-            // mmap must cover the params area end (0x41000 + 0x30c), page-aligned.
-            const dsz = (DL_PARAMS_OFF + 0x30c + 0xfff) & ~0xfff;
+            // mmap must cover the params area end (0x5000 + 0x28c), page-aligned.
+            const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
             const dm = sc(S.mmap, 0, dsz, 7, 0x1002, -1, 0);
             const dentry = v(dm.lo, dm.hi);
             if (dm.i32 !== -1 && (dentry.hi >>> 0) > 0) {
@@ -2474,17 +2474,15 @@ async function attempt(ctx, opts) {
               for (let i = 0; i < dl.length; ++i)
                 if (c.p.read1(plus(dentry, i)) !== dl[i]) { dbad = i; break; }
               if (dbad < 0) {
-                // ---- write params area [base+0x41000] ----
+                // ---- write params area [base+0x5000] ----
                 const ip = String(dlp.ip || "");
                 const path = String(dlp.path || "");
-                const host = String(dlp.host || "");
                 const sha = String(dlp.sha256 || "");
                 const port = (dlp.port | 0) & 0xffff;
                 wr4(plus(dentry, DL_PARAMS_OFF + 0x00), DL_PARAMS_MAGIC);
                 wr4(plus(dentry, DL_PARAMS_OFF + 0x04),
                   port | ((ip.length & 0xffff) << 16));
-                wr4(plus(dentry, DL_PARAMS_OFF + 0x08),
-                  (path.length & 0xffff) | ((host.length & 0xffff) << 16));
+                wr4(plus(dentry, DL_PARAMS_OFF + 0x08), path.length & 0xffff);
                 let k;
                 for (k = 0; k < ip.length; ++k)
                   wr1(plus(dentry, DL_PARAMS_OFF + 0x0c + k), ip.charCodeAt(k) & 0xff);
@@ -2492,8 +2490,6 @@ async function attempt(ctx, opts) {
                   wr1(plus(dentry, DL_PARAMS_OFF + 0x4c + k), path.charCodeAt(k) & 0xff);
                 for (k = 0; k < 64 && k < sha.length; ++k)
                   wr1(plus(dentry, DL_PARAMS_OFF + 0x24c + k), sha.charCodeAt(k) & 0xff);
-                for (k = 0; k < 128 && k < host.length; ++k)
-                  wr1(plus(dentry, DL_PARAMS_OFF + 0x28c + k), host.charCodeAt(k) & 0xff);
 
                 // Resolve pthread_create the same way loadPayload does: the
                 // 14.00 table blanks the import slot, so fall back to the

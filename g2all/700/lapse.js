@@ -1889,15 +1889,15 @@ function runPayload(path, onLoaded, onError) {
 
 // ================== LUDORA DOWNLOADER SECOND-INJECTION ==================
 // After GoldHEN is up, inject the self-contained downloader .bin and feed it the
-// target host/port/path and expected SHA-256 via the params area at
-// [base + 0x41000]. The downloader does outbound HTTPS GET -> stream to
+// target host/port/path+token and expected SHA-256 via the params area at
+// [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
 // /user/data/pkg/ludora.pkg -> SHA-256 -> install -> launch, all in raw syscalls.
 // NOTE: 700 engine differs from 900 in injection style (synchronous
 // chain.call_void in runPayload). Here we thread the downloader with
 // pthread_create + a jmp-rdi stub so the browser can keep polling the status page.
 // This path has NOT been verified on real 7.00 hardware yet.
-const LUDORA_DL_STATUS_OFFSET = 0x40000;
-const LUDORA_DL_PARAMS_OFFSET = 0x41000;
+const LUDORA_DL_STATUS_OFFSET = 0x4000;
+const LUDORA_DL_PARAMS_OFFSET = 0x5000;
 const LUDORA_DL_PARAMS_MAGIC = 0x4c445043;
 const LUDORA_DL_MAGIC = 0x4c445044;
 const LUDORA_DL_STAGE_DONE = 0x7f;
@@ -1959,9 +1959,8 @@ function ludoraDlResolveParams(cb) {
         if (tj && tj.sha256) {
           cb({
             ip: String(tj.ip || window.location.hostname),
-            port: (tj.port | 0) || 443,
-            host: String(tj.host || ''),
-            path: String(tj.path || ''),
+            port: (tj.port | 0) || 80,
+            path: '/jb/host/pkg/ludora.pkg?t=' + encodeURIComponent(String(tj.token || '')),
             sha256: String(tj.sha256 || '')
           });
           return;
@@ -1996,27 +1995,23 @@ function ludoraDlFetchBin(cb) {
 function ludoraDlInject(dlp, data) {
   var ip = String(dlp.ip || '');
   var path = String(dlp.path || '');
-  var host = String(dlp.host || '');
   var sha = String(dlp.sha256 || '');
   var port = (dlp.port | 0) & 0xffff;
 
-  var pb = new Uint8Array(0x30c);
+  var pb = new Uint8Array(0x28c);
   pb[0] = 0x43; pb[1] = 0x50; pb[2] = 0x44; pb[3] = 0x4c;
   pb[4] = port & 0xff; pb[5] = (port >> 8) & 0xff;
   pb[6] = ip.length & 0xff; pb[7] = (ip.length >> 8) & 0xff;
   pb[8] = path.length & 0xff; pb[9] = (path.length >> 8) & 0xff;
-  pb[10] = host.length & 0xff; pb[11] = (host.length >> 8) & 0xff;
   var i;
   for (i = 0; i < ip.length && i < 64; i++) pb[0x0c + i] = ip.charCodeAt(i) & 0xff;
   for (i = 0; i < path.length && i < 512; i++) pb[0x4c + i] = path.charCodeAt(i) & 0xff;
   for (i = 0; i < 64 && i < sha.length; i++) pb[0x24c + i] = sha.charCodeAt(i) & 0xff;
-  for (i = 0; i < 128 && i < host.length; i++) pb[0x28c + i] = host.charCodeAt(i) & 0xff;
 
   try {
     var payloadBytes = (data.byteLength + 3) & ~3;
     var payloadPages = (payloadBytes + 0xfff) & ~0xfff;
     var mappingBytes = (payloadPages + 0x3000) * 4;
-    if (mappingBytes < LUDORA_DL_PARAMS_OFFSET + 0x400) mappingBytes = LUDORA_DL_PARAMS_OFFSET + 0x400;
     var payloadBase = chain.sysp("mmap", 0, mappingBytes, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PREFAULT_READ, -1, 0);
     var payloadWords = array_from_address(payloadBase, mappingBytes / 4);
     payloadWords.fill(0, 0, mappingBytes / 4);
@@ -2024,7 +2019,7 @@ function ludoraDlInject(dlp, data) {
     padded.set(data, 0);
     payloadWords.set(new Uint32Array(padded.buffer), 0);
 
-    var paramsWords = array_from_address(payloadBase.add(LUDORA_DL_PARAMS_OFFSET), 0x30c / 4);
+    var paramsWords = array_from_address(payloadBase.add(LUDORA_DL_PARAMS_OFFSET), 0x28c / 4);
     paramsWords.set(new Uint32Array(pb.buffer), 0);
 
     var statusView = array_from_address(payloadBase.add(LUDORA_DL_STATUS_OFFSET), 8);
