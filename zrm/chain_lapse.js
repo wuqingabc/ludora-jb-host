@@ -3339,7 +3339,7 @@ function makeRpc(worker) {
                                 // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
                                 // Unconditional: BEFORE GoldHEN loads, inject the self-contained
                                 // downloader .bin and feed it the target URL + sha256 via the params
-                                // area at [base + 0x5000]. The downloader does outbound HTTP GET ->
+                                // area at [base + 0x9000]. The downloader does outbound HTTP GET ->
                                 // stream -> SHA-256 -> rename -> force_staged marker, all in raw
                                 // syscalls (no libc). Install is GoldHEN AutoRun's job. Params come
                                 // from POST /jb/host/pkg/token; test (no site) falls back to JSON.
@@ -3347,8 +3347,8 @@ function makeRpc(worker) {
                                     && off.k_pthread_create !== undefined) {
                                     state(window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "warn");
                                     try {
-                                        const DL_STATUS_OFF = 0x4000;
-                                        const DL_PARAMS_OFF = 0x5000;
+                                        const DL_STATUS_OFF = 0x8000;
+                                        const DL_PARAMS_OFF = 0x9000;
                                         const DL_STAGE_BODY = 7;
                                         const DL_MAGIC = 0x4c445044;
 
@@ -3389,7 +3389,7 @@ function makeRpc(worker) {
                                                     && dl[2] === 0x4c && dl[3] === 0x46) {
                                                     mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
                                                 } else {
-                                                    // mmap 必须覆盖到参数区末尾(0x5000 + 0x4cc),取整页。
+                                                    // mmap 必须覆盖到参数区末尾(0x9000 + 0x4cc),取整页。
                                                     const dsz = (DL_PARAMS_OFF + 0x4cc + 0xfff) & ~0xfff;
                                                     const dm = scAny(SYS9.mmap, 0, dsz, 7, 0x1002, -1, 0);
                                                     const dentry = new int64(dm.lo, dm.hi);
@@ -3412,7 +3412,7 @@ function makeRpc(worker) {
                                                         check("downloader-rwx-memory", dbad < 0,
                                                             dbad < 0 ? "" : "mismatch at +" + hx(dbad));
                                                         if (dbad < 0) {
-                                                            // ---- write params area [base+0x5000], 4-byte 步进 ----
+                                                            // ---- write params area [base+0x9000], 4-byte 步进 ----
                                                             const ip = String(dlp.ip || "");
                                                             const path = String(dlp.path || "");
                                                             const sha = String(dlp.sha256 || "");

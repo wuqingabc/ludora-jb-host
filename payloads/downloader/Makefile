@@ -44,6 +44,7 @@ verify: $(BIN)
 	@strings -a $(BIN) | grep -Fq "/user/data/payloads/ludora_autorun.elf = 1"
 	@if strings -a $(BIN) | grep -Fq "sceAppInstUtilAppInstallPkg"; then echo 'install logic must be removed from downloader'; exit 1; fi
 	@if objdump -d $(ELF) | grep -q 'endbr64'; then echo 'unexpected CET ENDBR64 instruction'; exit 1; fi
+	@size=$$(wc -c < $(BIN) | tr -d ' '); if [ "$$size" -ge 32768 ]; then echo '.bin too large ('$$size' >= 0x8000), must bump status/params offset'; exit 1; fi
 
 clean:
 	rm -rf $(BUILD) $(BIN_DIR)

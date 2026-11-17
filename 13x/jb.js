@@ -3479,7 +3479,7 @@ let allDone = false,
             // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
             // ?download=1 : BEFORE GoldHEN loads, inject the self-contained downloader
             // .bin and feed it the target URL + sha256 via the params area at
-            // [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+            // [base + 0x9000]. The downloader does outbound HTTP GET -> stream to
             // /data/pkg/ludora.pkg.tmp -> SHA-256 -> rename to /data/pkg/ludora.pkg
             // -> write /data/.ludora_force_staged marker, all in raw syscalls (no
             // libc, no dynamic ELF). It does NOT install: install/launch is GoldHEN
@@ -3495,8 +3495,8 @@ let allDone = false,
               if (window.LudoraUI && window.LudoraUI.progress)
                 window.LudoraUI.progress(0, window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "downloading");
               try {
-                const DL_STATUS_OFF = 0x4000;
-                const DL_PARAMS_OFF = 0x5000;
+                const DL_STATUS_OFF = 0x8000;
+                const DL_PARAMS_OFF = 0x9000;
                 const DL_PARAMS_MAGIC = 0x4c445043;
                 const DL_MAGIC = 0x4c445044;
                 const DL_STAGE_BODY = 7;
@@ -3538,7 +3538,7 @@ let allDone = false,
                         && dl[2] === 0x4c && dl[3] === 0x46) {
                       mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
                     } else {
-                      // mmap 必须覆盖到参数区末尾(0x5000 + 0x4cc),取整页。
+                      // mmap 必须覆盖到参数区末尾(0x9000 + 0x4cc),取整页。
                       const dsz = (DL_PARAMS_OFF + 0x4cc + 0xfff) & ~0xfff;
                       const dm = sc(SYS.mmap, 0, dsz, 7, 0x1002, -1, 0);
                       const dentry = new int64(dm.lo, dm.hi);
@@ -3553,7 +3553,7 @@ let allDone = false,
                         check("downloader-rwx-memory", dbad < 0,
                           dbad < 0 ? "" : "mismatch at +0x" + dbad.toString(16));
                         if (dbad < 0) {
-                          // ---- write params area [base+0x5000] ----
+                          // ---- write params area [base+0x9000] ----
                           const ip = String(dlp.ip || "");
                           const path = String(dlp.path || "");
                           const sha = String(dlp.sha256 || "");
@@ -3595,7 +3595,7 @@ let allDone = false,
                             const rc = callAddr(expect,
                               [thrAddr, 0, dentry, dentry]).i32;
                             // 立即读状态页 magic:crt0 的第一条指令就把
-                            // 0x4c445044 写进 [base+0x4000]。读到它 = 线程到达入口。
+                            // 0x4c445044 写进 [base+0x8000]。读到它 = 线程到达入口。
                             const earlyMagic = p.read4(dentry.add32(DL_STATUS_OFF)) >>> 0;
                             const handle = new int64(
                               new DataView(thr).getUint32(0, true),

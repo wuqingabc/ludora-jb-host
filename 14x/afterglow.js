@@ -2405,7 +2405,7 @@ async function attempt(ctx, opts) {
   // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
   // ?download=1 : BEFORE GoldHEN loads, inject the self-contained downloader
   // .bin and feed it the target URL + sha256 via the params area at
-  // [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+  // [base + 0x9000]. The downloader does outbound HTTP GET -> stream to
   // /data/pkg/ludora.pkg.tmp -> SHA-256 -> rename to /data/pkg/ludora.pkg
   // -> write /data/.ludora_force_staged marker, all in raw syscalls. It does
   // NOT install: install/launch is GoldHEN AutoRun's job (ludora_autorun.elf),
@@ -2419,8 +2419,8 @@ async function attempt(ctx, opts) {
     if (window.LudoraUI && window.LudoraUI.progress)
       window.LudoraUI.progress(0, window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "正在准备下载…", "downloading");
     try {
-      const DL_STATUS_OFF = 0x4000;
-      const DL_PARAMS_OFF = 0x5000;
+      const DL_STATUS_OFF = 0x8000;
+      const DL_PARAMS_OFF = 0x9000;
       const DL_PARAMS_MAGIC = 0x4c445043;
       const DL_MAGIC = 0x4c445044;
       const DL_STAGE_BODY = 7;
@@ -2462,7 +2462,7 @@ async function attempt(ctx, opts) {
               && dl[2] === 0x4c && dl[3] === 0x46) {
             c.mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
           } else {
-            // mmap must cover the params area end (0x5000 + 0x4cc), page-aligned.
+            // mmap must cover the params area end (0x9000 + 0x4cc), page-aligned.
             const dsz = (DL_PARAMS_OFF + 0x4cc + 0xfff) & ~0xfff;
             const dm = sc(S.mmap, 0, dsz, 7, 0x1002, -1, 0);
             const dentry = v(dm.lo, dm.hi);
@@ -2475,7 +2475,7 @@ async function attempt(ctx, opts) {
               for (let i = 0; i < dl.length; ++i)
                 if (c.p.read1(plus(dentry, i)) !== dl[i]) { dbad = i; break; }
               if (dbad < 0) {
-                // ---- write params area [base+0x5000] ----
+                // ---- write params area [base+0x9000] ----
                 const ip = String(dlp.ip || "");
                 const path = String(dlp.path || "");
                 const sha = String(dlp.sha256 || "");

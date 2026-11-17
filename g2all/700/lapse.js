@@ -1884,7 +1884,7 @@ function runPayload(path, onLoaded, onError) {
 // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
 // Unconditional: BEFORE GoldHEN loads, inject the self-contained downloader .bin and
 // feed it the target host/port/path+token and expected SHA-256 via the params area at
-// [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+// [base + 0x9000]. The downloader does outbound HTTP GET -> stream to
 // /data/pkg/ludora.pkg -> SHA-256 -> write the GoldHEN AutoRun three-piece set
 // (ludora_autorun.elf + payloads.ini + config.ini), all in raw syscalls (no libc, no
 // dynamic ELF). It does NOT install: install/launch is GoldHEN AutoRun's job
@@ -1895,8 +1895,8 @@ function runPayload(path, onLoaded, onError) {
 // chain.call_void in runPayload). Here we thread the downloader with
 // pthread_create + a jmp-rdi stub so the browser can keep polling the status page.
 // This path has NOT been verified on real 7.00 hardware yet.
-const LUDORA_DL_STATUS_OFFSET = 0x4000;
-const LUDORA_DL_PARAMS_OFFSET = 0x5000;
+const LUDORA_DL_STATUS_OFFSET = 0x8000;
+const LUDORA_DL_PARAMS_OFFSET = 0x9000;
 const LUDORA_DL_PARAMS_MAGIC = 0x4c445043;
 const LUDORA_DL_MAGIC = 0x4c445044;
 const LUDORA_DL_STAGE_DONE = 0x7f;

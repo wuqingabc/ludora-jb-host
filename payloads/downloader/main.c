@@ -17,6 +17,8 @@
 #define SYS_rename 128
 #define SYS_mkdir 136
 #define SYS_nanosleep 240
+#define SYS_poll 209
+#define SYS_lseek 478
 
 /* ---- open(2) flags ---- */
 #define O_RDONLY 0x0000
@@ -32,6 +34,18 @@
 #define F_SETFL 4
 #define O_NONBLOCK 4
 #define EINPROGRESS 36
+#define EAGAIN 35
+#define SEEK_END 2
+#define NCHUNKS 8
+
+/* poll(2) 事件位与 struct pollfd(FreeBSD 9,已核对 sys/poll.h) */
+#define POLLIN 0x0001
+#define POLLOUT 0x0004
+#define POLLERR 0x0008
+#define POLLHUP 0x0010
+#define POLLNVAL 0x0020
+
+struct pollfd { int fd; short events; short revents; };
 
 /* 只下载、不装机:落盘到 ludora_autorun 期望的暂存路径 + 写一次性强制标记,
  * 装机/拉起交给 GoldHEN AutoRun 的 ludora_autorun.elf(系统级进程,不在浏览器进程里装,
@@ -41,6 +55,9 @@
  * 同一物理目录),故此处写 /data/pkg 目录即等价 /user/data/pkg 目录;文件名统一 ludora.pkg。 */
 #define PKG_PATH "/data/pkg/ludora.pkg"
 #define PKG_TMP  "/data/pkg/ludora.pkg.tmp"
+/* 8 路分块的每块临时文件前缀:ludora.pkg.part0 … part7(单文件一写者,断点续传按
+ * 各 part 文件已有大小续 Range,避免共享单文件偏移竞争)。 */
+#define PKG_PART_PREFIX "/data/pkg/ludora.pkg.part"
 #define FORCE_STAGED_MARK "/data/.ludora_force_staged"
 
 /* GoldHEN AutoRun 三件套(装机/拉起交给 ludora_autorun.elf,这三样必须在本下载器
@@ -585,6 +602,420 @@ done_fail:
   return -1;
 }
 
+/* ==================== 8 路分块并发 + 断点续传(Route A:单线程 poll 多路复用) ====================
+ * 替换 pkg 的单连接串行下载:先探测总大小,再分 NCHUNKS 块、每块一个非阻塞 socket 写自己的
+ * .partN 临时文件(单文件一写者,无需 pwrite),单线程 poll 多路复用;全部就位后合并 + 整包
+ * SHA-256 + 原子 rename。任一阶段遇到「服务器不支持 Range」(200)或硬失败,返回 -1 让调用方
+ * 回退单连接 http_download()。elf 仍走单连接。 */
+
+static void u64_to_dec(char *buf, int *len, uint64_t v) {
+  char tmp[20];
+  int n = 0;
+  if (v == 0) tmp[n++] = '0';
+  while (v > 0) { tmp[n++] = '0' + (char)(v % 10); v /= 10; }
+  while (n > 0) buf[(*len)++] = tmp[--n];
+}
+
+static void part_path(char *buf, int idx) {
+  const char *base = PKG_PART_PREFIX;
+  int len = 0;
+  append_s(buf, &len, base);
+  buf[len++] = '0' + (char)idx;
+  buf[len] = 0;
+}
+
+static void part_cleanup(void) {
+  char path[64];
+  int i;
+  for (i = 0; i < NCHUNKS; i++) { part_path(path, i); syscall1(SYS_unlink, (long)path); }
+}
+
+/* 解析 "Content-Range: bytes 0-0/<total>" 里 '/' 之后的 total。 */
+static int parse_content_range(const char *hdr, int n, uint64_t *total) {
+  int i;
+  for (i = 0; i + 13 < n; i++) {
+    if (hdr[i] == 'C' && hdr[i+1] == 'o' && hdr[i+2] == 'n' && hdr[i+3] == 't' &&
+        hdr[i+4] == 'e' && hdr[i+5] == 'n' && hdr[i+6] == 't' && hdr[i+7] == '-' &&
+        hdr[i+8] == 'R' && hdr[i+9] == 'a' && hdr[i+10] == 'n' && hdr[i+11] == 'g' &&
+        hdr[i+12] == 'e' && hdr[i+13] == ':') {
+      int j = i + 14, slash = -1, digits = 0;
+      uint64_t v = 0;
+      while (j < n && !(hdr[j] == '\r' && j + 1 < n && hdr[j+1] == '\n')) {
+        if (hdr[j] == '/') slash = j;
+        j++;
+      }
+      if (slash < 0) return -1;
+      j = slash + 1;
+      while (j < n && hdr[j] >= '0' && hdr[j] <= '9') {
+        v = v * 10 + (uint64_t)(hdr[j] - '0');
+        j++;
+        digits++;
+      }
+      if (digits == 0) return -1;
+      *total = v;
+      return 0;
+    }
+  }
+  return -1;
+}
+
+/* 非阻塞 socket + connect(EINPROGRESS),返回 fd(-1 失败)。fd 保持非阻塞。 */
+static int tcp_connect_nb(const char *ip, uint16_t port) {
+  uint32_t ip_net = 0;
+  struct sockaddr_in addr;
+  int fd;
+  long cr;
+  if (parse_ipv4_net(ip, &ip_net) != 0) return -1;
+  fd = (int)syscall3(SYS_socket, AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (fd < 0) return -1;
+  syscall3(SYS_fcntl, fd, F_SETFL, O_NONBLOCK);
+  zero(&addr, sizeof(addr));
+  addr.sin_len = sizeof(addr);
+  addr.sin_family = AF_INET;
+  addr.sin_port = (uint16_t)((port >> 8) | (port << 8));
+  addr.sin_addr = ip_net;
+  cr = syscall3(SYS_connect, fd, (long)&addr, sizeof(addr));
+  if (cr < 0 && cr != -EINPROGRESS) { syscall1(SYS_close, fd); return -1; }
+  return fd;
+}
+
+/* 等单个非阻塞 connect 完成:0 成功,-1 失败/超时(10s)。 */
+static int tcp_connect_wait(int fd) {
+  struct pollfd pfd;
+  int i;
+  for (i = 0; i < 10; i++) {
+    int pr, soerr = 0, solen = 4;
+    pfd.fd = fd; pfd.events = POLLOUT; pfd.revents = 0;
+    pr = (int)syscall3(SYS_poll, (long)&pfd, 1, 1000);
+    if (pr < 0) return -1;
+    if (pr > 0) {
+      if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) return -1;
+      if (pfd.revents & POLLOUT) {
+        syscall5(SYS_getsockopt, fd, SOL_SOCKET, SO_ERROR, (long)&soerr, (long)&solen);
+        return (soerr == 0) ? 0 : -1;
+      }
+    }
+  }
+  return -1;
+}
+
+/* 探测 pkg 总大小:单连接 GET Range: bytes=0-0,读 206 的 Content-Range 得 total。
+ * 非 206 或失败返回 -1(调用方回退单连接)。 */
+static int probe_total_size(const char *ip, int ip_len, uint16_t port,
+                            const char *path, int path_len, uint64_t *out) {
+  int fd, rl = 0, sent = 0, hdr_len = 0;
+  char req[1024];
+  char hdr[2048];
+  unsigned char rbuf[512];
+  long code = 0;
+  uint64_t total = 0;
+
+  if (path_len + ip_len > (int)sizeof(req) - 48) return -1;
+  fd = tcp_connect_nb(ip, port);
+  if (fd < 0) return -1;
+  if (tcp_connect_wait(fd) != 0) { syscall1(SYS_close, fd); return -1; }
+  syscall3(SYS_fcntl, fd, F_SETFL, 0);
+
+  append_s(req, &rl, "GET ");
+  append_n(req, &rl, path, path_len);
+  append_s(req, &rl, " HTTP/1.1\r\nHost: ");
+  append_n(req, &rl, ip, ip_len);
+  append_s(req, &rl, "\r\nRange: bytes=0-0\r\nConnection: close\r\n\r\n");
+  while (sent < rl) {
+    long w = syscall3(SYS_write, fd, (long)(req + sent), rl - sent);
+    if (w <= 0) { syscall1(SYS_close, fd); return -1; }
+    sent += (int)w;
+  }
+  for (;;) {
+    long n = syscall3(SYS_read, fd, (long)rbuf, sizeof(rbuf));
+    int sep, k;
+    if (n == 0) break;
+    if (n < 0) { syscall1(SYS_close, fd); return -1; }
+    if (hdr_len + (int)n > (int)sizeof(hdr)) { syscall1(SYS_close, fd); return -1; }
+    for (k = 0; k < (int)n; k++) hdr[hdr_len + k] = (char)rbuf[k];
+    hdr_len += (int)n;
+    sep = find_header_end(hdr, hdr_len);
+    if (sep >= 0) {
+      if (parse_status(hdr, sep, &code) != 0 || code != 206) { syscall1(SYS_close, fd); return -1; }
+      if (parse_content_range(hdr, sep, &total) != 0 || total == 0) { syscall1(SYS_close, fd); return -1; }
+      syscall1(SYS_close, fd);
+      *out = total;
+      return 0;
+    }
+  }
+  syscall1(SYS_close, fd);
+  return -1;
+}
+
+struct chunk {
+  int fd;             /* socket,-1 = 无 */
+  int part_fd;        /* part 文件 fd,-1 = 未开 */
+  int done;           /* 1 = 本块已完整落盘 */
+  int hdr_done;       /* 1 = 响应头已解析 */
+  int connected;      /* 1 = connect 已完成 */
+  uint64_t start;     /* 绝对字节偏移起(inclusive) */
+  uint64_t end;       /* 绝对字节偏移止(inclusive) */
+  uint64_t have;      /* part 文件已落盘字节(续传起点) */
+  uint64_t got;       /* 本轮新增 body 字节 */
+  long content_len;   /* 本块 Content-Length(期望 body 字节数) */
+  int hdr_len;        /* 已累积响应头字节数 */
+};
+
+static int http_download_multi(struct ludora_dl_status *status,
+                               const char *ip, int ip_len, uint16_t port,
+                               const char *path, int path_len,
+                               const char *sha256_hex,
+                               const char *tmp_path, const char *final_path) {
+  struct chunk ck[NCHUNKS];
+  char hdr[NCHUNKS][1024];
+  unsigned char rbuf[4096];
+  struct pollfd pfds[NCHUNKS];
+  char req[1024];
+  char pathbuf[64];
+  uint64_t total = 0, chunk_len, expected, agg = 0;
+  int nchunks, i, nactive, pr;
+  sha256_t hash;
+  unsigned char actual[32];
+  char actual_hex[65];
+  int out = -1, prfd = -1;
+
+  zero(ck, sizeof(ck));
+
+  update(status, LUDORA_DL_STAGE_SOCKET, 0, 0, 0);
+  sleep_1s(); /* 给浏览器轮询留时间(与单连接一致) */
+
+  /* 1) 探测总大小 */
+  if (probe_total_size(ip, ip_len, port, path, path_len, &total) != 0) {
+    fail(status, LUDORA_DL_STAGE_RESP_HEAD, -4, 0);
+    return -1;
+  }
+  update(status, LUDORA_DL_STAGE_CONNECT, 0, 0, 0);
+  nchunks = (total < NCHUNKS) ? (int)total : NCHUNKS;
+  chunk_len = total / (uint64_t)nchunks;
+
+  /* 2) 每块算范围 + 开 part 文件 + 续传游标 */
+  for (i = 0; i < nchunks; i++) {
+    long sz;
+    ck[i].fd = -1;
+    ck[i].part_fd = -1;
+    ck[i].start = (uint64_t)i * chunk_len;
+    ck[i].end = (i == nchunks - 1) ? (total - 1) : (ck[i].start + chunk_len - 1);
+    expected = ck[i].end - ck[i].start + 1;
+    part_path(pathbuf, i);
+    ck[i].part_fd = (int)syscall3(SYS_open, (long)pathbuf, O_WRONLY | O_CREAT, 0600);
+    if (ck[i].part_fd < 0) { fail(status, LUDORA_DL_STAGE_BODY, (int32_t)ck[i].part_fd, 0); goto fail_cleanup; }
+    sz = syscall3(SYS_lseek, ck[i].part_fd, 0, SEEK_END);
+    if (sz < 0) { fail(status, LUDORA_DL_STAGE_BODY, (int32_t)sz, 0); goto fail_cleanup; }
+    if ((uint64_t)sz == expected) {
+      ck[i].done = 1;
+      agg += expected;
+      syscall1(SYS_close, ck[i].part_fd);
+      ck[i].part_fd = -1;
+    } else if ((uint64_t)sz > expected) {
+      syscall1(SYS_close, ck[i].part_fd);
+      syscall1(SYS_unlink, (long)pathbuf);
+      ck[i].part_fd = (int)syscall3(SYS_open, (long)pathbuf, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+      if (ck[i].part_fd < 0) { fail(status, LUDORA_DL_STAGE_BODY, (int32_t)ck[i].part_fd, 0); goto fail_cleanup; }
+      ck[i].have = 0;
+    } else {
+      ck[i].have = (uint64_t)sz;
+      agg += (uint64_t)sz;
+    }
+  }
+  update(status, LUDORA_DL_STAGE_BODY, 0, (uint32_t)agg, (uint32_t)total);
+
+  /* 3) 非阻塞 connect 所有未完成块 */
+  for (i = 0; i < nchunks; i++) {
+    if (ck[i].done) continue;
+    ck[i].fd = tcp_connect_nb(ip, port);
+    if (ck[i].fd < 0) { fail(status, LUDORA_DL_STAGE_CONNECT, -2, (uint32_t)i); goto fail_cleanup; }
+  }
+
+  /* 4) poll POLLOUT 等 connect 完成 */
+  for (;;) {
+    nactive = 0;
+    for (i = 0; i < nchunks; i++) {
+      pfds[i].fd = (ck[i].done || ck[i].connected) ? -1 : ck[i].fd;
+      pfds[i].events = POLLOUT;
+      pfds[i].revents = 0;
+      if (!(ck[i].done || ck[i].connected)) nactive++;
+    }
+    if (nactive == 0) break;
+    pr = (int)syscall3(SYS_poll, (long)pfds, nchunks, 1000);
+    if (pr < 0) { fail(status, LUDORA_DL_STAGE_CONNECT, pr, 0); goto fail_cleanup; }
+    for (i = 0; i < nchunks; i++) {
+      int soerr = 0, solen = 4;
+      if (ck[i].done || ck[i].connected || pfds[i].revents == 0) continue;
+      if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { fail(status, LUDORA_DL_STAGE_CONNECT, -3, (uint32_t)i); goto fail_cleanup; }
+      if (pfds[i].revents & POLLOUT) {
+        syscall5(SYS_getsockopt, ck[i].fd, SOL_SOCKET, SO_ERROR, (long)&soerr, (long)&solen);
+        if (soerr != 0) { fail(status, LUDORA_DL_STAGE_CONNECT, -soerr, (uint32_t)i); goto fail_cleanup; }
+        ck[i].connected = 1;
+      }
+    }
+  }
+
+  /* 5) 发各块 Range 请求(恢复阻塞写入,再回非阻塞读) */
+  for (i = 0; i < nchunks; i++) {
+    int rl = 0, sent = 0;
+    if (ck[i].done) continue;
+    syscall3(SYS_fcntl, ck[i].fd, F_SETFL, 0);
+    append_s(req, &rl, "GET ");
+    append_n(req, &rl, path, path_len);
+    append_s(req, &rl, " HTTP/1.1\r\nHost: ");
+    append_n(req, &rl, ip, ip_len);
+    append_s(req, &rl, "\r\nRange: bytes=");
+    u64_to_dec(req, &rl, ck[i].start + ck[i].have);
+    append_s(req, &rl, "-");
+    u64_to_dec(req, &rl, ck[i].end);
+    append_s(req, &rl, "\r\nConnection: close\r\n\r\n");
+    while (sent < rl) {
+      long w = syscall3(SYS_write, ck[i].fd, (long)(req + sent), rl - sent);
+      if (w <= 0) { fail(status, LUDORA_DL_STAGE_SEND, (int32_t)w, (uint32_t)i); goto fail_cleanup; }
+      sent += (int)w;
+    }
+    syscall3(SYS_fcntl, ck[i].fd, F_SETFL, O_NONBLOCK);
+  }
+
+  /* 6) poll POLLIN 读循环,直到所有块完成 */
+  for (;;) {
+    int all_done = 1;
+    for (i = 0; i < nchunks; i++) if (!ck[i].done) { all_done = 0; break; }
+    if (all_done) break;
+
+    nactive = 0;
+    for (i = 0; i < nchunks; i++) {
+      pfds[i].fd = ck[i].done ? -1 : ck[i].fd;
+      pfds[i].events = POLLIN;
+      pfds[i].revents = 0;
+      if (!ck[i].done) nactive++;
+    }
+    if (nactive == 0) break;
+    pr = (int)syscall3(SYS_poll, (long)pfds, nchunks, 2000);
+    if (pr < 0) { fail(status, LUDORA_DL_STAGE_BODY, pr, 0); goto fail_cleanup; }
+
+    for (i = 0; i < nchunks; i++) {
+      long n;
+      if (ck[i].done || pfds[i].revents == 0) continue;
+
+      if (pfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        fail(status, LUDORA_DL_STAGE_BODY, -4, (uint32_t)i);
+        goto fail_cleanup;
+      }
+
+      n = syscall3(SYS_read, ck[i].fd, (long)rbuf, sizeof(rbuf));
+      if (n == 0) {
+        /* EOF:该块数据到此为止 */
+        if (!ck[i].hdr_done || ck[i].got < (uint64_t)ck[i].content_len) {
+          fail(status, LUDORA_DL_STAGE_BODY, -5, (uint32_t)i);
+          goto fail_cleanup;
+        }
+        ck[i].done = 1;
+        syscall1(SYS_close, ck[i].fd);
+        ck[i].fd = -1;
+        syscall1(SYS_close, ck[i].part_fd);
+        ck[i].part_fd = -1;
+        continue;
+      }
+      if (n < 0) {
+        if (n == -EAGAIN) continue;
+        fail(status, LUDORA_DL_STAGE_BODY, (int32_t)n, (uint32_t)i);
+        goto fail_cleanup;
+      }
+
+      /* 处理 n 字节 */
+      if (!ck[i].hdr_done) {
+        int j;
+        for (j = 0; j < (int)n && !ck[i].hdr_done; j++) {
+          if (ck[i].hdr_len >= 1024) { fail(status, LUDORA_DL_STAGE_RESP_HEAD, -1, (uint32_t)i); goto fail_cleanup; }
+          hdr[i][ck[i].hdr_len++] = (char)rbuf[j];
+          if (ck[i].hdr_len >= 4 &&
+              hdr[i][ck[i].hdr_len-4] == '\r' && hdr[i][ck[i].hdr_len-3] == '\n' &&
+              hdr[i][ck[i].hdr_len-2] == '\r' && hdr[i][ck[i].hdr_len-1] == '\n') {
+            long code = 0;
+            if (parse_status(hdr[i], ck[i].hdr_len, &code) != 0) { fail(status, LUDORA_DL_STAGE_RESP_HEAD, -2, (uint32_t)i); goto fail_cleanup; }
+            if (code != 206) { fail(status, LUDORA_DL_STAGE_RESP_HEAD, -5, (uint32_t)code); goto fail_cleanup; } /* 200/416 等 -> 回退 */
+            if (parse_content_length(hdr[i], ck[i].hdr_len, &ck[i].content_len) != 0 || ck[i].content_len <= 0) {
+              fail(status, LUDORA_DL_STAGE_RESP_HEAD, -4, (uint32_t)i);
+              goto fail_cleanup;
+            }
+            ck[i].hdr_done = 1;
+          }
+        }
+        /* j 之后的剩余字节是 body,写盘 */
+        if (j < (int)n && ck[i].hdr_done) {
+          long w = syscall3(SYS_write, ck[i].part_fd, (long)(rbuf + j), (int)n - j);
+          if (w != (int)n - j) { fail(status, LUDORA_DL_STAGE_BODY, -6, (uint32_t)i); goto fail_cleanup; }
+          ck[i].got += (uint64_t)((int)n - j);
+          agg += (uint64_t)((int)n - j);
+        }
+      } else {
+        /* 只写 content_len 允许的剩余字节 */
+        long body_left = ck[i].content_len - (long)ck[i].got;
+        long to_write = (long)n;
+        long w;
+        if (to_write > body_left) to_write = body_left;
+        if (to_write > 0) {
+          w = syscall3(SYS_write, ck[i].part_fd, (long)rbuf, to_write);
+          if (w != to_write) { fail(status, LUDORA_DL_STAGE_BODY, -7, (uint32_t)i); goto fail_cleanup; }
+          ck[i].got += (uint64_t)to_write;
+          agg += (uint64_t)to_write;
+        }
+      }
+
+      update(status, LUDORA_DL_STAGE_BODY, 0, (uint32_t)agg, (uint32_t)total);
+    }
+  }
+
+  /* 7) 合并 + 整包 SHA-256 + 原子 rename */
+  update(status, LUDORA_DL_STAGE_HASH, 0, 0, 0);
+  out = (int)syscall3(SYS_open, (long)tmp_path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+  if (out < 0) { fail(status, LUDORA_DL_STAGE_HASH, out, 0); goto fail_cleanup; }
+  sha256_init(&hash);
+  for (i = 0; i < nchunks; i++) {
+    part_path(pathbuf, i);
+    prfd = (int)syscall3(SYS_open, (long)pathbuf, O_RDONLY, 0);
+    if (prfd < 0) { fail(status, LUDORA_DL_STAGE_HASH, prfd, (uint32_t)i); goto fail_cleanup; }
+    for (;;) {
+      long n = syscall3(SYS_read, prfd, (long)rbuf, sizeof(rbuf));
+      int wr = 0;
+      if (n == 0) break;
+      if (n < 0) { fail(status, LUDORA_DL_STAGE_HASH, (int32_t)n, (uint32_t)i); goto fail_cleanup; }
+      while (wr < (int)n) {
+        long w = syscall3(SYS_write, out, (long)(rbuf + wr), (int)n - wr);
+        if (w <= 0) { fail(status, LUDORA_DL_STAGE_HASH, (int32_t)w, (uint32_t)i); goto fail_cleanup; }
+        wr += (int)w;
+      }
+      sha256_update(&hash, rbuf, (size_t)n);
+    }
+    syscall1(SYS_close, prfd);
+    prfd = -1;
+  }
+  syscall1(SYS_close, out);
+  out = -1;
+  sha256_final(&hash, actual);
+  hex_encode(actual, actual_hex, 32);
+  if (memcmp_s((const unsigned char *)actual_hex, (const unsigned char *)sha256_hex, 64) != 0) {
+    fail(status, LUDORA_DL_STAGE_HASH, -1, 0);
+    goto fail_cleanup;
+  }
+  if (syscall2(SYS_rename, (long)tmp_path, (long)final_path) != 0) {
+    fail(status, LUDORA_DL_STAGE_HASH, -2, 0);
+    goto fail_cleanup;
+  }
+  part_cleanup();
+  return 0;
+
+fail_cleanup:
+  if (out >= 0) syscall1(SYS_close, out);
+  if (prfd >= 0) syscall1(SYS_close, prfd);
+  for (i = 0; i < nchunks; i++) {
+    if (ck[i].fd >= 0) syscall1(SYS_close, ck[i].fd);
+    if (ck[i].part_fd >= 0) syscall1(SYS_close, ck[i].part_fd);
+  }
+  return -1;
+}
+
 int _main(void *payload_base) {
   struct ludora_dl_status *status = (struct ludora_dl_status *)((uint8_t *)payload_base + LUDORA_DL_STATUS_OFFSET);
   struct ludora_dl_params *params = (struct ludora_dl_params *)((uint8_t *)payload_base + LUDORA_DL_PARAMS_OFFSET);
@@ -612,17 +1043,24 @@ int _main(void *payload_base) {
     return 0;
   }
 
-  /* 1) 下载 pkg。pkg 已落盘(上次下完还没重启装机)则跳过,避免重复下载 49MB。 */
+  /* 1) 下载 pkg。pkg 已落盘(上次下完还没重启装机)则跳过,避免重复下载 49MB。
+   * 优先 8 路分块 + 断点续传;服务器不支持 Range(200)或分块硬失败时回退单连接,
+   * 不因分块失败卡死越狱。 */
   if (!file_exists(PKG_PATH)) {
     int mkrc = ensure_dir("/data/pkg");
     if (mkrc != 0) {
       fail(status, LUDORA_DL_STAGE_BODY, -4, (uint32_t)mkrc);
       return -1;
     }
-    if (http_download(status, params->ip, params->ip_len, params->port,
-                      params->path, params->path_len, params->sha256_hex,
-                      PKG_TMP, PKG_PATH) != 0) {
-      return -1;
+    if (http_download_multi(status, params->ip, params->ip_len, params->port,
+                            params->path, params->path_len, params->sha256_hex,
+                            PKG_TMP, PKG_PATH) != 0) {
+      part_cleanup();
+      if (http_download(status, params->ip, params->ip_len, params->port,
+                        params->path, params->path_len, params->sha256_hex,
+                        PKG_TMP, PKG_PATH) != 0) {
+        return -1;
+      }
     }
   }
 

@@ -5,11 +5,11 @@
 
 #define LUDORA_DL_MAGIC 0x4c445044u
 #define LUDORA_DL_VERSION 1u
-/* 状态页/参数区偏移必须落在 .bin 代码段之后:.bin 当前 0x2480 字节,
- * 曾把状态页放 0x1000/参数区放 0x2000,会覆盖 .text(0..0x2125)与
- * .rodata(0x2140..0x2480)导致 payload 自毁挂起。抬高到 0x4000/0x5000。 */
-#define LUDORA_DL_STATUS_OFFSET 0x4000u
-#define LUDORA_DL_PARAMS_OFFSET 0x5000u
+/* 状态页/参数区偏移必须落在 .bin 代码段之后:.bin 当前 0x4891 字节,
+ * 曾把状态页放 0x1000/参数区放 0x2000,会覆盖 .text 自毁挂起。8 路分块
+ * 下载代码涨到 0x4891,已越过旧 0x4000,故抬到 0x8000/0x9000。 */
+#define LUDORA_DL_STATUS_OFFSET 0x8000u
+#define LUDORA_DL_PARAMS_OFFSET 0x9000u
 
 #define LUDORA_DL_STAGE_ENTRY 1u
 #define LUDORA_DL_STAGE_PARAM 2u
