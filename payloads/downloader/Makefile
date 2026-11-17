@@ -38,6 +38,10 @@ verify: $(BIN)
 	@strings -a $(BIN) | grep -Fq "/data/.ludora_force_staged"
 	@strings -a $(BIN) | grep -Fq "/user/appmeta/LUDO00001"
 	@strings -a $(BIN) | grep -Fq "/user/appmeta/external/LUDO00001"
+	@strings -a $(BIN) | grep -Fq "/data/payloads/ludora_autorun.elf"
+	@strings -a $(BIN) | grep -Fq "/data/GoldHEN/payloads.ini"
+	@strings -a $(BIN) | grep -Fq "/data/GoldHEN/config.ini"
+	@strings -a $(BIN) | grep -Fq "/user/data/payloads/ludora_autorun.elf = 1"
 	@if strings -a $(BIN) | grep -Fq "sceAppInstUtilAppInstallPkg"; then echo 'install logic must be removed from downloader'; exit 1; fi
 	@if objdump -d $(ELF) | grep -q 'endbr64'; then echo 'unexpected CET ENDBR64 instruction'; exit 1; fi
 

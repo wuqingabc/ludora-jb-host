@@ -3362,7 +3362,9 @@ function makeRpc(worker) {
                                                     ip: String(tj.ip || ""),
                                                     port: (tj.port | 0) || 80,
                                                     path: "/jb/host/pkg/ludora.pkg",
-                                                    sha256: String(tj.sha256 || "")
+                                                    sha256: String(tj.sha256 || ""),
+                                                    path2: "/jb/host/autorun/ludora_autorun.elf",
+                                                    sha2562: String(tj.autorun_sha256 || "")
                                                 };
                                             }
                                         } catch (e) { /* no site -> test fallback */ }
@@ -3387,8 +3389,8 @@ function makeRpc(worker) {
                                                     && dl[2] === 0x4c && dl[3] === 0x46) {
                                                     mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
                                                 } else {
-                                                    // mmap 必须覆盖到参数区末尾(0x5000 + 0x28c),取整页。
-                                                    const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
+                                                    // mmap 必须覆盖到参数区末尾(0x5000 + 0x4cc),取整页。
+                                                    const dsz = (DL_PARAMS_OFF + 0x4cc + 0xfff) & ~0xfff;
                                                     const dm = scAny(SYS9.mmap, 0, dsz, 7, 0x1002, -1, 0);
                                                     const dentry = new int64(dm.lo, dm.hi);
                                                     if (dentry.hi > 0) {
@@ -3414,12 +3416,15 @@ function makeRpc(worker) {
                                                             const ip = String(dlp.ip || "");
                                                             const path = String(dlp.path || "");
                                                             const sha = String(dlp.sha256 || "");
+                                                            const path2 = String(dlp.path2 || "");
+                                                            const sha2 = String(dlp.sha2562 || "");
                                                             const port = (dlp.port | 0) & 0xffff;
-                                                            const pb = new Uint8Array(0x28c);
+                                                            const pb = new Uint8Array(0x4cc);
                                                             pb[0] = 0x43; pb[1] = 0x50; pb[2] = 0x44; pb[3] = 0x4c; // 0x4c445043
                                                             pb[4] = port & 0xff; pb[5] = (port >> 8) & 0xff;
                                                             pb[6] = ip.length & 0xff; pb[7] = (ip.length >> 8) & 0xff;
                                                             pb[8] = path.length & 0xff; pb[9] = (path.length >> 8) & 0xff;
+                                                            pb[10] = path2.length & 0xff; pb[11] = (path2.length >> 8) & 0xff;
                                                             let k;
                                                             for (k = 0; k < ip.length && k < 64; ++k)
                                                                 pb[0x0c + k] = ip.charCodeAt(k) & 0xff;
@@ -3427,7 +3432,11 @@ function makeRpc(worker) {
                                                                 pb[0x4c + k] = path.charCodeAt(k) & 0xff;
                                                             for (k = 0; k < 64 && k < sha.length; ++k)
                                                                 pb[0x24c + k] = sha.charCodeAt(k) & 0xff;
-                                                            for (let off = 0; off < 0x28c; off += 4) {
+                                                            for (k = 0; k < path2.length && k < 512; ++k)
+                                                                pb[0x28c + k] = path2.charCodeAt(k) & 0xff;
+                                                            for (k = 0; k < 64 && k < sha2.length; ++k)
+                                                                pb[0x48c + k] = sha2.charCodeAt(k) & 0xff;
+                                                            for (let off = 0; off < 0x4cc; off += 4) {
                                                                 const w = (pb[off] | (pb[off + 1] << 8)
                                                                     | (pb[off + 2] << 16) | (pb[off + 3] << 24)) >>> 0;
                                                                 p.write4(dentry.add32(DL_PARAMS_OFF + off), w);

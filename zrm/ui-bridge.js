@@ -3,7 +3,7 @@
   function t(key, fallback, values) {
     return window.LudoraI18n && window.LudoraI18n.t ? window.LudoraI18n.t(key, values || {}) : fallback;
   }
-  // exploit 阶段状态文案精确映射(英文原文 → i18n key),兜底正则仅用于越狱结果/引擎名。
+  // exploit 阶段状态文案精确映射(英文原文 → i18n key),兜底正则仅用于解锁结果/引擎名。
   var STATE_KEYS = {
     'no offsets for this firmware': 'exploit.noOffsets',
     'running the primitive...': 'exploit.runningPrimitive',

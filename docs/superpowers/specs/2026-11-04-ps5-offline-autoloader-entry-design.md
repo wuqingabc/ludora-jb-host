@@ -1,9 +1,9 @@
-# PS5 无 PC 离线越狱入口（autoloader 品牌化）设计
+# PS5 无 PC 离线解锁入口（autoloader 品牌化）设计
 
 **Date:** 2026-11-04
 **Status:** Design（站长已拍板关键决策，待 review）
 **Scope:** 本文是 [2026-11-04-ps5-webkit-remote-loader-host-design.md](./2026-11-04-ps5-webkit-remote-loader-host-design.md)
-（下称「昨晚 spec」）的**补充**，只覆盖昨晚 spec 明确排除的场景：**无 PC 用户第一次越狱**。
+（下称「昨晚 spec」）的**补充**，只覆盖昨晚 spec 明确排除的场景：**无 PC 用户第一次解锁**。
 昨晚 spec 的 L2/L3/L4 资产、插件 manifest、borrow 登记一律**复用**，本文不再重复。
 
 ---
@@ -33,11 +33,11 @@ ELF sender + plugins.json 9 插件）打包成 **autoloader 的 offline chain pa
 1. DNS 劫持：PS5 把 DNS 指向开发机（192.168.3.128:53），`manuals.playstation.net` 被解析到该 IP。
 2. 自签名 HTTPS：PS5 接受 CN=manuals.playstation.net 的自签证书，TLS 1.3 握手成功。
 3. 固件识别：UA `PlayStation 5/9.40` → 路由到 Relapse 链（`index.html`）。
-4. WebKit exploit 运行成功 → 内核越狱。
+4. WebKit exploit 运行成功 → 内核解锁。
 5. autoloader 装主屏成功（"WebKit Autoloader" 图标出现）。
 6. 重启后主屏启动 autoloader 可用（离线）。
 
-**结论：无 PC 越狱链路在真机 9.40 完全可行。** 缺口只有一个：装出来的是 upstream 白板
+**结论：无 PC 解锁链路在真机 9.40 完全可行。** 缺口只有一个：装出来的是 upstream 白板
 （unified-autoloader / Payload Manager），不含我们 plugins.json 的 9 个 payload —— 这正是
 品牌化要补的。
 
@@ -126,7 +126,7 @@ i18n/二维码引用父目录 `../`。autoloader 是「单文件 HTML」。适�
 2. **plugins.json**：`--embed plugins.json`，bridge 的 `fetch("./plugins.json")` 走 inline fetch。
 3. **i18n**：昨晚三语言（zh-CN/zh-TW/en-US）内联；若内联成本高，standalone 先简体中文单语言
    （open item，实现期定）。
-4. **store-qr.png（鲁哆啦在线下载二维码）**：内联保留（越狱后引导装 app 的场景仍适用）。
+4. **store-qr.png（鲁哆啦在线下载二维码）**：内联保留（解锁后引导装 app 的场景仍适用）。
 
 ### 5.5 installer.elf 重编译（品牌名 + 图标）
 

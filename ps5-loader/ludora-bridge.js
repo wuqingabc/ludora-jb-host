@@ -72,7 +72,7 @@
       setState(tr("relapse.unsupported", "当前主机或固件版本不受支持"), "warn");
     } else if (isErrorMarker) {
       seenFailure = true;
-      setState(tr("relapse.failed", "越狱失败，请重新加载页面重试"), "bad");
+      setState(tr("relapse.failed", "解锁失败，请重新加载页面重试"), "bad");
     } else {
       for (var i = 0; i < SUCCESS_SUBSTRINGS.length; i++) {
         if (message.indexOf(SUCCESS_SUBSTRINGS[i]) !== -1) {
@@ -81,9 +81,9 @@
         }
       }
       if (seenSuccess) {
-        setState(tr("relapse.success", "越狱成功，加载器已在监听"), "ok");
+        setState(tr("relapse.success", "解锁成功，加载器已在监听"), "ok");
       } else if (!seenFailure) {
-        setState(tr("relapse.running", "正在执行漏洞利用，请勿离开此页面"), "");
+        setState(tr("relapse.running", "正在执行解锁，请勿离开此页面"), "");
       }
     }
 
@@ -114,7 +114,7 @@
     if (pluginsHintEl) {
       pluginsHintEl.textContent = ready
         ? tr("loader.ready", "加载器已就绪，点选下方插件即可加载")
-        : tr("loader.waiting", "等待越狱完成…");
+        : tr("loader.waiting", "等待解锁完成…");
     }
     if (!pluginsEl) return;
     var buttons = pluginsEl.querySelectorAll("button");
@@ -230,7 +230,7 @@
   }
 
   if (pluginsHintEl) {
-    pluginsHintEl.textContent = tr("loader.waiting", "等待越狱完成…");
+    pluginsHintEl.textContent = tr("loader.waiting", "等待解锁完成…");
   }
   loadPlugins();
 })();

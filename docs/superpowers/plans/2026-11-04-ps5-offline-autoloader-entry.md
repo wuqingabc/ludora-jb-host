@@ -1,4 +1,4 @@
-# PS5 无 PC 离线越狱入口（autoloader 品牌化）实现计划
+# PS5 无 PC 离线解锁入口（autoloader 品牌化）实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -220,9 +220,9 @@ console.log("wrote " + dest + " (" + plugins.length + " plugins)");
 
   var wrap = el('div', 'wrap');
   var eyebrow = el('div', null, 'eyebrow'); eyebrow.textContent = '主机工具';
-  var state = el('div', 'state'); state.textContent = '正在执行漏洞利用，请勿离开此页面';
+  var state = el('div', 'state'); state.textContent = '正在执行解锁，请勿离开此页面';
   var det = el('div', 'det');
-  var hint = el('div', 'plugins-hint'); hint.textContent = '等待越狱完成…';
+  var hint = el('div', 'plugins-hint'); hint.textContent = '等待解锁完成…';
   var plugins = el('div', 'plugins');
   wrap.appendChild(eyebrow); wrap.appendChild(state); wrap.appendChild(det);
   wrap.appendChild(hint); wrap.appendChild(plugins);

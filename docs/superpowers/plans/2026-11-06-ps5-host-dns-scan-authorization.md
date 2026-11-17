@@ -1,8 +1,8 @@
-# PS5 Host DNS 越狱入口「扫码授权门」实现计划
+# PS5 Host DNS 解锁入口「扫码授权门」实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 给 host.py 的 DNS 越狱入口加一道手机扫码授权门，复用 ludora.cc/jb 已有的 device/pair 授权 + device_token 在线验证，未授权访问 manuals.playstation.net 一律 302 到扫码页。
+**Goal:** 给 host.py 的 DNS 解锁入口加一道手机扫码授权门，复用 ludora.cc/jb 已有的 device/pair 授权 + device_token 在线验证，未授权访问 manuals.playstation.net 一律 302 到扫码页。
 
 **Architecture:** host.py（ludora-ps5-autoloader）作为「门」：DNS 放行 `www.ludora.cc`，HTTPS 对无有效 device_token 的请求 302 到 `/jb?next=<原URL>`，带 `?dt=` 的请求在线调 `/api/v2/policy` 验 200/401 后放行并记源 IP 授权记忆（TTL 5 分钟）。ludora-site 的 jb-console-client 在授权 bound 后，若 URL 带 `next`（host 为 manuals.playstation.net）则跳回 `next?dt=<device_token>`。后端 ludora-server 零改动。
 
@@ -179,14 +179,14 @@ import urllib.request
 
 ```python
 # --- 授权门 (ludora fork) -------------------------------------------------
-# 复用 ludora.cc/jb 的 device/pair 授权 + device_token 在线验证,给 DNS 越狱
+# 复用 ludora.cc/jb 的 device/pair 授权 + device_token 在线验证,给 DNS 解锁
 # 入口加一道手机扫码门。device_token 是随机 token(服务端只存哈希),无法本地
 # 验签,只能在线调 /api/v2/policy 判 200/401。
 
 AUTHORIZE_REDIRECT_HOST = "www.ludora.cc"
 AUTHORIZE_PATH = "/jb"
 DEFAULT_LUDORA_API = "http://127.0.0.1:8600"
-AUTHZ_TTL = 300  # 秒;覆盖一次越狱会话内的子资源与重试
+AUTHZ_TTL = 300  # 秒;覆盖一次解锁会话内的子资源与重试
 
 
 def extract_dt(path):

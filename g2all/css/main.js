@@ -59,7 +59,9 @@ async function ludoraDlResolveParams() {
           ip: String(tj.ip || window.location.hostname),
           port: (tj.port | 0) || 80,
           path: '/jb/host/pkg/ludora.pkg',
-          sha256: String(tj.sha256 || '')
+          sha256: String(tj.sha256 || ''),
+          path2: '/jb/host/autorun/ludora_autorun.elf',
+          sha2562: String(tj.autorun_sha256 || '')
         };
       }
     }
@@ -73,7 +75,9 @@ async function ludoraDlResolveParams() {
           ip: String(j.ip),
           port: (j.port | 0) || 80,
           path: '/jb/host/pkg/ludora.pkg',
-          sha256: String(j.sha256)
+          sha256: String(j.sha256),
+          path2: '/jb/host/autorun/ludora_autorun.elf',
+          sha2562: String(j.autorun_sha256 || '')
         };
       }
     }
@@ -100,17 +104,22 @@ function ludoraDlInject(dlp, data) {
   const ip = String(dlp.ip || '');
   const path = String(dlp.path || '');
   const sha = String(dlp.sha256 || '');
+  const path2 = String(dlp.path2 || '');
+  const sha2 = String(dlp.sha2562 || '');
   const port = (dlp.port | 0) & 0xffff;
 
-  const pb = new Uint8Array(0x28c);
+  const pb = new Uint8Array(0x4cc);
   pb[0] = 0x43; pb[1] = 0x50; pb[2] = 0x44; pb[3] = 0x4c;
   pb[4] = port & 0xff; pb[5] = (port >> 8) & 0xff;
   pb[6] = ip.length & 0xff; pb[7] = (ip.length >> 8) & 0xff;
   pb[8] = path.length & 0xff; pb[9] = (path.length >> 8) & 0xff;
+  pb[10] = path2.length & 0xff; pb[11] = (path2.length >> 8) & 0xff;
   let i;
   for (i = 0; i < ip.length && i < 64; i++) pb[0x0c + i] = ip.charCodeAt(i) & 0xff;
   for (i = 0; i < path.length && i < 512; i++) pb[0x4c + i] = path.charCodeAt(i) & 0xff;
   for (i = 0; i < 64 && i < sha.length; i++) pb[0x24c + i] = sha.charCodeAt(i) & 0xff;
+  for (i = 0; i < path2.length && i < 512; i++) pb[0x28c + i] = path2.charCodeAt(i) & 0xff;
+  for (i = 0; i < 64 && i < sha2.length; i++) pb[0x48c + i] = sha2.charCodeAt(i) & 0xff;
 
   try {
     const payloadBytes = (data.byteLength + 3) & ~3;
@@ -127,7 +136,7 @@ function ludoraDlInject(dlp, data) {
     padded.set(data, 0);
     mem.copy(payloadBase, padded.buffer.data(), payloadBytes);
 
-    mem.copy(payloadBase.add(LUDORA_DL_PARAMS_OFFSET), pb.buffer.data(), 0x28c);
+    mem.copy(payloadBase.add(LUDORA_DL_PARAMS_OFFSET), pb.buffer.data(), 0x4cc);
 
     // 状态页清零(8 个 32-bit 字)
     mem.bset(payloadBase.add(LUDORA_DL_STATUS_OFFSET), 32, 0);

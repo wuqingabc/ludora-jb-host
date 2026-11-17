@@ -6,7 +6,7 @@
 
 ## 1. 现象
 
-PS4 通过官网 `/jb` Web 越狱,GoldHEN(`goldhen_2.4b18.10.bin`)能成功加载,但「下载 `ludora.pkg` 并安装」这一步从来没真正跑起来。
+PS4 通过官网 `/jb` Web 解锁,GoldHEN(`goldhen_2.4b18.10.bin`)能成功加载,但「下载 `ludora.pkg` 并安装」这一步从来没真正跑起来。
 
 ## 2. 根因(五条,任一都致命,当前全中)
 

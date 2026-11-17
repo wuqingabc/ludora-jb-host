@@ -1,9 +1,9 @@
-# PS5 Host DNS 越狱入口「扫码授权门」设计
+# PS5 Host DNS 解锁入口「扫码授权门」设计
 
 **Date:** 2026-11-06
 **Status:** Design（已按「与授权流程一致、不重造轮子」重写，待 review）
 **Scope:** 本文是 [2026-11-04-ps5-offline-autoloader-entry-design.md](./2026-11-04-ps5-offline-autoloader-entry-design.md)
-（下称「offline spec」）的补充。落地范围限定：给 host.py 的 DNS 越狱入口加一道**手机扫码授权门**，
+（下称「offline spec」）的补充。落地范围限定：给 host.py 的 DNS 解锁入口加一道**手机扫码授权门**，
 **复用 ludora.cc/jb 已有的 device/pair 授权 + device_token 在线验证**，不新增任何后端端点。
 不碰 PS4 引擎、不碰 remote-loader vendored 源、不碰本地鲁哆啦折腾器（pldmgr / 主屏快捷方式）的
 离线启动路径。
@@ -12,7 +12,7 @@
 
 ## 1. 背景与目标
 
-offline spec 已把「无 PC 用户第一次越狱」走通：PS5 把 DNS 指向 ludora.cc → User's Guide 被
+offline spec 已把「无 PC 用户第一次解锁」走通：PS5 把 DNS 指向 ludora.cc → User's Guide 被
 DNS 劫持到 host.py → 返回 exploit chain page → 装主屏。但这条入口目前**任何人点 User's Guide
 就能直接进 exploit**，没有门槛。
 
@@ -22,7 +22,7 @@ ludora.cc/jb 的**网页路由**入口已有完整授权闭环（已上线）：
 
 **目标**：
 
-1. 给 host.py 的 DNS 越狱入口加**手机扫码授权门**：点 User's Guide → 先走 device/pair 授权 →
+1. 给 host.py 的 DNS 解锁入口加**手机扫码授权门**：点 User's Guide → 先走 device/pair 授权 →
    授权通过（拿到有效 device_token）才进 exploit。
 2. **复用 ludora.cc/jb 的 device/pair + device_token 在线验证**，不新造后端端点、不新造凭证。
 3. **本地鲁哆啦折腾器（主屏快捷方式 / pldmgr 127.0.0.1:8084）不扫码** —— 已装机的老用户直接进。
@@ -50,9 +50,9 @@ ludora.cc/jb 的**网页路由**入口已有完整授权闭环（已上线）：
    host.py 只做「门」。
 2. **门槛 = 真手机授权握手**：手机扫码 + **登录态**（会员 cookie→Bearer）+ 输配对码。与
    ludora.cc/jb 一致，不是纯扫码、不是会员档位付费。
-3. **频率 = 每次越狱都扫码**：每次 DNS 越狱都是一次新的 device/pair 会话（`pair_start` 生成新
+3. **频率 = 每次解锁都扫码**：每次 DNS 解锁都是一次新的 device/pair 会话（`pair_start` 生成新
    `device_code`/`user_code`，手机每次都要确认）。host.py 的「源 IP 授权记忆」进程内存 + 短 TTL
-   （5 分钟，仅覆盖一次越狱会话内的子资源与重试），不落盘、不持久化免扫。
+   （5 分钟，仅覆盖一次解锁会话内的子资源与重试），不落盘、不持久化免扫。
 4. **凭证验证 = 复用 device_token + `/api/v2/policy` 在线验证**（`validJbDeviceToken` 同款）。
    🔴 device_token 是随机 token、服务端只存哈希，**无法本地验签** —— 不另造 entry_token 密钥，
    直接沿用现成的「调 /api/v2/policy 判 200/401」。
@@ -102,7 +102,7 @@ device/pair（`device.py`）与 `/api/v2/policy`（`policy.py` + `auth.py`）均
 
 ---
 
-## 5. 数据流（DNS 越狱入口，完整时序）
+## 5. 数据流（DNS 解锁入口，完整时序）
 
 ```
 PS5           host.py(ludora.cc)        ludora.cc/jb(astro+API)        手机
@@ -141,7 +141,7 @@ PS5           host.py(ludora.cc)        ludora.cc/jb(astro+API)        手机
   （用户自己的网络）下可接受的取舍，换取「不依赖 PS5 cookie/header 行为」的可靠性。
 - **device_token 进 URL**：跳回时 `?dt=<device_token>` 会进 host.py 日志与浏览器历史。host.py 日志
   已脱敏 `dt`；device_token 本身是「设备身份凭证」，泄漏面 = 冒充这台设备调 API（设备场景风险
-  可控），且只在一次越狱跳回的瞬间出现。
+  可控），且只在一次解锁跳回的瞬间出现。
 - **open-redirect**：`next` 只允许 `manuals.playstation.net`，其余 host 一律忽略走默认入口。
 
 ---
@@ -173,7 +173,7 @@ PS5           host.py(ludora.cc)        ludora.cc/jb(astro+API)        手机
 
 - 不做会员档位/付费门槛（门槛 = 登录态 + 输配对码，与 ludora.cc/jb 一致）。
 - 不新造后端端点（`/api/jb/sessions`）、不新造凭证（entry_token）、不另起密钥。
-- 不持久化「授权一次长期免扫」（每次越狱 = 一次新的 device/pair 会话，手机每次确认）。
+- 不持久化「授权一次长期免扫」（每次解锁 = 一次新的 device/pair 会话，手机每次确认）。
 - 不动 ludora-jb-host 的死前端 `jb/index.html`。
 - open items：PS5 浏览器对 302 / `?dt=` 回跳、`urllib` 回环调用绕代理的实际支持；host.py 打包
   （`build_host.py`）是否需注入 ludora-server 地址配置。

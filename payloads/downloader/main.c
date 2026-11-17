@@ -43,9 +43,42 @@
 #define PKG_TMP  "/data/pkg/ludora.pkg.tmp"
 #define FORCE_STAGED_MARK "/data/.ludora_force_staged"
 
+/* GoldHEN AutoRun 三件套(装机/拉起交给 ludora_autorun.elf,这三样必须在本下载器
+ * 落盘后、GoldHEN 启动前就位,否则 AutoRun 读不到 elf/ini 永远不触发 —— 这正是
+ * Web 首次装机「只下了 pkg 却卡在启动鲁哆啦安装」的根因)。
+ * 落点与内容照 bd-jb-1300 光盘 JB 的 stage_ludora_autorun() 复刻:
+ *   - elf → /data/payloads/ludora_autorun.elf(来源从光盘 copy 换成第二次 HTTP 下载)
+ *   - payloads.ini 整份重建,只含 [AutoRun] 一行
+ *   - config.ini prod 全开(BinLoader=1 是 AutoRun 触发前提;FTPServer/KLogServer=1
+ *     与光盘行为一致,站长已拍板) */
+#define ELF_PATH "/data/payloads/ludora_autorun.elf"
+#define ELF_TMP  "/data/payloads/ludora_autorun.elf.tmp"
+#define PAYLOADS_INI_PATH "/data/GoldHEN/payloads.ini"
+#define CONFIG_INI_PATH "/data/GoldHEN/config.ini"
+#define PAYLOADS_INI_TEXT "[AutoRun]\n/user/data/payloads/ludora_autorun.elf = 1\n"
+#define CONFIG_INI_TEXT \
+  "[BinLoader]\n" \
+  "Enabled = 1\n\n" \
+  "[FTPServer]\n" \
+  "Enabled = 1\n\n" \
+  "[KLogServer]\n" \
+  "Enabled = 1\n" \
+  "TTYRedirect = 1\n\n" \
+  "[DebugSettings]\n" \
+  "Enabled = 2\n" \
+  "Source = 0\n" \
+  "Subdirectories_Enabled = 0\n" \
+  "Info_Visible = 0\n" \
+  "Path_Visible = 0\n" \
+  "Bgft_Enabled = 0\n" \
+  "Pkg_Source = 2\n\n" \
+  "[BDApp]\n" \
+  "AutoKill_Enabled = 1\n" \
+  "AutoEject_Enabled = 0\n"
+
 /* 已装机判据:装机成功后源 pkg 会被安装服务删掉(装完即删,见 itemzflow installpkg.cpp
  * "装完即删,腾出空间"),所以不能再拿"pkg 文件是否存在"当跳过信号 —— 那会让已装机的
- * 主机每次越狱都重新下载 49MB。改为检查 appmeta 目录(装机时即建立),与 ludora_autorun
+ * 主机每次解锁都重新下载 49MB。改为检查 appmeta 目录(装机时即建立),与 ludora_autorun
  * 的 sceAppInstUtilAppExists(LUDO00001) 语义等价。
  * 注意:ludora 被用户移到扩展硬盘后,appmeta 会落在 /user/appmeta/external/<TID>
  * (itemzflow 自身图标 fallback 就同时查内/外两条路径),所以两条都要判,否则装扩展盘
@@ -328,10 +361,10 @@ static void write_force_staged(void) {
   write_file(FORCE_STAGED_MARK, "1\n");
 }
 
-/* /data/pkg 不是系统自带目录,首次落盘前必须自建(对齐 autorun 的 nf_ensure_package_dirs)。
+/* 目标目录不是系统自带目录,首次落盘前必须自建(对齐 autorun 的 nf_ensure_package_dirs)。
  * 目录已存在(EEXIST)按成功处理,其余错误才算失败。裸 syscall 失败返回负 errno。 */
-static int ensure_pkg_dir(void) {
-  long r = syscall2(SYS_mkdir, (long)"/data/pkg", 0755);
+static int ensure_dir(const char *path) {
+  long r = syscall2(SYS_mkdir, (long)path, 0755);
   if (r != 0 && r != -17) return (int)r; /* -17 = -EEXIST */
   return 0;
 }
@@ -342,8 +375,14 @@ static int ensure_pkg_dir(void) {
  * 参见 nasflow-archive/ps4/plugin/ludora_autorun/main.c 与
  * docs/research/2026-07-21-first-install-architecture.md §四。 */
 
-/* ---- outbound HTTP GET -> stream to disk + SHA-256 ---- */
-static int http_download(struct ludora_dl_status *status, struct ludora_dl_params *params) {
+/* ---- outbound HTTP GET -> stream to disk + SHA-256 ----
+ * 参数化到「目标 ip/port/path/sha256 + 临时/最终路径」,pkg 与 autorun elf 各调一次,
+ * 复用同一套非阻塞 connect + SO_ERROR + 明文 GET + SHA-256 校验 + 原子 rename。 */
+static int http_download(struct ludora_dl_status *status,
+                         const char *ip, int ip_len, uint16_t port,
+                         const char *path, int path_len,
+                         const char *sha256_hex,
+                         const char *tmp_path, const char *final_path) {
   uint32_t ip_net = 0;
   struct sockaddr_in addr;
   int fd = -1, out = -1;
@@ -358,14 +397,14 @@ static int http_download(struct ludora_dl_status *status, struct ludora_dl_param
   unsigned char actual[32];
   char actual_hex[65];
 
-  if (parse_ipv4_net(params->ip, &ip_net) != 0) {
+  if (parse_ipv4_net(ip, &ip_net) != 0) {
     fail(status, LUDORA_DL_STAGE_PARAM, -2, 0);
     return -1;
   }
   /* 防御性复查:请求行 = "GET "(4) + path + " HTTP/1.1\r\nHost: "(16) + ip
    * + "\r\nConnection: close\r\n\r\n"(24)。_main 已限 path_len<512、ip_len<64,
    * 理论上 ≤618 < sizeof(req)=1024;此处再守一次,防止将来放宽校验后溢出。 */
-  if (params->path_len + params->ip_len > (int)sizeof(req) - 48) {
+  if (path_len + ip_len > (int)sizeof(req) - 48) {
     fail(status, LUDORA_DL_STAGE_PARAM, -4, 0);
     return -1;
   }
@@ -384,14 +423,14 @@ static int http_download(struct ludora_dl_status *status, struct ludora_dl_param
   zero(&addr, sizeof(addr));
   addr.sin_len = sizeof(addr);
   addr.sin_family = AF_INET;
-  addr.sin_port = (uint16_t)((params->port >> 8) | (params->port << 8)); /* htons */
+  addr.sin_port = (uint16_t)((port >> 8) | (port << 8)); /* htons */
   addr.sin_addr = ip_net;
 
   /* 非阻塞 connect + SO_ERROR 诊断:12.52 上裸阻塞 connect 实测卡死(既不返回成功
    * 也不返回失败,永远停在 stage=4)。非阻塞能立即拿到 EINPROGRESS 或 errno,再读
    * SO_ERROR 拿最终结果,浏览器侧 poll 能看到确切 errno 而非永远停在 CONNECT。 */
   syscall3(SYS_fcntl, fd, F_SETFL, O_NONBLOCK);
-  update(status, LUDORA_DL_STAGE_CONNECT, 0, (uint32_t)fd, (uint32_t)params->port);
+  update(status, LUDORA_DL_STAGE_CONNECT, 0, (uint32_t)fd, (uint32_t)port);
   cr = syscall3(SYS_connect, fd, (long)&addr, sizeof(addr));
   if (cr < 0 && cr != -EINPROGRESS) {
     fail(status, LUDORA_DL_STAGE_CONNECT, (int32_t)cr, (uint32_t)fd);
@@ -417,9 +456,9 @@ static int http_download(struct ludora_dl_status *status, struct ludora_dl_param
   syscall3(SYS_fcntl, fd, F_SETFL, 0); /* 恢复阻塞,后续 read/write 正常 */
 
   append_s(req, &rl, "GET ");
-  append_n(req, &rl, params->path, params->path_len);
+  append_n(req, &rl, path, path_len);
   append_s(req, &rl, " HTTP/1.1\r\nHost: ");
-  append_n(req, &rl, params->ip, params->ip_len);
+  append_n(req, &rl, ip, ip_len);
   append_s(req, &rl, "\r\nConnection: close\r\n\r\n");
 
   update(status, LUDORA_DL_STAGE_SEND, 0, 0, 0);
@@ -433,7 +472,7 @@ static int http_download(struct ludora_dl_status *status, struct ludora_dl_param
     sent += (int)w;
   }
 
-  out = (int)syscall3(SYS_open, (long)PKG_TMP, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+  out = (int)syscall3(SYS_open, (long)tmp_path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
   if (out < 0) {
     fail(status, LUDORA_DL_STAGE_BODY, out, 0);
     syscall1(SYS_close, fd);
@@ -526,13 +565,13 @@ static int http_download(struct ludora_dl_status *status, struct ludora_dl_param
   sha256_final(&hash, actual);
   hex_encode(actual, actual_hex, 32);
   update(status, LUDORA_DL_STAGE_HASH, 0, 0, 0);
-  if (memcmp_s((const unsigned char *)actual_hex, (const unsigned char *)params->sha256_hex, 64) != 0) {
+  if (memcmp_s((const unsigned char *)actual_hex, (const unsigned char *)sha256_hex, 64) != 0) {
     fail(status, LUDORA_DL_STAGE_HASH, -1, 0);
     goto done_fail;
   }
 
   /* sha256 一致,临时文件原子 rename 成 final 路径。 */
-  if (syscall2(SYS_rename, (long)PKG_TMP, (long)PKG_PATH) != 0) {
+  if (syscall2(SYS_rename, (long)tmp_path, (long)final_path) != 0) {
     fail(status, LUDORA_DL_STAGE_HASH, -2, 0);
     goto done_fail;
   }
@@ -542,7 +581,7 @@ static int http_download(struct ludora_dl_status *status, struct ludora_dl_param
 done_fail:
   if (out >= 0) syscall1(SYS_close, out);
   if (fd >= 0) syscall1(SYS_close, fd);
-  syscall1(SYS_unlink, (long)PKG_TMP);
+  syscall1(SYS_unlink, (long)tmp_path);
   return -1;
 }
 
@@ -558,40 +597,62 @@ int _main(void *payload_base) {
     return -1;
   }
   if (params->ip_len == 0 || params->ip_len >= LUDORA_DL_IP_MAX ||
-      params->path_len == 0 || params->path_len >= LUDORA_DL_PATH_MAX) {
+      params->path_len == 0 || params->path_len >= LUDORA_DL_PATH_MAX ||
+      params->path2_len >= LUDORA_DL_PATH_MAX) {
     fail(status, LUDORA_DL_STAGE_PARAM, -3, 0);
     return -1;
   }
 
-  /* 下载前先查是否真的需要下载:
-   *   - ludora 已装 → 什么都不用下(装后源 pkg 已被安装服务删掉,仅靠"pkg 是否存在"
-   *     判断会误判成"未装"而重复下载);直接判 DONE。内/外盘 appmeta 都要判,覆盖
-   *     ludora 被移到扩展硬盘的情况。
-   *   - pkg 已落盘(上次下载完还没重启装机)→ 写强制标记,autorun 会优先用 HDD 包。
-   * detail0=1 表示"已存在/已装,跳过下载",供浏览器侧区分展示。 */
+  /* ludora 已装 → 什么都不用下(装后源 pkg 已被安装服务删掉,仅靠"pkg 是否存在"
+   * 判断会误判成"未装"而重复下载);直接判 DONE。内/外盘 appmeta 都要判,覆盖
+   * ludora 被移到扩展硬盘的情况。detail0=1 表示"已装,跳过下载",供浏览器侧区分。 */
   if (file_exists(APP_INSTALLED_DIR) || file_exists(APP_INSTALLED_DIR_EXT)) {
     write_marker("SKIP-INSTALLED\n");
     update(status, LUDORA_DL_STAGE_DONE, 0, 1, 0);
     return 0;
   }
-  if (file_exists(PKG_PATH)) {
-    write_force_staged();
-    write_marker("SKIP\n");
-    update(status, LUDORA_DL_STAGE_DONE, 0, 1, 0);
-    return 0;
-  }
 
-  /* /data/pkg 可能不存在(全新机首次越狱),先确保目录再落盘。 */
-  {
-    int mkrc = ensure_pkg_dir();
+  /* 1) 下载 pkg。pkg 已落盘(上次下完还没重启装机)则跳过,避免重复下载 49MB。 */
+  if (!file_exists(PKG_PATH)) {
+    int mkrc = ensure_dir("/data/pkg");
     if (mkrc != 0) {
       fail(status, LUDORA_DL_STAGE_BODY, -4, (uint32_t)mkrc);
       return -1;
     }
+    if (http_download(status, params->ip, params->ip_len, params->port,
+                      params->path, params->path_len, params->sha256_hex,
+                      PKG_TMP, PKG_PATH) != 0) {
+      return -1;
+    }
   }
 
-  if (http_download(status, params) != 0) {
-    return -1;
+  /* 2) 预置 GoldHEN AutoRun 三件套:elf 落盘 + payloads.ini + config.ini。
+   * 装机/拉起交给 ludora_autorun.elf,这三样必须在 GoldHEN 启动前就位 —— 缺了
+   * 任一样 AutoRun 读不到、装机永远不触发(正是「只下 pkg 却卡在启动鲁哆啦安装」)。
+   * 半程恢复:pkg 已下但 elf/ini 缺失时,这里补齐而不是直接 DONE。
+   * path2_len > 0 才做(向后兼容:老引擎只写 pkg 参数时 path2_len=0,退化为只下 pkg,
+   * 不崩,但该固件区间仍是「装不了」—— 真正修复靠 7 引擎全部同步写 path2/sha2562)。 */
+  if (params->path2_len > 0) {
+    int mkrc = ensure_dir("/data/payloads");
+    if (mkrc != 0) {
+      fail(status, LUDORA_DL_STAGE_BODY, -5, (uint32_t)mkrc);
+      return -1;
+    }
+    mkrc = ensure_dir("/data/GoldHEN");
+    if (mkrc != 0) {
+      fail(status, LUDORA_DL_STAGE_BODY, -6, (uint32_t)mkrc);
+      return -1;
+    }
+    if (!file_exists(ELF_PATH)) {
+      if (http_download(status, params->ip, params->ip_len, params->port,
+                        params->path2, params->path2_len, params->sha256_hex2,
+                        ELF_TMP, ELF_PATH) != 0) {
+        return -1;
+      }
+    }
+    /* payloads.ini/config.ini 每次整份重建(幂等,内容固定,照 bd-jb-1300 复刻)。 */
+    write_file(PAYLOADS_INI_PATH, PAYLOADS_INI_TEXT);
+    write_file(CONFIG_INI_PATH, CONFIG_INI_TEXT);
   }
 
   write_force_staged();
