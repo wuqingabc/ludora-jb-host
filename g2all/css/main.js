@@ -8,11 +8,16 @@ function load_script(src, remote = true, transfer = []) {
   });
 }
 
-// ================== LUDORA DOWNLOADER SECOND-INJECTION (css engine) ==================
-// After GoldHEN is up, inject the self-contained downloader .bin and feed it the
-// target host/port/path and expected SHA-256 via the params area at [base + 0x5000].
-// The downloader does outbound HTTP GET -> stream to /user/data/pkg/ludora.pkg ->
-// SHA-256 -> install -> launch, all in raw syscalls. Unlike the g2all 700/900 engines
+// ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
+// Unconditional: BEFORE GoldHEN loads, inject the self-contained downloader .bin and
+// feed it the target host/port/path and expected SHA-256 via the params area at
+// [base + 0x5000]. The downloader does outbound HTTP GET -> stream to
+// /data/pkg/ludora.pkg -> SHA-256 -> write the GoldHEN AutoRun three-piece set
+// (ludora_autorun.elf + payloads.ini + config.ini), all in raw syscalls (no libc, no
+// dynamic ELF). It does NOT install: install/launch is GoldHEN AutoRun's job
+// (ludora_autorun.elf, a system-level process), so the three-piece set must be in
+// place BEFORE GoldHEN starts. Download completes (or fails/times out) before GoldHEN
+// starts below; either way GoldHEN still loads. Unlike the g2all 700/900 engines
 // (which use chain.sysp / array_from_address / chain.call_int), the css engine uses
 // fn.mmap / mem.copy / fn.pthread_create / arw.view plus a jmp-rdi stub to thread the
 // downloader so the browser can keep polling the status page at [base + 0x4000].
@@ -100,7 +105,9 @@ async function ludoraDlFetchBin() {
   }
 }
 
-function ludoraDlInject(dlp, data) {
+function ludoraDlInject(dlp, data, onComplete) {
+  let settled = false;
+  function finish() { if (settled) return; settled = true; onComplete(); }
   const ip = String(dlp.ip || '');
   const path = String(dlp.path || '');
   const sha = String(dlp.sha256 || '');
@@ -152,6 +159,7 @@ function ludoraDlInject(dlp, data) {
     logger.info('downloader pthread_create rc=' + rc);
     if (rc !== 0) {
       msgs.textContent = dlText('downloader.failedToStart', null, 'Ludora downloader failed to start (pthread_create rc=' + rc + ').');
+      finish();
       return;
     }
 
@@ -192,10 +200,12 @@ function ludoraDlInject(dlp, data) {
           if (window.LudoraUI && window.LudoraUI.progress)
             window.LudoraUI.progress(100, dlText('downloader.failed', null, '下载失败'), 'error');
         }
+        finish();
         return;
       }
       if (Date.now() >= deadline) {
         msgs.textContent = dlText('downloader.timedOut', { stage: ludoraDlStageName(lastStage) }, 'Ludora downloader timed out at ' + ludoraDlStageName(lastStage) + '.');
+        finish();
         return;
       }
       setTimeout(poll, 200);
@@ -205,6 +215,7 @@ function ludoraDlInject(dlp, data) {
     const detail = e && e.message ? e.message : String(e);
     logger.info('downloader dispatch error: ' + detail);
     msgs.textContent = dlText('downloader.dispatchFailed', { detail: detail }, 'Ludora downloader dispatch failed: ' + detail);
+    finish();
   }
 }
 
@@ -221,9 +232,9 @@ async function runDownloader() {
     msgs.textContent = dlText('downloader.payloadUnavailable', null, 'Ludora downloader payload unavailable.');
     return;
   }
-  ludoraDlInject(dlp, dl);
+  await new Promise((resolve) => ludoraDlInject(dlp, dl, resolve));
 }
-// ================== /LUDORA DOWNLOADER SECOND-INJECTION ==================
+// ================== /LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
 
 async function doJb() {
   await load_script("css/misc.js");
@@ -325,9 +336,8 @@ async function doJb() {
       const bin_rsp = await fetch("goldhen_2.4b18.14.bin");
       const bin_buf = await bin_rsp.arrayBuffer();
       const bin_u8 = new Uint8Array(bin_buf);
+      await runDownloader();
       load_bin(bin_u8);
-
-      runDownloader();
     }
 
     msgs.innerHTML = window.LudoraI18n ? LudoraI18n.t("payload.loaded") : "GoldHEN loaded.";
