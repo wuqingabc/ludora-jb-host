@@ -2434,8 +2434,7 @@ async function attempt(ctx, opts) {
           dlp = {
             ip: String(tj.ip || ""),
             port: (tj.port | 0) || 80,
-            path: "/jb/host/pkg/ludora.pkg?t="
-              + encodeURIComponent(String(tj.token || "")),
+            path: "/jb/host/pkg/ludora.pkg",
             sha256: String(tj.sha256 || "")
           };
         }

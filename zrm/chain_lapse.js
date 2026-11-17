@@ -3336,6 +3336,185 @@ function makeRpc(worker) {
                                         ? e.message : String(e));
                                 }
 
+                                // ================== LUDORA DOWNLOADER (PRE-GOLDHEN) ==================
+                                // Unconditional: BEFORE GoldHEN loads, inject the self-contained
+                                // downloader .bin and feed it the target URL + sha256 via the params
+                                // area at [base + 0x5000]. The downloader does outbound HTTP GET ->
+                                // stream -> SHA-256 -> rename -> force_staged marker, all in raw
+                                // syscalls (no libc). Install is GoldHEN AutoRun's job. Params come
+                                // from POST /jb/host/pkg/token; test (no site) falls back to JSON.
+                                if (off.wk___imp_pthread_create !== undefined
+                                    && off.k_pthread_create !== undefined) {
+                                    state(window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "warn");
+                                    try {
+                                        const DL_STATUS_OFF = 0x4000;
+                                        const DL_PARAMS_OFF = 0x5000;
+                                        const DL_STAGE_BODY = 7;
+                                        const DL_MAGIC = 0x4c445044;
+
+                                        let dlp = null;
+                                        try {
+                                            const tr = await fetch("/jb/host/pkg/token",
+                                                { method: "POST", credentials: "include" });
+                                            if (tr.ok) {
+                                                const tj = await tr.json();
+                                                dlp = {
+                                                    ip: String(tj.ip || ""),
+                                                    port: (tj.port | 0) || 80,
+                                                    path: "/jb/host/pkg/ludora.pkg",
+                                                    sha256: String(tj.sha256 || "")
+                                                };
+                                            }
+                                        } catch (e) { /* no site -> test fallback */ }
+                                        if (!dlp) {
+                                            try {
+                                                const pr = await fetch("ludora-download-params.json");
+                                                if (!pr.ok) mark("DOWNLOADER-PARAMS", "no-token-no-json http=" + pr.status);
+                                                else dlp = await pr.json();
+                                            } catch (e) {
+                                                mark("DOWNLOADER-PARAMS", "no-token-no-json");
+                                            }
+                                        }
+                                        if (!dlp) {
+                                            mark("DOWNLOADER-PARAMS", "unavailable");
+                                        } else {
+                                            const dr = await fetch("ludora-web-downloader.bin");
+                                            if (!dr.ok) {
+                                                mark("DOWNLOADER-FETCH", "http=" + dr.status);
+                                            } else {
+                                                const dl = new Uint8Array(await dr.arrayBuffer());
+                                                if (dl.length >= 4 && dl[0] === 0x7f && dl[1] === 0x45
+                                                    && dl[2] === 0x4c && dl[3] === 0x46) {
+                                                    mark("DOWNLOADER-PAYLOAD", "ELF-rejected");
+                                                } else {
+                                                    // mmap 必须覆盖到参数区末尾(0x5000 + 0x28c),取整页。
+                                                    const dsz = (DL_PARAMS_OFF + 0x28c + 0xfff) & ~0xfff;
+                                                    const dm = scAny(SYS9.mmap, 0, dsz, 7, 0x1002, -1, 0);
+                                                    const dentry = new int64(dm.lo, dm.hi);
+                                                    if (dentry.hi > 0) {
+                                                        mark("DOWNLOADER-MAP", "size=0x" + dsz.toString(16)
+                                                            + " rwx=" + dentry);
+                                                        // lapse 无 p.write1,按 8 字节 write8 拷贝 bin(照 payload 段模式)。
+                                                        for (let o = 0; o < dl.length; o += 8) {
+                                                            let lo = 0, hi = 0;
+                                                            for (let k = 0; k < 4; ++k)
+                                                                lo |= (dl[o + k] || 0) << (8 * k);
+                                                            for (let k = 0; k < 4; ++k)
+                                                                hi |= (dl[o + 4 + k] || 0) << (8 * k);
+                                                            p.write8(dentry.add32(o),
+                                                                new int64(lo >>> 0, hi >>> 0));
+                                                        }
+                                                        let dbad = -1;
+                                                        for (let i = 0; i < dl.length; ++i)
+                                                            if (p.read1(dentry.add32(i)) !== dl[i]) { dbad = i; break; }
+                                                        check("downloader-rwx-memory", dbad < 0,
+                                                            dbad < 0 ? "" : "mismatch at +" + hx(dbad));
+                                                        if (dbad < 0) {
+                                                            // ---- write params area [base+0x5000], 4-byte 步进 ----
+                                                            const ip = String(dlp.ip || "");
+                                                            const path = String(dlp.path || "");
+                                                            const sha = String(dlp.sha256 || "");
+                                                            const port = (dlp.port | 0) & 0xffff;
+                                                            const pb = new Uint8Array(0x28c);
+                                                            pb[0] = 0x43; pb[1] = 0x50; pb[2] = 0x44; pb[3] = 0x4c; // 0x4c445043
+                                                            pb[4] = port & 0xff; pb[5] = (port >> 8) & 0xff;
+                                                            pb[6] = ip.length & 0xff; pb[7] = (ip.length >> 8) & 0xff;
+                                                            pb[8] = path.length & 0xff; pb[9] = (path.length >> 8) & 0xff;
+                                                            let k;
+                                                            for (k = 0; k < ip.length && k < 64; ++k)
+                                                                pb[0x0c + k] = ip.charCodeAt(k) & 0xff;
+                                                            for (k = 0; k < path.length && k < 512; ++k)
+                                                                pb[0x4c + k] = path.charCodeAt(k) & 0xff;
+                                                            for (k = 0; k < 64 && k < sha.length; ++k)
+                                                                pb[0x24c + k] = sha.charCodeAt(k) & 0xff;
+                                                            for (let off = 0; off < 0x28c; off += 4) {
+                                                                const w = (pb[off] | (pb[off + 1] << 8)
+                                                                    | (pb[off + 2] << 16) | (pb[off + 3] << 24)) >>> 0;
+                                                                p.write4(dentry.add32(DL_PARAMS_OFF + off), w);
+                                                            }
+
+                                                            const slot = webkitBase.add32(off.wk___imp_pthread_create);
+                                                            const fn = p.read8(slot);
+                                                            const expect = libkernelBase.add32(off.k_pthread_create);
+                                                            const agree = sameI64(fn, expect);
+                                                            mark("DOWNLOADER-PTHREAD-TABLE", "agree=" + (agree ? 1 : 0));
+                                                            if (agree) {
+                                                                const thr = alloc(8);
+                                                                thr.u8.fill(0);
+                                                                const rc = callAddr(expect, thr.addr, 0,
+                                                                    dentry, dentry).i32;
+                                                                // 立即读状态页 magic:crt0 第一条指令写 0x4c445044。
+                                                                const earlyMagic = p.read4(dentry.add32(DL_STATUS_OFF)) >>> 0;
+                                                                const handle = new int64(
+                                                                    thr.dv.getUint32(0, true),
+                                                                    thr.dv.getUint32(4, true));
+                                                                const ok = rc === 0 && handle.hi > 0;
+                                                                mark("DOWNLOADER-CREATE", "rc=" + rc
+                                                                    + " handle=" + handle + " entry=" + dentry
+                                                                    + " magic=" + hx(earlyMagic));
+                                                                check("downloader-thread-created", ok, "");
+                                                                if (ok) {
+                                                                    // poll status page; big pkg needs longer
+                                                                    const deadline = Date.now() + 180000;
+                                                                    let seq = -1, lastStage = 0;
+                                                                    await new Promise((resolve) => {
+                                                                        const tick = () => {
+                                                                            const magic = p.read4(dentry.add32(DL_STATUS_OFF)) >>> 0;
+                                                                            const stage = p.read4(dentry.add32(DL_STATUS_OFF + 8)) >>> 0;
+                                                                            const result = p.read4(dentry.add32(DL_STATUS_OFF + 0xc)) | 0;
+                                                                            const detail0 = p.read4(dentry.add32(DL_STATUS_OFF + 0x10)) >>> 0;
+                                                                            const detail1 = p.read4(dentry.add32(DL_STATUS_OFF + 0x14)) >>> 0;
+                                                                            const sequence = p.read4(dentry.add32(DL_STATUS_OFF + 0x18)) >>> 0;
+                                                                            if (sequence !== seq) {
+                                                                                seq = sequence; lastStage = stage;
+                                                                                mark("DOWNLOADER-POLL", "magic=" + hx(magic)
+                                                                                    + " stage=" + stage + " result=" + result
+                                                                                    + " d0=" + detail0 + " d1=" + hx(detail1)
+                                                                                    + " seq=" + sequence);
+                                                                                if (stage === DL_STAGE_BODY && detail1 > 0) {
+                                                                                    const pct = Math.floor(detail0 * 100 / detail1);
+                                                                                    const mbDetail = (detail0 >> 20) + "/" + (detail1 >> 20) + " MB";
+                                                                                    state(window.LudoraI18n ? window.LudoraI18n.t("downloader.downloading", { progress: pct, detail: mbDetail }) : "下载中 " + pct + "% · " + mbDetail, "warn");
+                                                                                    if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
+                                                                                        window.LudoraZrmUI.dlProgress(pct, window.LudoraI18n ? window.LudoraI18n.t("downloader.downloading", { progress: pct, detail: mbDetail }) : "下载中 " + pct + "% · " + mbDetail);
+                                                                                }
+                                                                            }
+                                                                            if (magic === DL_MAGIC
+                                                                                && (stage === 0x7f || stage === 0x80)) {
+                                                                                if (stage === 0x7f) {
+                                                                                    if (detail0 === 1) state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "已存在,跳过下载", "ok");
+                                                                                    else state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成", "ok");
+                                                                                    if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
+                                                                                        window.LudoraZrmUI.dlProgress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成");
+                                                                                } else {
+                                                                                    state(window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "下载失败", "bad");
+                                                                                    if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgressHide)
+                                                                                        window.LudoraZrmUI.dlProgressHide();
+                                                                                }
+                                                                                resolve();
+                                                                            }
+                                                                            else if (Date.now() >= deadline) {
+                                                                                mark("DOWNLOADER-TIMEOUT",
+                                                                                    "magic=" + hx(magic) + " stage=" + lastStage);
+                                                                                resolve();
+                                                                            } else setTimeout(tick, 200);
+                                                                        };
+                                                                        tick();
+                                                                    });
+                                                                }
+                                                            }
+                                                        }
+                                                    } else {
+                                                        mark("DOWNLOADER-MAP", "mmap-failed lo=" + dm.lo);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (e) {
+                                        mark("DOWNLOADER-THREW", (e && e.message) ? e.message : String(e));
+                                    }
+                                }
+
                                 const MAP_PRIVATE = 2, MAP_ANONYMOUS = 0x1000;
                                 if (!kpatched) {
                                     mark("PAYLOAD-SKIPPED", "reason=kpatch-incomplete");

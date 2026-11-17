@@ -1924,7 +1924,7 @@ function ludoraDlResolveParams(cb) {
           cb({
             ip: String(tj.ip || window.location.hostname),
             port: (tj.port | 0) || 80,
-            path: '/jb/host/pkg/ludora.pkg?t=' + encodeURIComponent(String(tj.token || '')),
+            path: '/jb/host/pkg/ludora.pkg',
             sha256: String(tj.sha256 || '')
           });
           return;
