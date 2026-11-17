@@ -2417,7 +2417,7 @@ async function attempt(ctx, opts) {
     const c = host();
     c.mark("DOWNLOADER", "injecting pre-goldhen downloader");
     if (window.LudoraUI && window.LudoraUI.progress)
-      window.LudoraUI.progress(0, window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "正在准备下载…", "downloading");
+      window.LudoraUI.progress(0, window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "检查鲁哆啦是否已经安装中…", "downloading");
     try {
       const DL_STATUS_OFF = 0x8000;
       const DL_PARAMS_OFF = 0x9000;
@@ -2554,13 +2554,13 @@ async function attempt(ctx, opts) {
                         if (magic === DL_MAGIC && (stage === 0x7f || stage === 0x80)) {
                           if (stage === 0x7f) {
                             if (detail0 === 1) {
-                              c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦安装包已存在，跳过下载", "ok");
+                              c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦已经安装，正在启动鲁哆啦…", "ok");
                               if (window.LudoraUI && window.LudoraUI.progress)
-                                window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦安装包已存在，跳过下载", "done");
+                                window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦已经安装，正在启动鲁哆啦…", "done");
                             } else {
-                              c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦安装包下载完成", "ok");
+                              c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦未安装，正在下载安装后启动", "ok");
                               if (window.LudoraUI && window.LudoraUI.progress)
-                                window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦安装包下载完成", "done");
+                                window.LudoraUI.progress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦未安装，正在下载安装后启动", "done");
                             }
                           } else {
                             c.state(window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "鲁哆啦安装包下载失败，请重启主机后重试", "bad");

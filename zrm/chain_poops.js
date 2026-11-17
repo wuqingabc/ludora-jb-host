@@ -2305,7 +2305,7 @@ let allDone = false;
                     // way GoldHEN still loads. Production params come from POST /jb/host/pkg/token;
                     // test (no site) falls back to a same-origin JSON.
                     if (off.wk___imp_pthread_create !== undefined) {
-                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "准备下载…", "warn");
+                        state(window.LudoraI18n ? window.LudoraI18n.t("downloader.preparing") : "检查鲁哆啦是否已经安装中…", "warn");
                         try {
                             const DL_STATUS_OFF = 0x8000;
                             const DL_PARAMS_OFF = 0x9000;
@@ -2452,10 +2452,10 @@ let allDone = false;
                                                                 if (magic === DL_MAGIC
                                                                     && (stage === 0x7f || stage === 0x80)) {
                                                                     if (stage === 0x7f) {
-                                                                        if (detail0 === 1) state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "已存在,跳过下载", "ok");
-                                                                        else state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成", "ok");
+                                                                        if (detail0 === 1) state(window.LudoraI18n ? window.LudoraI18n.t("downloader.exists") : "鲁哆啦已经安装，正在启动鲁哆啦…", "ok");
+                                                                        else state(window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "鲁哆啦未安装，正在下载安装后启动", "ok");
                                                                         if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgress)
-                                                                            window.LudoraZrmUI.dlProgress(100, window.LudoraI18n ? window.LudoraI18n.t("downloader.complete") : "下载完成");
+                                                                            window.LudoraZrmUI.dlProgress(100, window.LudoraI18n ? window.LudoraI18n.t(detail0 === 1 ? "downloader.exists" : "downloader.complete") : (detail0 === 1 ? "鲁哆啦已经安装，正在启动鲁哆啦…" : "鲁哆啦未安装，正在下载安装后启动"));
                                                                     } else {
                                                                         state(window.LudoraI18n ? window.LudoraI18n.t("downloader.failed") : "下载失败", "bad");
                                                                         if (window.LudoraZrmUI && window.LudoraZrmUI.dlProgressHide)

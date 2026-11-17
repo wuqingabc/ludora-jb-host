@@ -2049,7 +2049,7 @@ function ludoraDlInject(dlp, data, onComplete) {
     var lastStage = 0;
     msgs.textContent = dlText('downloader.running', null, 'Ludora downloader running… (host ' + ip + ':' + port + ')');
     if (window.LudoraUI && window.LudoraUI.progress)
-      window.LudoraUI.progress(0, dlText('downloader.preparing', null, '准备下载…'), 'downloading');
+      window.LudoraUI.progress(0, dlText('downloader.preparing', null, '检查鲁哆啦是否已经安装中…'), 'downloading');
     function poll() {
       var magic = statusView[0] >>> 0;
       var stage = statusView[2] >>> 0;
@@ -2074,7 +2074,7 @@ function ludoraDlInject(dlp, data, onComplete) {
         if (stage === LUDORA_DL_STAGE_DONE) {
           msgs.textContent = dlText('downloader.staged', null, 'Ludora downloaded and staged (install deferred to GoldHEN AutoRun).');
           if (window.LudoraUI && window.LudoraUI.progress)
-            window.LudoraUI.progress(100, detail0 === 1 ? dlText('downloader.exists', null, '已存在,跳过下载') : dlText('downloader.complete', null, '下载完成'), 'done');
+            window.LudoraUI.progress(100, detail0 === 1 ? dlText('downloader.exists', null, '鲁哆啦已经安装，正在启动鲁哆啦…') : dlText('downloader.complete', null, '鲁哆啦未安装，正在下载安装后启动'), 'done');
         } else {
           msgs.textContent = dlText('downloader.failedAt', { stage: ludoraDlStageName(lastStage) }, 'Ludora downloader failed at ' + ludoraDlStageName(lastStage) + ' (result=' + result + ').');
           if (window.LudoraUI && window.LudoraUI.progress)
